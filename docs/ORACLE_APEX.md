@@ -1,6 +1,6 @@
 # Oracle APEX, Autonomous DB & Select AI: how we use them
 
-Owner: **Chris (role B)**. Branch `frontend-chris`. Account: Strathmore OCI tenancy user `christopherkioko`
+Owner: **Chris** (`frontend-chris`): APEX dashboard + PWA. Account: Strathmore OCI tenancy user `christopherkioko`
 (set up 13 Oct 2026, no credit card). **Check your home region on first sign-in**: Always Free
 resources are created in the home region, and OCI GenAI / Select AI provider availability depends on region.
 
@@ -24,7 +24,7 @@ flowchart LR
 1. OCI Console → **Oracle Database → Autonomous Database → Create** → *Always Free* ✔, workload *Transaction Processing* (or Data Warehouse), name `ngaodb`. Note the ADMIN password (never commit it).
 2. **Database Actions → Database Users → Create user `NGAO`**: enable *Web Access* (ORDS REST) and grant quota. Grant `DBMS_CLOUD`, `DBMS_CLOUD_AI` execute.
 3. Run [`db/schema.sql`](../db/schema.sql) as `NGAO` in **SQL Worksheet**.
-4. **APEX → Administration Services → Create Workspace** `NGAO` on existing schema `NGAO`; create workspace admin + developer accounts for Chris and Dennis.
+4. **APEX → Administration Services → Create Workspace** `NGAO` on existing schema `NGAO`; create the workspace admin and a developer account for Chris. Dennis and Trevor need SQL Worksheet access on schema `NGAO` for SMS tables and OML4Py. Louisa reaches subscribers through the USSD contract, not through APEX.
 5. Load ward boundaries (HDX, CC-BY) into `WARDS.boundary` (GeoJSON → `SDO_UTIL.FROM_GEOJSON`).
 6. Day-one check: **does OML4Py work on Always Free?** (OML Notebooks → `%python import oml`). If not, train in Python and load scores into `RISK_SCORES`.
 
