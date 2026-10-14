@@ -1,0 +1,15 @@
+# api: REST + webhooks + USSD contract. scheduler: 06:00 alerts, 18:00 routes, SMS queue.
+# Put the ADB wallet in ./wallet (git-ignored) and set DB_WALLET_DIR=/wallet in .env.
+services:
+  api:
+    build: .
+    env_file: .env
+    ports: ["8000:8000"]
+    volumes: ["./wallet:/wallet:ro"]
+    restart: unless-stopped
+  scheduler:
+    build: .
+    env_file: .env
+    command: ["python", "manage.py", "scheduler"]
+    volumes: ["./wallet:/wallet:ro"]
+    restart: unless-stopped

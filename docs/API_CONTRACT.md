@@ -47,7 +47,8 @@ Four layers:
 | `MESSAGES` | Every inbound SMS (IN) and every send/DLR update (OUT) | direction, channel, phone, body, provider_msg_id, status |
 | `REPORTS` | Reply reader / USSD menu 2 via §6 | message_id, ward_id, report_type, report_count, payload, ai_confidence, review_status |
 | `ROUTES`, `ROUTE_STOPS`, `BOOKINGS` | Dryer router 18:00 / confirmations | see schema |
-| `ALERTS` | Alert engine (if owned by backend; else PL/SQL) | score_id, subscriber_id, alert_type, status |
+| `ALERTS` | Alert engine: one row per (ACT score, language), body rendered from `ALERT_TEMPLATE` | score_id, ward_id, alert_type, hazard, severity, lang, body, status (`PENDING_APPROVAL` → `APPROVED`/`REJECTED` → `SENT`, or `SUPPRESSED`), approved_by, approved_at, sent_at |
+| `JOB_RUNS` | Every `/jobs/*` call (§2.2) | job_name, params, status, summary |
 
 Louisa (`ussd/`) writes `USSD_SESSIONS` (session_id, phone, last_text, updated_at) on each hop. She does not write `SUBSCRIBERS`, `MESSAGES`, or `REPORTS`.
 
@@ -74,6 +75,7 @@ Trevor (`data/`) writes `WARDS`, `WARD_FEATURES_DAILY`, `FORECASTS`, `RISK_SCORE
 
 ### 1.3 Writes APEX makes
 - `REPORTS.review_status` (`ACCEPTED`/`CORRECTED`/`REJECTED`), `reviewed_by`, corrected `payload`.
+- `ALERTS.status` `PENDING_APPROVAL` → `APPROVED` or `REJECTED`, with `approved_by`, `approved_at` (Alert Approvals page). The backend fans out every `APPROVED` alert to the ward's subscribers in that `lang` as `MESSAGES` rows with `alert_id`, then sets `SENT` and `sent_at`. It never sends replay alerts or approvals older than 48 h.
 - Demo controls call **PL/SQL packages or REST §2.2**, never insert alerts directly.
 - `ASK_NGAO_LOG` inserts.
 
@@ -109,6 +111,8 @@ SMS webhook endpoints **always return 200** to Wasiliana (log errors). The USSD 
 | POST | `/jobs/plan-routes` | `{"route_date":"2026-10-16"}` | Dryer router → routes, bookings, SMS |
 | POST | `/jobs/replay` | `{"scenario":"garissa_rvf_2006","from":"2006-09-01","to":"2007-01-15"}` | Fill replay tables |
 | POST | `/jobs/reset-demo` | `{}` | Reset demo subscribers/messages |
+| POST | `/jobs/dispatch` | `{"retry_failed":false}` | Fan out `APPROVED` alerts and send queued SMS now (additive) |
+| POST | `/jobs/grade-outcomes` | `{"as_of":"2026-10-15"}` | Grade passed A1/A2 windows → `OUTCOMES` (additive) |
 
 Response `202`:
 ```json
@@ -144,6 +148,8 @@ Response `202`:
 `POST /bookings/{id}/confirm` → `{"booking_id": 91, "status": "CONFIRMED"}`
 
 `GET /public/scorecard` → rows of `V_SCORECARD`.
+
+Additive (v1-draft.4): `GET /alerts?status=PENDING_APPROVAL`, `POST /alerts/{id}/approve` and `/reject` `{"approved_by":"..."}` (same effect as the APEX page), `GET /jobs/{job_id}/status`, `GET /public/calibration` (rows of `V_CALIBRATION`), `GET /health` (unauthenticated), `POST /demo/inbound-sms` `{"phone","text"}` (the §3.4 reply path without Wasiliana forwarding, API token).
 
 ### 2.4 Internal: reply-reader contract (OCI GenAI output)
 
@@ -194,7 +200,7 @@ Registration, reports, ward status, and unsubscribe go through [§5](#5-ussd-to-
 
 Dennis is the only sender. The alert engine and dryer router queue rows in `MESSAGES` (`direction=OUT`, `status=QUEUED`). A worker dequeues them and calls the **Wasiliana SMS REST API** with the **API key** and the registered **sender ID**.
 
-Store the provider message id returned by Wasiliana in `MESSAGES.provider_msg_id`. **Confirm the exact URL, headers, and JSON against [docs.wasiliana.com](https://docs.wasiliana.com).** The Python package **`pytek-wasiliana`** is an optional client for this call; a thin `requests` wrapper is also fine. Either way the env vars are `WASILIANA_API_KEY` and `WASILIANA_SENDER_ID`.
+Store the provider message id returned by Wasiliana in `MESSAGES.provider_msg_id`. Reference shape from the `pytek-wasiliana` client (still to confirm): `POST https://api.wasiliana.com/api/v1/developer/send/sms`, header `apiKey`, body `{"recipients":["2547..."],"from":"<sender id>","message":"..."}`; delivery reports `{"phone","correlator","deliveryStatus","failure_reason"}`. The backend reads these names from one adapter and `.env` overrides (`WASILIANA_SMS_URL`, `WASILIANA_DLR_FIELDS`, `WASILIANA_INBOUND_FIELDS`). **Confirm the exact URL, headers, and JSON against [docs.wasiliana.com](https://docs.wasiliana.com).** The Python package **`pytek-wasiliana`** is an optional client for this call; a thin `requests` wrapper is also fine. Either way the env vars are `WASILIANA_API_KEY` and `WASILIANA_SENDER_ID`.
 
 ### 3.3 Delivery reports
 
@@ -259,3 +265,4 @@ Session rows stay in `ussd/`: each hop upserts `USSD_SESSIONS` (`session_id`, `p
 | v1-draft | 2026-10-14 | Initial contract |
 | v1-draft.2 | 2026-10-14 | Wasiliana replaces Africa's Talking. USSD service is `ussd/` (Louisa); §5 is the USSD to backend contract. Inbound SMS forwarding and delivery-report field names left open pending docs.wasiliana.com |
 | v1-draft.3 | 2026-10-14 | Language choice: `preferred_lang`, first-session prompt, main-menu Lugha / Language, SMS `LUGHA`/`LANG`, alerts rendered from `ALERT_TEMPLATE` |
+| v1-draft.4 | 2026-10-14 | Alert approval workflow as built in APEX (`ALERTS` per score × language, `PENDING_APPROVAL`/`APPROVED`/`REJECTED`/`SENT`), `MESSAGES.alert_id`, `JOB_RUNS`; additive endpoints (`/jobs/dispatch`, `/jobs/grade-outcomes`, `/alerts/*`, `/jobs/{id}/status`, `/public/calibration`, `/health`, `/demo/inbound-sms`). Existing ADB: `db/migrations/001_backend_alignment.sql` |

@@ -1,0 +1,15 @@
+# Ngao backend (Python 3.12+; developed on 3.14)
+Django==6.1.2
+djangorestframework==3.18.3
+python-dotenv==1.2.4
+requests==2.34.2
+gunicorn==26.2.0
+# OpenAPI 3 schema + Swagger UI / ReDoc (assets bundled, no CDN) served by WhiteNoise
+drf-spectacular==0.30.0
+drf-spectacular-sidecar==2026.10.1
+whitenoise==6.12.0
+PyYAML==6.0.3
+# Oracle Autonomous Database (thin mode, no Instant Client needed; wallet via DB_WALLET_DIR)
+oracledb==26.0.1
+# OCI Generative AI for the reply reader (REPLY_READER=genai). Imported lazily.
+oci==2.188.0

@@ -1,6 +1,7 @@
 -- Ngao / MvuaSmart: shared schema DRAFT (Oracle Autonomous Database, schema NGAO)
 -- Matches docs/ARCHITECTURE.md §7. Oracle 19c+/23ai syntax. Run as NGAO in SQL Worksheet.
--- Status: v1-draft 2026-10-14. Changes via PR to main only.
+-- Status: v1-draft.4 2026-10-14 (alert approval workflow, messages.alert_id, job_runs). Changes via PR to main only.
+-- Existing databases: run db/migrations/001_backend_alignment.sql instead of re-creating tables.
 
 -- ===== Reference =====
 CREATE TABLE wards (
@@ -128,16 +129,29 @@ CREATE TABLE messages (
   created_at      TIMESTAMP WITH TIME ZONE DEFAULT SYSTIMESTAMP
 );
 
+-- One alert per (risk score, language): drafted by the alert engine, approved by an officer on the
+-- APEX Alert Approvals page, then fanned out by the backend as one MESSAGES row per subscriber.
 CREATE TABLE alerts (
   alert_id      NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  score_id      NUMBER NOT NULL REFERENCES risk_scores,
-  subscriber_id NUMBER NOT NULL REFERENCES subscribers,
+  score_id      NUMBER REFERENCES risk_scores,
+  subscriber_id NUMBER REFERENCES subscribers,       -- legacy per-subscriber rows; null for ward-level alerts
   alert_type    VARCHAR2(3) NOT NULL REFERENCES alert_types,
   ward_id       NUMBER NOT NULL REFERENCES wards,
-  message_id    NUMBER REFERENCES messages,
-  status        VARCHAR2(12) DEFAULT 'CREATED' CHECK (status IN ('CREATED','QUEUED','SENT','SUPPRESSED')),
-  created_at    TIMESTAMP WITH TIME ZONE DEFAULT SYSTIMESTAMP
+  message_id    NUMBER REFERENCES messages,          -- legacy; OUT messages point back via messages.alert_id
+  hazard        VARCHAR2(30),                        -- ALERT_TEMPLATE key used for body
+  severity      VARCHAR2(16),
+  lang          CHAR(2) CHECK (lang IN ('sw','en')),
+  body          VARCHAR2(480),                       -- rendered SMS the officer approves
+  status        VARCHAR2(16) DEFAULT 'PENDING_APPROVAL' CONSTRAINT ck_alerts_status CHECK (status IN
+                  ('PENDING_APPROVAL','APPROVED','REJECTED','SENT','SUPPRESSED','CREATED','QUEUED')),
+  created_at    TIMESTAMP WITH TIME ZONE DEFAULT SYSTIMESTAMP,
+  approved_by   VARCHAR2(100),                       -- APEX :APP_USER, or 'auto' when approval is off
+  approved_at   TIMESTAMP WITH TIME ZONE,
+  sent_at       TIMESTAMP WITH TIME ZONE
 );
+
+-- Which alert an OUT SMS delivered (cooldowns, weekly cap, delivery per alert).
+ALTER TABLE messages ADD (alert_id NUMBER CONSTRAINT fk_msg_alert REFERENCES alerts (alert_id));
 
 CREATE TABLE ussd_sessions (
   session_id    VARCHAR2(100) PRIMARY KEY,
@@ -156,7 +170,7 @@ CREATE TABLE reports (
   unit          VARCHAR2(10),
   payload       JSON,
   ai_confidence NUMBER(4,3),
-  source        VARCHAR2(10) DEFAULT 'SMS_AI' CHECK (source IN ('SMS_AI','SMS_KEYWORD','USSD')),
+  source        VARCHAR2(12) DEFAULT 'SMS_AI' CHECK (source IN ('SMS_AI','SMS_KEYWORD','USSD')),  -- 'SMS_KEYWORD' is 11 chars
   review_status VARCHAR2(14) DEFAULT 'NEEDS_REVIEW' CHECK (review_status IN ('AUTO_ACCEPTED','NEEDS_REVIEW','ACCEPTED','CORRECTED','REJECTED')),
   reviewed_by   NUMBER REFERENCES app_users,
   created_at    TIMESTAMP WITH TIME ZONE DEFAULT SYSTIMESTAMP
@@ -237,7 +251,21 @@ CREATE TABLE ask_ngao_log (
   asked_at      TIMESTAMP WITH TIME ZONE DEFAULT SYSTIMESTAMP
 );
 
+-- One row per /jobs/* call (API_CONTRACT §2.2 job_id). Written by the backend.
+CREATE TABLE job_runs (
+  job_id      NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  job_name    VARCHAR2(30) NOT NULL,
+  params      JSON,
+  status      VARCHAR2(10) DEFAULT 'RUNNING' CHECK (status IN ('RUNNING','DONE','FAILED')),
+  summary     JSON,
+  error_text  VARCHAR2(1000),
+  started_at  TIMESTAMP WITH TIME ZONE DEFAULT SYSTIMESTAMP,
+  finished_at TIMESTAMP WITH TIME ZONE
+);
+
 CREATE INDEX ix_rs_date   ON risk_scores (score_date, alert_type);
+CREATE INDEX ix_msg_alert ON messages (alert_id);
+CREATE INDEX ix_alerts_score ON alerts (score_id, lang);
 CREATE INDEX ix_msg_phone ON messages (phone, created_at);
 CREATE INDEX ix_rep_ward  ON reports (ward_id, created_at);
 
