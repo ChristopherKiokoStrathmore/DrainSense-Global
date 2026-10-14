@@ -1,4 +1,4 @@
-# frontend/apex/
+# frontend/apex/ (Chris · `frontend-chris`)
 APEX application export (app id 100 **[Assumption]**). Update with:
 ```bash
 apex export -applicationid 100 -split -skipExportDate -dir frontend/apex
