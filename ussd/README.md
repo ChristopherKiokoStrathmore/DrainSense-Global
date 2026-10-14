@@ -21,11 +21,13 @@ Auth: `Authorization: Bearer <USSD_SERVICE_TOKEN>`. Each hop also upserts `USSD_
 ussd/
 ├── README.md
 ├── callback.py       POST /ussd → CON / END (Flask), GET /healthz
-├── menus.py          Jiandikishe, Ripoti, Hali, Lugha, Acha: state machine + all screen text (sw/en)
+├── menus.py          Jiandikishe, Ripoti, Hali, Lugha, Acha, El Niño: state machine + menu text (sw/en)
+├── advice.py         El Niño tips (plant, harvest, water, floods, livestock, health) in sw/en
 ├── wasiliana.py      request adapter (field names: assumption until confirmed, overridable by env)
 ├── backend.py        §5 client (BackendClient) + DevBackend stub for local runs
 ├── store.py          USSD_SESSIONS upsert; read-only SUBSCRIBERS.preferred_lang and WARDS
-├── simulate.py       walk the menus in a terminal like a feature phone
+├── simulate.py       walk the menus in a terminal, or --web for a phone UI
+├── simulator.html    phone UI served by simulate.py --web (dev only, not on the live callback)
 ├── tests/            pytest: adapter + every menu path
 ├── requirements.txt
 └── .env.example      USSD_PUBLIC_URL, USSD_SERVICE_TOKEN, BACKEND_BASE_URL, DB_* (no real values)
@@ -44,8 +46,15 @@ MvuaSmart
 │                      · 5 other → "send us an SMS" (no call)
 ├── 3 Hali ya kata yangu / My ward status                                  → GET  /ussd/ward-status
 ├── 4 Lugha / Language → choose again, continue in the new language        → POST /ussd/language
-└── 5 Acha ujumbe / Stop alerts → confirm                                  → POST /ussd/unsubscribe
+├── 5 Acha ujumbe / Stop alerts → confirm                                  → POST /ussd/unsubscribe
+└── 6 Ushauri wa El Niño / El Niño advice (static tips, no call)
+    ├── 1 Kupanda / Planting              ├── 4 Mafuriko na kuhama / Floods and moving
+    ├── 2 Kuvuna na kuhifadhi / Harvest   ├── 5 Mifugo / Livestock
+    ├── 3 Kuvuna maji / Saving rainwater  └── 6 Afya / Family health
+    each topic: one tip per screen · 1 More · 0 Back · 0 again = main menu
 ```
+
+El Niño advice text lives in `advice.py` so it can be edited without touching the menu logic. It needs an agronomist's check, and the Swahili a native speaker's.
 
 Each screen is rebuilt from the whole input path (`1*2*20`) on every hop. An invalid entry shows the same screen again with "Chaguo si sahihi / Invalid choice". Long county and ward lists page with `98`. A backend error ends the session with `Samahani, jaribu tena.` / `Sorry, please try again.`
 
@@ -56,7 +65,10 @@ cd ussd
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python -m pytest -q tests          # all menu paths
 .venv/bin/python simulate.py +254712345678   # try it in the terminal
+.venv/bin/python simulate.py --web           # phone UI at http://localhost:8080/simulator
 ```
+
+In VS Code, open the phone UI with **Cmd+Shift+P → Simple Browser: Show** and paste the URL. Dial `*384*55#`, press Call, and reply with the keypad or keyboard. **New number** gives a fresh phone so you see the language prompt again.
 
 Without `BACKEND_BASE_URL` the service uses `DevBackend` (logs calls, writes nothing). Without `DB_DSN` it uses an in-memory store with a **dev ward list whose ids do not match `WARDS`**.
 

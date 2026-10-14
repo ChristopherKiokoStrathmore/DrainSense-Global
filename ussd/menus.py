@@ -1,4 +1,4 @@
-"""MvuaSmart USSD menu state machine (Jiandikishe, Ripoti, Hali, Lugha, Acha).
+"""MvuaSmart USSD menu state machine (Jiandikishe, Ripoti, Hali, Lugha, Acha, El Niño).
 
 The screen is a pure function of the inputs entered so far in this session
 (`1*2*20`) plus what we knew about the number when the session started.
@@ -11,12 +11,13 @@ Every hop replays the whole path, so:
 * An invalid input is skipped: the same screen is shown again with
   "Invalid choice", and later inputs are read against that same screen.
 
-All screen text lives in TEXT below. Swahili copy must be checked by a native
+Menu screen text lives in TEXT below; El Niño advice lives in advice.py. Swahili copy must be checked by a native
 speaker before the demo.
 """
 
 from dataclasses import dataclass
 
+from advice import ELNINO
 from backend import BackendError
 
 LANG_PROMPT = "Chagua lugha / Choose language\n1. Kiswahili\n2. English"
@@ -25,7 +26,7 @@ MORE = "98"
 
 TEXT = {
     "sw": {
-        "main": "MvuaSmart\n1. Jiandikishe\n2. Ripoti\n3. Hali ya kata yangu\n4. Lugha / Language\n5. Acha ujumbe",
+        "main": "MvuaSmart\n1. Jiandikishe\n2. Ripoti\n3. Hali ya kata yangu\n4. Lugha / Language\n5. Acha ujumbe\n6. Ushauri wa El Niño",
         "lang_set": "Lugha: Kiswahili",
         "invalid": "Chaguo si sahihi.",
         "error": "Samahani, jaribu tena.",
@@ -33,6 +34,8 @@ TEXT = {
         "county": "Chagua kaunti:",
         "ward": "Chagua kata:",
         "more": "Zaidi",
+        "back": "Rudi",
+        "main_menu": "Menyu kuu",
         "no_wards": "Samahani, hakuna kata zilizopatikana. Jaribu baadaye.",
         "consent": "Ukubali kupokea tahadhari za mvua na ushauri wa shamba bure kwa SMS?\n1. Ndiyo\n2. Hapana",
         "registered": "Asante! Umesajiliwa.",
@@ -49,7 +52,7 @@ TEXT = {
         "kept": "Sawa, utaendelea kupokea ujumbe wa MvuaSmart.",
     },
     "en": {
-        "main": "MvuaSmart\n1. Register\n2. Report\n3. My ward status\n4. Lugha / Language\n5. Stop alerts",
+        "main": "MvuaSmart\n1. Register\n2. Report\n3. My ward status\n4. Lugha / Language\n5. Stop alerts\n6. El Niño advice",
         "lang_set": "Language: English",
         "invalid": "Invalid choice.",
         "error": "Sorry, please try again.",
@@ -57,6 +60,8 @@ TEXT = {
         "county": "Choose county:",
         "ward": "Choose ward:",
         "more": "More",
+        "back": "Back",
+        "main_menu": "Main menu",
         "no_wards": "Sorry, no wards are available. Please try later.",
         "consent": "Agree to receive free rain alerts and farm advice by SMS?\n1. Yes\n2. No",
         "registered": "Thank you! You are registered.",
@@ -241,6 +246,25 @@ def _stop(path: Path, ctx: Ctx) -> str:
     return end(t["stopped"])
 
 
+def _elnino(path: Path, ctx: Ctx) -> None:
+    """Topic list -> tips, one per screen. Returns when the user picks 0 (main menu)."""
+    t, content = TEXT[ctx.lang], ELNINO[ctx.lang]
+    topics = content["topics"]
+    menu = content["title"] + "".join(f"\n{n}. {label}" for n, (label, _) in enumerate(topics, 1))
+    menu += f"\n0. {t['main_menu']}"
+    valid = {"0"} | {str(n) for n in range(1, len(topics) + 1)}
+    while True:
+        choice = _choose(path, menu, valid, ctx.lang)
+        if choice == "0":
+            return
+        tips = topics[int(choice) - 1][1]
+        for i, tip in enumerate(tips):
+            more = i < len(tips) - 1
+            screen = tip + (f"\n1. {t['more']}" if more else "") + f"\n0. {t['back']}"
+            if _choose(path, screen, {"0", "1"} if more else {"0"}, ctx.lang) == "0":
+                break
+
+
 def handle(text: str, ctx: Ctx, is_new: bool) -> str:
     """Return the full reply body (starting with CON or END) for this hop."""
     path = Path(text)
@@ -250,7 +274,7 @@ def handle(text: str, ctx: Ctx, is_new: bool) -> str:
         notice = ""
         while True:
             t = TEXT[ctx.lang]
-            choice = _choose(path, notice + t["main"], {"1", "2", "3", "4", "5"}, ctx.lang)
+            choice = _choose(path, notice + t["main"], {"1", "2", "3", "4", "5", "6"}, ctx.lang)
             notice = ""
             if choice == "1":
                 return _register(path, ctx)
@@ -264,6 +288,8 @@ def handle(text: str, ctx: Ctx, is_new: bool) -> str:
                 continue
             if choice == "5":
                 return _stop(path, ctx)
+            if choice == "6":
+                _elnino(path, ctx)
     except Reply as r:
         return r.screen
     except BackendError:

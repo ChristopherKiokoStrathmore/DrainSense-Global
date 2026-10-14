@@ -141,5 +141,40 @@ def test_screens_fit_ussd_limit():
     for lang in menus.TEXT.values():
         for key in ("main", "role", "consent", "report", "stop_confirm"):
             assert len("CON " + lang["invalid"] + "\n" + lang[key]) <= menus.MAX_SCREEN, key
+    from advice import ELNINO
+    for code, content in ELNINO.items():
+        t = menus.TEXT[code]
+        worst = f"CON {t['invalid']}\n"
+        menu = content["title"] + "".join(f"\n{n}. {l}" for n, (l, _) in enumerate(content["topics"], 1))
+        assert len(worst + menu + f"\n0. {t['main_menu']}") <= menus.MAX_SCREEN, code
+        for _, tips in content["topics"]:
+            for tip in tips:
+                screen = worst + tip + f"\n1. {t['more']}\n0. {t['back']}"
+                assert len(screen) <= menus.MAX_SCREEN, (len(screen), tip)
     pages = menus._pages("Chagua kata:", [f"Kata ndefu sana {i}" for i in range(40)], "Zaidi")
     assert len(pages) > 1 and all(len("CON " + p) <= menus.MAX_SCREEN for p in pages)
+
+
+def test_advice_topics_match_across_languages():
+    from advice import ELNINO
+    sw, en = ELNINO["sw"]["topics"], ELNINO["en"]["topics"]
+    assert [len(t) for _, t in sw] == [len(t) for _, t in en]
+
+
+def test_elnino_topics_and_tips(env):
+    hop, backend, _ = env
+    assert walk(hop, "2", "6").startswith("CON El Niño: heavy rain is coming. Choose:\n1. Planting")
+    screen = hop("2*6*2")
+    assert screen.startswith("CON If your crop is mature, harvest now.") and screen.endswith("1. More\n0. Back")
+    assert hop("2*6*2*1").startswith("CON Dry grain fully")
+    last = hop("2*6*2*1*1*1")
+    assert "Main menu > 2 > 1" in last and "1. More" not in last
+    assert backend.calls == [("language", {"phone": PHONE, "preferred_lang": "en"})]  # advice is static
+
+
+def test_elnino_back_navigation(env):
+    hop, _, _ = env
+    walk(hop, "1", "6", "4")
+    assert hop("1*6*4*0").startswith("CON El Niño: mvua kubwa")       # tip -> topics
+    assert hop("1*6*4*0*0").startswith("CON MvuaSmart\n1. Jiandikishe")  # topics -> main menu
+    assert hop("1*6*4*0*0*3").startswith("END")                         # main menu still works
