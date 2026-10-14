@@ -23,7 +23,7 @@ ELNINO = {
                 "Mazao yakikomaa, vuna sasa. Usisubiri: mvua juu ya mazao yaliyokomaa huleta uozo na kuvu yenye sumu (aflatoxin).",
                 "Kausha nafaka kabisa kabla ya kuhifadhi. Nafaka yenye unyevu huota kuvu yenye sumu kwa watu na mifugo.",
                 "Weka magunia juu ya mbao, si sakafuni wala ukutani, chini ya paa lisilovuja. Tumia magunia ya hermetic ukiweza.",
-                "Magunia yakilowa, ripoti: Menyu kuu > 2 > 1. Mashine ya kukausha inaweza kutumwa eneo lako.",
+                "Magunia yakilowa, omba mashine ya kukausha: Menyu kuu > 7. Funika magunia na uyaweke juu ya mbao.",
             ]),
             ("Kuvuna maji ya mvua", [
                 "Chimba bwawa dogo upande wa chini wa shamba kunasa maji. Tandika plastiki ili maji yadumu hadi kiangazi.",
@@ -59,7 +59,7 @@ ELNINO = {
                 "If your crop is mature, harvest now. Rain on a ripe crop causes rot and poisonous mould (aflatoxin).",
                 "Dry grain fully before storing. Damp grain grows mould that is poisonous to people and animals.",
                 "Keep bags on pallets, off the floor and away from walls, under a roof that does not leak. Use hermetic bags if you can.",
-                "If bags get wet, report them: Main menu > 2 > 1. A dryer may be sent to your area.",
+                "If bags get wet, book a dryer: Main menu > 7. Cover the bags and keep them off the ground.",
             ]),
             ("Saving rainwater", [
                 "Dig a water pan on the lower side of your plot to catch runoff. Line it with plastic to keep water for the dry months.",

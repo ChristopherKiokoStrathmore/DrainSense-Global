@@ -68,13 +68,14 @@ def create_app(backend=None, store=None, sessions=None) -> Flask:
                 text = f"{prev}*{text}" if prev and text else (text or prev)
 
             meta = sessions.get(req.session_id)
-            if meta is None:
-                meta = SessionMeta(start_lang=store.preferred_lang(req.phone), created=time.time())
+            if meta is None or meta.phone != req.phone:
+                meta = SessionMeta(start_lang=store.preferred_lang(req.phone), created=time.time(),
+                                   phone=req.phone)
                 sessions.put(req.session_id, meta)
             lang = meta.start_lang or "sw"
 
             ctx = menus.Ctx(phone=req.phone, session_id=req.session_id, lang=lang,
-                            backend=backend, store=store)
+                            backend=backend, store=store, cache=meta.cache)
             reply = menus.handle(text, ctx, is_new=meta.start_lang is None)
 
             try:
