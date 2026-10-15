@@ -114,6 +114,8 @@ Alternative: *App Builder → Export/Import → Export* (SQL file) → save as `
 Import on a fresh workspace: *App Builder → Import* (or `@frontend/apex/f100/install.sql` in SQLcl).
 DB objects live in `db/` (not in the APEX export).
 
+A push to `main` imports `frontend/apex/f100.sql` into workspace `NGAO` (schema `WKSP_NGAO`, application 100, alias `NGAO-MVUASMART`) and then runs the re-runnable scripts in `db/deploy/manifest.txt`. The secrets, the SQLcl install context, and rollback are in [DEPLOY.md](DEPLOY.md).
+
 ## 8. Deployment URL for judges
 `https://<adb-id>-ngaodb.adb.<region>.oraclecloudapps.com/ords/r/ngao/ngao/home` (format for APEX friendly
 URLs; copy the real one from *Run Application*). Put it in the submission email and README once live.

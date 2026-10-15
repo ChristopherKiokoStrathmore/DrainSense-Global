@@ -7,6 +7,7 @@ the menu turns into an END screen in the subscriber's language.
 
 import logging
 import os
+from datetime import datetime, timedelta, timezone
 
 import requests
 
@@ -62,17 +63,26 @@ class BackendClient:
         })
 
     def report(self, phone: str, session_id: str, report_type: str,
-               count: int | None, unit: str | None) -> dict:
-        return self._call("POST", "/ussd/report", json={
-            "phone": phone, "session_id": session_id, "report_type": report_type,
-            "count": count, "unit": unit,
-        })
+               count: int | None, unit: str | None, point_id: int | None = None) -> dict:
+        body = {"phone": phone, "session_id": session_id, "report_type": report_type,
+                "count": count, "unit": unit}
+        if point_id is not None:
+            body["point_id"] = point_id  # farmer asked for drying at this collection point
+        return self._call("POST", "/ussd/report", json=body)
 
     def ward_status(self, phone: str) -> str:
         return self._call("GET", "/ussd/ward-status", params={"phone": phone}).get("text", "")
 
     def unsubscribe(self, phone: str) -> dict:
         return self._call("POST", "/ussd/unsubscribe", json={"phone": phone})
+
+    def drying(self, phone: str) -> dict:
+        """{"registered": bool, "booking": {...} | None, "points": [{"point_id", "point_name"}]}"""
+        return self._call("GET", "/ussd/drying", params={"phone": phone})
+
+    def confirm_booking(self, phone: str, booking_id: int) -> dict:
+        return self._call("POST", "/ussd/drying/confirm",
+                          json={"phone": phone, "booking_id": booking_id})
 
 
 class DevBackend:
@@ -83,6 +93,12 @@ class DevBackend:
         self.status_text = {"sw": "Kata yako: hakuna alama ya hatari leo.",
                             "en": "Your ward: no risk score today."}
         self.langs: dict[str, str] = {}
+        self.registered: set[str] = set()
+        self.bookings: dict[str, dict] = {}
+        # DEV FIXTURE: real points come from COLLECTION_POINTS in the subscriber's ward.
+        self.points = [{"point_id": 3, "point_name": "Moiben market"},
+                       {"point_id": 4, "point_name": "Kapseret coop store"},
+                       {"point_id": 5, "point_name": "Kimumu primary school"}]
 
     def _log(self, name: str, **kw):
         self.calls.append((name, kw))
@@ -94,14 +110,34 @@ class DevBackend:
         return {"preferred_lang": lang}
 
     def register(self, phone, ward_id, role, lang, consent):
+        self.registered.add(phone)
         self._log("register", phone=phone, ward_id=ward_id, role=role,
                   preferred_lang=lang, consent=consent)
         return {"subscriber_id": 1, "status": "ACTIVE"}
 
-    def report(self, phone, session_id, report_type, count, unit):
+    def report(self, phone, session_id, report_type, count, unit, point_id=None):
+        extra = {"point_id": point_id} if point_id is not None else {}
         self._log("report", phone=phone, session_id=session_id,
-                  report_type=report_type, count=count, unit=unit)
+                  report_type=report_type, count=count, unit=unit, **extra)
+        if report_type == "wet_bags" and point_id is not None:
+            # Pretend the 18:00 router ran: offer a slot tomorrow at 08:00 EAT.
+            eat = timezone(timedelta(hours=3))
+            eta = (datetime.now(eat) + timedelta(days=1)).replace(hour=8, minute=0, second=0, microsecond=0)
+            name = next(p["point_name"] for p in self.points if p["point_id"] == point_id)
+            self.bookings[phone] = {"booking_id": len(self.bookings) + 1, "status": "OFFERED",
+                                    "point_name": name, "eta": eta.isoformat(),
+                                    "bags": count, "fee_kes": count * 60}
         return {"report_id": 1}
+
+    def drying(self, phone):
+        self._log("drying", phone=phone)
+        return {"registered": phone in self.registered,
+                "booking": self.bookings.get(phone), "points": self.points}
+
+    def confirm_booking(self, phone, booking_id):
+        self._log("drying-confirm", phone=phone, booking_id=booking_id)
+        self.bookings[phone]["status"] = "CONFIRMED"
+        return {"booking_id": booking_id, "status": "CONFIRMED"}
 
     def ward_status(self, phone):
         self._log("ward-status", phone=phone)
