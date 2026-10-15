@@ -49,7 +49,10 @@ jobs:
   deploy:
     name: Deploy to NgaoDB
     needs: validate
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    # Opt-in on push: the live APEX app now runs on NgaoATP (imported 2026-10-15) and the NGAO_DB_*
+    # secrets point there, so an automatic import of db/apex/f100.sql would overwrite it.
+    # Set repository variable NGAO_DB_AUTO_DEPLOY=true to re-enable, or run it manually.
+    if: (github.event_name == 'push' && vars.NGAO_DB_AUTO_DEPLOY == 'true') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     concurrency:

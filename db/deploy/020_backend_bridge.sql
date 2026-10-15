@@ -90,11 +90,15 @@ CREATE OR REPLACE PACKAGE BODY ngao_backend AS
     apex_web_service.set_request_headers(
       p_name_01 => 'Content-Type', p_value_01 => 'application/json',
       p_name_02 => 'Accept',       p_value_02 => 'application/json');
+    IF cfg('API_TOKEN') IS NOT NULL THEN  -- no APEX workspace/web credential (e.g. NgaoATP): token from config
+      apex_web_service.set_request_headers(
+        p_name_01 => 'Authorization', p_value_01 => 'Bearer ' || cfg('API_TOKEN'));
+    END IF;
     l_response := apex_web_service.make_rest_request(
       p_url                  => base_url || p_path,
       p_http_method          => UPPER(p_method),
       p_body                 => p_body,
-      p_credential_static_id => NVL(cfg('CREDENTIAL_STATIC_ID'), 'NGAO_BACKEND'),
+      p_credential_static_id => CASE WHEN cfg('API_TOKEN') IS NULL THEN NVL(cfg('CREDENTIAL_STATIC_ID'), 'NGAO_BACKEND') END,
       p_transfer_timeout     => 60);
     l_status := apex_web_service.g_status_code;
     IF l_status IS NULL OR l_status >= 400 THEN

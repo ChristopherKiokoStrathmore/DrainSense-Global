@@ -1,8 +1,8 @@
 # ussd/ (Louisa · branch `ussd-louisa`)
 
-Owns the **Wasiliana USSD callback**, the menu state machine, and `USSD_SESSIONS`.
+Owns the **USSD callback** (Africa's Talking by default, Wasiliana with `USSD_PROVIDER=wasiliana`), the menu state machine, and `USSD_SESSIONS`.
 
-Wasiliana is callback-only: they POST each session to our callback URL. This service replies with `text/plain` prefixed `CON ` (continue) or `END ` (end) within about 10 seconds. No OCI GenAI call on this path.
+The gateway is callback-only: Africa's Talking POSTs each hop (form fields `sessionId`, `serviceCode`, `phoneNumber`, `networkCode`, and `text` = every input so far joined by `*`) to the channel's callback URL, `https://<host>/ussd?k=<WEBHOOK_SECRET>`. This service replies with `text/plain` prefixed `CON ` (continue) or `END ` (end) within about 10 seconds. No OCI GenAI call on this path. `gateway.py` picks the provider; `wasiliana.py` parses the shared payload shape.
 
 It does **not** send SMS and it does **not** write `SUBSCRIBERS`, `MESSAGES`, or `REPORTS`. Those go through the backend contract in [docs/API_CONTRACT.md §5](../docs/API_CONTRACT.md#5-ussd-to-backend-contract):
 
