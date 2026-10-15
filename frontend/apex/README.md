@@ -26,4 +26,6 @@ The app is installable as the **Ngao** PWA: open page 20 in Chrome (⋮ → Inst
 2. SQL Workshop / App Builder → **Import**, choose `apex/f100.sql` (type: Application).
 3. Install, keeping or changing the application ID. The app expects the Ngao tables (wards, alerts, subscribers, risk_scores, …) in the parsing schema.
 
+Pushes to `main` import this file with SQLcl into workspace `NGAO`, schema `WKSP_NGAO`, application 100. See [docs/DEPLOY.md](../../docs/DEPLOY.md).
+
 No credentials are stored in this folder.
