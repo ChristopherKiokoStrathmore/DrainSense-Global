@@ -1,0 +1,70 @@
+# Production stack on the Oracle VM (deployed by .github/workflows/deploy-vm.yml into /opt/ngao).
+#   caddy      :80/:443, automatic HTTPS for NGAO_SITE_ADDRESS (e.g. 129.151.1.2.sslip.io)
+#   api        Django REST + webhooks + USSD contract (/ngao/v1, /api/v1)
+#   scheduler  06:00 alerts, 18:00 routes, approved-alert fan-out and the SMS queue every 15 s
+#   ussd       Wasiliana USSD callback (/ussd)
+# Images, the site address and the env files are written by the deploy; nothing secret is in git.
+# env_file format "raw" (Compose >= 2.30) keeps values literal, so passwords may contain $ or quotes.
+name: ngao
+
+x-backend: &backend
+  image: ${NGAO_BACKEND_IMAGE:?NGAO_BACKEND_IMAGE is set by the deploy}
+  env_file:
+    - path: backend.env
+      format: raw
+  volumes:
+    - ./wallet:/wallet:ro
+  restart: unless-stopped
+  logging: &logging
+    driver: json-file
+    options: {max-size: "10m", max-file: "5"}
+
+services:
+  api:
+    <<: *backend
+    healthcheck:
+      # 200 only when the database answers (503 "degraded" when NgaoDB is stopped).
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ngao/v1/health', timeout=8)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  scheduler:
+    <<: *backend
+    command: ["python", "manage.py", "scheduler"]
+    depends_on: [api]
+
+  ussd:
+    image: ${NGAO_USSD_IMAGE:?NGAO_USSD_IMAGE is set by the deploy}
+    env_file:
+      - path: ussd.env
+        format: raw
+    volumes:
+      - ./wallet:/wallet:ro
+    restart: unless-stopped
+    logging: *logging
+    depends_on: [api]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  caddy:
+    image: caddy:2.10.2-alpine
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment:
+      NGAO_SITE_ADDRESS: ${NGAO_SITE_ADDRESS:?NGAO_SITE_ADDRESS is set by the deploy}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    logging: *logging
+    depends_on: [api, ussd]
+
+volumes:
+  caddy_data:
+  caddy_config:

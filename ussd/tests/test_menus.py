@@ -1,5 +1,6 @@
 import pytest
 
+import menus
 from backend import BackendError, DevBackend
 from callback import create_app
 from store import MemoryStore
@@ -7,7 +8,7 @@ from store import MemoryStore
 PHONE = "+254712345678"
 # Fixed list so tests don't depend on edits to db/seed/cooperatives.csv.
 # Sorted on screen: 1 Ainabkoi FCS, 2 Moiben FCS, 3 Tuiyo FCS, 4 Other.
-TEST_COOPS = [(4, "Tuiyo FCS"), (3, "Moiben FCS"), (1, "Ainabkoi FCS")]
+TEST_COOPS = [(4, "Tuiyo FCS", 21), (3, "Moiben FCS", None), (1, "Ainabkoi FCS", 7)]
 
 
 class FailingBackend(DevBackend):
@@ -62,7 +63,8 @@ def test_full_registration_in_swahili(env):
     assert hop("1*1*1*3*tf-0042").startswith("CON Tuiyo FCS, namba TF-0042.\nUkubali kupokea")
     assert hop("1*1*1*3*tf-0042*1") == "END Asante! Umesajiliwa."
     assert backend.calls[-1] == ("register", {"phone": PHONE, "coop_id": 4, "membership_no": "TF-0042",
-                                              "role": "farmer", "preferred_lang": "sw", "consent": True})
+                                              "ward_id": 21, "role": "farmer", "preferred_lang": "sw",
+                                              "consent": True})
 
 
 def test_declined_consent_does_not_register(env):
@@ -173,7 +175,9 @@ def test_elnino_topics_and_tips(env):
     assert hop("2*6*2*1").startswith("CON Dry grain fully")
     last = hop("2*6*2*1*1*1")
     assert "Main menu > 7" in last and "1. More" not in last
-    assert backend.calls == [("language", {"phone": PHONE, "preferred_lang": "en"})]  # advice is static
+    # The tips are static; menu 6 asks the backend for the ward outlook once per session.
+    assert backend.calls == [("language", {"phone": PHONE, "preferred_lang": "en"}),
+                             ("seasonal-outlook", {"phone": PHONE})]
 
 
 def test_elnino_back_navigation(env):
@@ -182,6 +186,33 @@ def test_elnino_back_navigation(env):
     assert hop("1*6*4*0").startswith("CON El Niño: mvua kubwa")       # tip -> topics
     assert hop("1*6*4*0*0").startswith("CON MvuaSmart\n1. Jiandikishe")  # topics -> main menu
     assert hop("1*6*4*0*0*3").startswith("END")                         # main menu still works
+
+
+def test_elnino_title_shows_the_ward_outlook(env):
+    hop, backend, _ = env
+    backend.outlooks[PHONE] = {"registered": True, "season": "OND 2026", "probability": 0.656, "category": "HIGH"}
+    screen = walk(hop, "2", "6")
+    assert screen.startswith("CON Oct-Dec 2026: 66% chance of very heavy rains. Choose:\n1. Planting")
+    assert len(screen) <= menus.MAX_SCREEN
+    assert hop("2*6*2").startswith("CON If your crop is mature")  # topic numbers unchanged
+
+
+def test_elnino_outlook_title_fits_in_swahili(env):
+    hop, backend, _ = env
+    backend.outlooks[PHONE] = {"registered": True, "season": "OND 2026", "probability": 1.0, "category": "HIGH"}
+    screen = walk(hop, "1", "6")
+    assert screen.startswith("CON Okt-Des 2026: 100% uwezekano wa mvua kubwa sana. Chagua:")
+    assert len(screen) <= menus.MAX_SCREEN
+
+
+def test_elnino_backend_error_keeps_static_title(env):
+    hop, backend, _ = env
+
+    def broken(phone):
+        raise BackendError("timeout")
+
+    backend.seasonal_outlook = broken
+    assert walk(hop, "2", "6").startswith("CON El Niño: heavy rain is coming. Choose:")
 
 
 # --- Drying booking (menu 7) ---
@@ -301,7 +332,8 @@ def test_registration_other_cooperative_skips_membership(env):
     assert walk(hop, "2", "1", "3", "4").startswith("CON Agree to receive")  # no member no. asked
     assert hop("2*1*3*4*1") == "END Thank you! You are registered."
     body = backend.calls[-1][1]
-    assert body["coop_id"] is None and body["membership_no"] is None and body["role"] == "both"
+    assert body["coop_id"] is None and body["membership_no"] is None and body["ward_id"] is None
+    assert body["role"] == "both"
 
 
 def test_invalid_membership_number_reprompts(env):
@@ -331,7 +363,8 @@ def test_seed_cooperatives_csv_is_valid():
     import csv
     from store import COOP_CSV
     rows = list(csv.DictReader(open(COOP_CSV, encoding="utf-8")))
-    assert rows and len({r["coop_id"] for r in rows}) == len(rows)
+    assert rows
+    assert len({r["seed_id"] for r in rows}) == len(rows)
     for r in rows:
         assert r["county"] and r["source_url"].startswith("https://")
         assert len(r["short_name"]) <= 24
@@ -344,3 +377,23 @@ def test_consent_with_member_summary_fits():
         screen = menus.con(t["invalid"] + "\n" + t["member_summary"].format(coop="X" * 24, no="9" * 20)
                            + t["consent"])
         assert len(screen) <= menus.MAX_SCREEN, len(screen)
+
+
+def test_register_request_body_omits_unknown_ward():
+    from backend import BackendClient
+
+    class Recorder:
+        def __init__(self):
+            self.headers, self.sent = {}, []
+
+        def request(self, method, url, timeout, **kw):
+            self.sent.append(kw["json"])
+            r = __import__("requests").models.Response()
+            r.status_code, r._content = 201, b'{"subscriber_id": 1, "status": "ACTIVE"}'
+            return r
+
+    http = Recorder()
+    client = BackendClient("http://x/ngao/v1", "t", session=http)
+    client.register(PHONE, coop_id=3, membership_no="M1", ward_id=None, role="farmer", lang="sw", consent=True)
+    client.register(PHONE, coop_id=4, membership_no="M2", ward_id=21, role="farmer", lang="sw", consent=True)
+    assert "ward_id" not in http.sent[0] and http.sent[1]["ward_id"] == 21

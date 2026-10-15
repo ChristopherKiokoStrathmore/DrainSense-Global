@@ -1,4 +1,4 @@
-coop_id,coop_name,short_name,county,sub_county,ward_name,location_basis,coop_type,source_url,notes
+seed_id,coop_name,short_name,county,sub_county,ward_name,location_basis,coop_type,source_url,notes
 1,Ainabkoi Farmers Cooperative Society,Ainabkoi FCS,Uasin Gishu,Ainabkoi,,STATED,dairy,https://uasingishu.go.ke/index.php/department/ainabkoi-subcounty,Sub-county stated; ward not stated
 2,Kuona Mbele Cooperative Society,Kuona Mbele,Uasin Gishu,Ainabkoi,,STATED,grain,https://uasingishu.go.ke/index.php/county-to-boost-cooperative-societies-through-strategic-partnerships,Sub-county stated; ward not stated
 3,Moiben Farmers Cooperative Society,Moiben FCS,Uasin Gishu,Moiben,Moiben,INFERRED,dairy,https://uasingishu.go.ke/?p=4229,Source names Moiben only; ward inferred from name

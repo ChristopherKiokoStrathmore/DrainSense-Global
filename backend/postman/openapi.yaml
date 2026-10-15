@@ -1,0 +1,5120 @@
+openapi: 3.0.3
+info:
+  title: Ngao · MvuaSmart backend API
+  version: 1.0.0 (contract v1-draft.4)
+  description: "\nBackend for **Ngao · MvuaSmart**: early warnings for floods, Rift Valley fever and aflatoxin,\nsent to farmers\
+    \ and herders by SMS/USSD in Kiswahili or English (the subscriber's choice), with\nofficers approving alerts in the Oracle\
+    \ APEX dashboard. This page is generated from the code and\nfollows [`docs/API_CONTRACT.md`](https://github.com/ChristopherKiokoStrathmore/MVUA-SMART/blob/main/docs/API_CONTRACT.md).\n\
+    \n## Base URLs\nThe same API is served under two prefixes (pick one in **Servers** above):\n\n| Prefix | Who uses it |\n\
+    |---|---|\n| `/ngao/v1` | the contract's ORDS-style path; Louisa's `ussd/` service, APEX demo controls |\n| `/api/v1`\
+    \ | the contract's Django base URL; identical routes |\n\n## Authentication (§2.0)\nClick **Authorize** and paste a token\
+    \ (without the word `Bearer`).\n\n| Scheme | Header | Caller | May call |\n|---|---|---|---|\n| `ApiToken` | `Authorization:\
+    \ Bearer <NGAO_API_TOKENS>` | APEX demo controls, scheduler, tests | everything except the public endpoints |\n| `UssdToken`\
+    \ | `Authorization: Bearer <USSD_SERVICE_TOKEN>` | Louisa's USSD service | `/ussd/*` only |\n| `WebhookSecret` | `?k=<WEBHOOK_SECRET>`\
+    \ | Africa's Talking callbacks | `/sms/delivery`, `/sms/inbound` |\n| none | | anyone | `/health`, `/public/*`, these\
+    \ docs |\n\n## Errors (§2.1)\nEvery error has the same body. `request_id` equals the `X-Request-ID` response header (send\
+    \ your\nown `X-Request-ID` to correlate logs).\n```json\n{\"error\": {\"code\": \"VALIDATION_ERROR\", \"message\": \"\
+    ward_id is required\",\n           \"details\": {\"field\": \"ward_id\"}, \"request_id\": \"8f2c...\"}}\n```\n| code |\
+    \ HTTP |\n|---|---|\n| `VALIDATION_ERROR` | 400 |\n| `UNAUTHORIZED` | 401 |\n| `FORBIDDEN` | 403 |\n| `NOT_FOUND` | 404\
+    \ |\n| `CONFLICT` | 409 |\n| `UPSTREAM_ERROR` | 502 |\n| `INTERNAL` | 500 |\n\nSMS webhooks are the exception: they **always**\
+    \ answer `200` with an empty body.\n\n## Conventions\n- Phones are E.164 (`+2547XXXXXXXX`); inputs may also be `07…` or\
+    \ `2547…`.\n- Times are ISO-8601 with the Nairobi offset (`2026-10-16T08:00:00+03:00`); dates are `YYYY-MM-DD` (EAT).\n\
+    - `probability` is 0–1 and `confidence_pct` is 0–100. Decisions are `ACT` / `WATCH` / `ABSTAIN`.\n- Languages: `sw` (Kiswahili,\
+    \ the default) or `en`.\n\n## The demo in seven calls\n1. `POST /ussd/language` + `POST /ussd/register`: the farmer registers\
+    \ by USSD\n2. `POST /jobs/score`: score wards → `RISK_SCORES`\n3. `POST /jobs/send-alerts` → `GET /alerts?status=PENDING_APPROVAL`\
+    \ → `POST /alerts/{id}/approve`: the SMS goes out\n4. `POST /demo/inbound-sms` (or Africa's Talking's `POST /sms/inbound`):\
+    \ the farmer replies, *\"Nimevuna magunia 20…\"*\n5. `POST /jobs/plan-routes` → `GET /routes`: a dryer is routed to her\
+    \ collection point\n6. `POST /bookings/{id}/confirm` (or an SMS reply of `1`): booking confirmed\n7. `POST /jobs/replay`:\
+    \ the Garissa 2006 Rift Valley fever replay\n\nThe Postman collection in `backend/postman/` runs exactly this sequence.\n\
+    \n## Safety rules the API enforces\n- Only `ACT` scores produce SMS, and only after approval (`ALERTS_REQUIRE_APPROVAL=true`).\n\
+    - Replay alerts and approvals older than 48 h are never sent.\n- Synthetic subscribers (`is_demo='Y'`) never reach the\
+    \ SMS provider.\n- Generative AI only *reads* replies. Unsure parses go to the officers' review queue.\n"
+  contact:
+    name: Dennis (backend-dennis)
+  license:
+    name: Hackathon prototype, GreenTech Hackathon 2026
+paths:
+  /alerts:
+    get:
+      operationId: alerts_list
+      description: One row per subscriber (the live `ALERTS` shape). `messages` is the linked SMS, if queued.
+      summary: List alerts
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+        description: Score date `YYYY-MM-DD`
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - en
+          - sw
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Max rows (default 200, at most 1000).
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - APPROVED
+          - PENDING_APPROVAL
+          - REJECTED
+          - SENT
+      - in: query
+        name: ward_id
+        schema:
+          type: integer
+      tags:
+      - Alerts
+      security:
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertList'
+              examples:
+                Pending:
+                  value:
+                    items:
+                    - alert_id: 42
+                      score_id: 1301
+                      alert_type_id: A1
+                      ward_id: 12
+                      ward_name: Moiben
+                      county: Uasin Gishu
+                      hazard: dry_window
+                      severity: warning
+                      lang: sw
+                      subscriber_id: 7
+                      phone: '+254700000101'
+                      body: 'MvuaSmart: Siku 3 za jua zinatarajiwa kuanzia Alhamisi katika kata yako (uhakika 75%). Vuna mahindi
+                        sasa na uyakaushe. Jibu NDIYO ukivuna.'
+                      status: PENDING_APPROVAL
+                      probability: 0.75
+                      confidence_pct: 75
+                      score_date: '2026-10-15'
+                      created_at: '2026-10-15T06:00:04+03:00'
+                      approved_by: null
+                      approved_at: null
+                      sent_at: null
+                      messages: {}
+                  summary: pending
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+  /alerts/{alert_id}/approve:
+    post:
+      operationId: alert_approve
+      description: '`PENDING_APPROVAL` → `APPROVED`, then queues the one SMS for this subscriber (48 h cooldown and 3/week
+        routine cap; floods and disease skip the cap). `ALERTS.MESSAGE_ID` is set to that `MESSAGES` row. The alert becomes
+        `SENT` once Africa''s Talking accepts the SMS. A subscriber who is no longer eligible is left `APPROVED` and not sent.
+        Replay alerts and alerts older than 48 h are approved but **not** sent (`dispatch.skipped`).'
+      summary: Approve an alert (sends it)
+      parameters:
+      - in: path
+        name: alert_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Alerts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveInRequest'
+            examples:
+              Officer:
+                value:
+                  approved_by: agri.officer.uasingishu
+                summary: officer
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ApproveInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ApproveInRequest'
+      security:
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertApproved'
+              examples:
+                Approved:
+                  value:
+                    alert_id: 42
+                    status: SENT
+                    dispatch:
+                      messages_queued: 1
+                      suppressed_cooldown: 0
+                      suppressed_cap: 0
+                  summary: approved
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                NOTFOUND:
+                  value:
+                    error:
+                      code: NOT_FOUND
+                      message: ward 999 not found
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: NOT_FOUND
+          description: Not found
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                CONFLICT:
+                  value:
+                    error:
+                      code: CONFLICT
+                      message: alert 42 is SENT, not PENDING_APPROVAL
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Conflict with the current state
+  /alerts/{alert_id}/reject:
+    post:
+      operationId: alert_reject
+      description: '`PENDING_APPROVAL` → `REJECTED`. Nothing is sent. Rejected alerts do not block a later draft.'
+      summary: Reject an alert
+      parameters:
+      - in: path
+        name: alert_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Alerts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveInRequest'
+            examples:
+              Officer:
+                value:
+                  approved_by: agri.officer.uasingishu
+                summary: officer
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ApproveInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ApproveInRequest'
+      security:
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertRejected'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                NOTFOUND:
+                  value:
+                    error:
+                      code: NOT_FOUND
+                      message: ward 999 not found
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: NOT_FOUND
+          description: Not found
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                CONFLICT:
+                  value:
+                    error:
+                      code: CONFLICT
+                      message: alert 42 is SENT, not PENDING_APPROVAL
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Conflict with the current state
+  /bookings/{booking_id}/confirm:
+    post:
+      operationId: booking_confirm
+      description: '`OFFERED` → `CONFIRMED` and a confirmation SMS in the farmer''s language. Same effect as the farmer replying
+        `1`. Confirming twice is harmless; `409` for DRIED/NO_SHOW.'
+      summary: Confirm a booking
+      parameters:
+      - in: path
+        name: booking_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Dryer routes
+      security:
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingConfirmed'
+              examples:
+                Contract:
+                  value:
+                    booking_id: 91
+                    status: CONFIRMED
+                  summary: contract
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                NOTFOUND:
+                  value:
+                    error:
+                      code: NOT_FOUND
+                      message: ward 999 not found
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: NOT_FOUND
+          description: Not found
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                CONFLICT:
+                  value:
+                    error:
+                      code: CONFLICT
+                      message: alert 42 is SENT, not PENDING_APPROVAL
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Conflict with the current state
+  /demo/inbound-sms:
+    post:
+      operationId: demo_inbound_sms
+      description: Runs exactly the `/sms/inbound` path (keywords, then the reply reader) **synchronously** and returns the
+        resulting report. For the demo, and for testing without an Africa's Talking shortcode.
+      summary: Simulate an inbound SMS
+      tags:
+      - Demo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulatedInboundRequest'
+            examples:
+              DemoReply:
+                value:
+                  phone: '+254711000001'
+                  text: Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu
+                summary: demo reply
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SimulatedInboundRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SimulatedInboundRequest'
+        required: true
+      security:
+      - ApiToken: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulatedInbound'
+              examples:
+                Parsed:
+                  value:
+                    message_id: 311
+                    report:
+                      report_id: 78
+                      report_type: wet_bags
+                      report_count: 20
+                      review_status: AUTO_ACCEPTED
+                      ai_confidence: 0.8
+                      source: SMS_KEYWORD
+                  summary: parsed
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+  /health:
+    get:
+      operationId: health
+      description: Checks the database connection and reports which SMS backend, dispatch mode and reply reader are active.
+        `503` when the database is unreachable. Unauthenticated.
+      summary: Liveness + configuration
+      tags:
+      - Health & docs
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+              examples:
+                Ok:
+                  value:
+                    status: ok
+                    database: oracle
+                    sms_backend: africastalking
+                    sms_dispatch: inline
+                    reply_reader: genai
+                    alerts_require_approval: true
+                  summary: ok
+          description: ''
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+          description: ''
+  /jobs/{job_id}/status:
+    get:
+      operationId: job_status
+      description: 'The recorded run for a job id returned by any `/jobs/*` call: params, summary, error text. Persisted in
+        `JOB_RUNS` when that table exists; otherwise kept for this process only.'
+      summary: One job run
+      parameters:
+      - in: path
+        name: job_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Jobs
+      security:
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                NOTFOUND:
+                  value:
+                    error:
+                      code: NOT_FOUND
+                      message: ward 999 not found
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: NOT_FOUND
+          description: Not found
+  /jobs/dispatch:
+    post:
+      operationId: job_dispatch
+      description: 'Fans out every `APPROVED` alert that has no messages yet (e.g. approved on the APEX page), then sends
+        the `MESSAGES` queue through Africa''s Talking. The scheduler does this every 15 s anyway. Synthetic subscribers are
+        marked `SENT` with `provider_msg_id=''SIMULATED''`.
+
+
+        Answers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists
+        (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is
+        kept for this process.'
+      summary: Send approved alerts and queued SMS now
+      tags:
+      - Jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DispatchJobInRequest'
+            examples:
+              Now:
+                value: {}
+                summary: now
+              RetryFailures:
+                value:
+                  retry_failed: true
+                summary: retry failures
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DispatchJobInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DispatchJobInRequest'
+      security:
+      - ApiToken: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DispatchJobAccepted'
+              examples:
+                Done:
+                  value:
+                    job_id: 1042
+                    job: dispatch
+                    status: DONE
+                    summary:
+                      approved_dispatch:
+                        alerts_dispatched: 1
+                        messages_queued: 3
+                        suppressed_cooldown: 0
+                        suppressed_cap: 0
+                        skipped_replay: 0
+                        skipped_stale: 0
+                      sms:
+                        sent: 1
+                        simulated: 2
+                        failed: 0
+                        retry_later: 0
+                  summary: done
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+  /jobs/grade-outcomes:
+    post:
+      operationId: job_grade_outcomes
+      description: 'Grades ACT/WATCH scores whose window has passed against observed rain in `WARD_FEATURES_DAILY`: A1 hit
+        = 3 consecutive days < 2 mm starting on day 1-5; A2 hit = a day > 20 mm on day 1-2. Scores without all observations
+        wait (`waiting_for_data`).
+
+
+        Answers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists
+        (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is
+        kept for this process.'
+      summary: Grade past alerts → OUTCOMES (scorecard)
+      tags:
+      - Jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeJobInRequest'
+            examples:
+              Today:
+                value: {}
+                summary: today
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GradeJobInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GradeJobInRequest'
+      security:
+      - ApiToken: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GradeOutcomesJobAccepted'
+              examples:
+                Done:
+                  value:
+                    job_id: 1042
+                    job: grade-outcomes
+                    status: DONE
+                    summary:
+                      as_of: '2026-10-20'
+                      graded: 3
+                      hits: 2
+                      misses: 1
+                      waiting_for_data: 4
+                  summary: done
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+  /jobs/plan-routes:
+    post:
+      operationId: job_plan_routes
+      description: 'Greedy dryer router (ARCHITECTURE §6.3):
+
+
+        1. **Demand**: accepted `wet_bags` reports of the last 3 days, the latest per farmer, at the ward''s collection point.
+
+        2. **Urgency**: wet bags × P(heavy rain 48 h, A2) × aflatoxin boost (A3 ACT 1.5, WATCH 1.2).
+
+        3. **Capacity**: t/h × hours ÷ 0.09 bags per day; the most urgent point goes to the dryer with the most room; points
+        are split across dryers when needed.
+
+        4. **ETA**: 08:00 EAT + travel at 30 km/h + drying time, rounded up to 5 minutes.
+
+
+        Creates `ROUTES`, `ROUTE_STOPS`, `BOOKINGS (OFFERED)` and queues the A5 booking SMS (`Jibu 1`) plus each operator''s
+        stop list. `409` once any booking for that date is confirmed.
+
+
+        Answers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists
+        (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is
+        kept for this process.'
+      summary: Plan tomorrow's dryer routes + booking SMS
+      tags:
+      - Jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanRoutesJobInRequest'
+            examples:
+              Contract:
+                value:
+                  route_date: '2026-10-16'
+                summary: contract
+              Tomorrow:
+                value: {}
+                summary: tomorrow
+              PlanWithoutSMS:
+                value:
+                  notify: false
+                summary: plan without SMS
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlanRoutesJobInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlanRoutesJobInRequest'
+      security:
+      - ApiToken: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanRoutesJobAccepted'
+              examples:
+                Done:
+                  value:
+                    job_id: 1042
+                    job: plan-routes
+                    status: DONE
+                    summary:
+                      route_date: '2026-10-16'
+                      dryers: 2
+                      points_with_demand: 2
+                      routes: 1
+                      stops: 2
+                      planned_bags: 60.0
+                      unserved_bags: 0.0
+                      bookings: 2
+                      messages_queued: 3
+                      replaced_routes: 0
+                      placeholder_dryers: 2
+                  summary: done
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                CONFLICT:
+                  value:
+                    error:
+                      code: CONFLICT
+                      message: alert 42 is SENT, not PENDING_APPROVAL
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Conflict with the current state
+  /jobs/replay:
+    post:
+      operationId: job_replay
+      description: 'Re-runs the scorer week by week with `is_replay=''Y''`, reading only data that was available on each date.
+        Returns the first `ACT` date and the lead time before the index human case (symptom onset 30 Nov 2006, CDC MMWR).
+        Replay rows are **never** alerted.
+
+
+        Answers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists
+        (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is
+        kept for this process.'
+      summary: Run the Garissa 2006 RVF replay
+      tags:
+      - Jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReplayJobInRequest'
+            examples:
+              Contract:
+                value:
+                  scenario: garissa_rvf_2006
+                  from: '2006-09-01'
+                  to: '2007-01-15'
+                summary: contract
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReplayJobInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReplayJobInRequest'
+      security:
+      - ApiToken: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplayJobAccepted'
+              examples:
+                Done:
+                  value:
+                    job_id: 1042
+                    job: replay
+                    status: DONE
+                    summary:
+                      scenario: garissa_rvf_2006
+                      county: Garissa
+                      from: '2006-09-01'
+                      to: '2007-01-15'
+                      weeks: 20
+                      scores_written: 90
+                      kept_existing: 0
+                      first_act_date: '2006-11-03'
+                      index_case_date: '2006-11-30'
+                      lead_days_before_index_case: 27
+                  summary: done
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+  /jobs/reset-demo:
+    post:
+      operationId: job_reset_demo
+      description: 'Deletes everything belonging to the presenter phones (`phones`, default `DEMO_PHONES`): the subscriber
+        row (so the USSD language prompt shows again), messages, reports, bookings, farms, herds, USSD sessions. Also deletes
+        alerts drafted today and routes from today on. The synthetic dataset is untouched.
+
+
+        Answers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists
+        (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is
+        kept for this process.'
+      summary: Reset the live demo
+      tags:
+      - Jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetDemoJobInRequest'
+            examples:
+              Contract:
+                value: {}
+                summary: contract
+              ExplicitPhone:
+                value:
+                  phones:
+                  - '+254711000001'
+                summary: explicit phone
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResetDemoJobInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResetDemoJobInRequest'
+      security:
+      - ApiToken: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetDemoJobAccepted'
+              examples:
+                Done:
+                  value:
+                    job_id: 1042
+                    job: reset-demo
+                    status: DONE
+                    summary:
+                      phones: 1
+                      reports: 2
+                      outcomes: 0
+                      bookings: 2
+                      routes: 1
+                      messages: 9
+                      alerts: 4
+                      subscribers: 1
+                  summary: done
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+  /jobs/score:
+    post:
+      operationId: job_score
+      description: 'Runs the **heuristic-v0** fallback rules on leakage-safe inputs (only rows with `available_date <= as_of`)
+        and upserts `RISK_SCORES` with `model_version=''heuristic-v0-backend''`.
+
+
+        - Decisions: `ACT` (≥ act threshold), `WATCH` (≥ watch threshold), `ABSTAIN` (GFS/ECMWF disagree or inputs partly
+        missing, with `abstain_reason`). Below watch nothing is stored.
+
+        - Rows written by **another model_version** (Trevor''s trained models) are kept unless `overwrite=true`.
+
+
+        Answers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists
+        (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is
+        kept for this process.'
+      summary: Score wards → RISK_SCORES
+      tags:
+      - Jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScoreJobInRequest'
+            examples:
+              Contract:
+                value:
+                  as_of: '2026-10-15'
+                  county: Uasin Gishu
+                summary: contract
+              EverythingToday:
+                value: {}
+                summary: everything today
+              DryRun:
+                value:
+                  dry_run: true
+                summary: dry run
+              OnlyDryWindow+HeavyRain:
+                value:
+                  alert_types:
+                  - A1
+                  - A2
+                summary: only dry window + heavy rain
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ScoreJobInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ScoreJobInRequest'
+      security:
+      - ApiToken: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoreJobAccepted'
+              examples:
+                Done:
+                  value:
+                    job_id: 1042
+                    job: score
+                    status: DONE
+                    summary:
+                      as_of: '2026-10-15'
+                      county: Uasin Gishu
+                      model_version: heuristic-v0-backend
+                      wards: 31
+                      scores_written: 14
+                      act: 2
+                      watch: 1
+                      abstain: 1
+                      below_watch: 26
+                      no_data: 50
+                      kept_existing: 0
+                      act_wards:
+                      - A2:Kapseret
+                      - A1:Moiben
+                  summary: done
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+  /jobs/seasonal-outlook:
+    post:
+      operationId: job_seasonal_outlook
+      description: 'The v3 El Niño / Indian Ocean model (`docs/SEASONAL_MODEL.md`). Reads August-September SST from NOAA ERSSTv5
+        (and July-September wind and pressure from ERA5 when `CDSAPI_KEY` is set), scores every ward and writes `SEASONAL_OUTLOOK`:
+        P(OND rain > 125% of the 1991-2020 mean), category HIGH (≥ 0.5), MEDIUM (≥ the model threshold) or LOW. Wards at WATCH/ACT
+        also get an `S1` row in `RISK_SCORES`, so `send-alerts` drafts SMS alerts that an officer approves in APEX.
+
+
+        Before the September SST is published (early October) the answer is `waiting_for_data` and nothing is written. The
+        scheduler issues the season''s outlook once, from October.
+
+
+        Answers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists
+        (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is
+        kept for this process.'
+      summary: Issue the Oct-Dec outlook → SEASONAL_OUTLOOK
+      tags:
+      - Jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SeasonalOutlookJobInRequest'
+            examples:
+              ThisSeason:
+                value: {}
+                summary: this season
+              Re-issue2023AsACheck:
+                value:
+                  year: 2023
+                  source: sst
+                summary: re-issue 2023 as a check
+              Preview:
+                value:
+                  dry_run: true
+                summary: preview
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SeasonalOutlookJobInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SeasonalOutlookJobInRequest'
+      security:
+      - ApiToken: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeasonalOutlookJobAccepted'
+              examples:
+                Done:
+                  value:
+                    job_id: 1042
+                    job: seasonal-outlook
+                    status: DONE
+                    summary:
+                      season: OND 2026
+                      status: ISSUED
+                      dry_run: false
+                      source: auto
+                      model_version: ngao-seasonal-v3-sst4
+                      variant: sst4
+                      features:
+                        wio: 27.41
+                        eio: 28.12
+                        dmi: -0.71
+                        nino34: 26.95
+                      threshold: 0.31
+                      wards: 61
+                      high: 0
+                      medium: 12
+                      low: 49
+                      probability_by_region:
+                        '0': 0.21
+                        '3': 0.34
+                      s1_act: 0
+                      s1_watch: 12
+                      s1_alert_type: present
+                      model_card_rows: 4
+                      notes: []
+                  summary: done
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+  /jobs/send-alerts:
+    post:
+      operationId: job_send_alerts
+      description: 'For every `ACT` score of `as_of` (not replay, not A5) drafts **one `ALERTS` row per eligible subscriber**
+        (ACTIVE, consented, role in the alert''s audience), which is what live `V_ALERT_QUEUE` can show. The body is rendered
+        from `ALERT_TEMPLATE` (hazard, severity, lang) in that subscriber''s language and stored in at most 160 characters.
+
+
+        - `ALERTS_REQUIRE_APPROVAL=true` (default): status `PENDING_APPROVAL`; an officer approves in APEX or via `POST /alerts/{alert_id}/approve`.
+
+        - Otherwise: `APPROVED` by `auto` and fanned out at once.
+
+        - A ward-level cooldown (`ALERT_TYPES.cooldown_hours`, 48 h) stops repeat drafts; reruns are idempotent (`already_drafted`).
+
+        - Also fans out any alert already `APPROVED` in APEX (`approved_dispatch`).
+
+
+        Answers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists
+        (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is
+        kept for this process.'
+      summary: Draft alerts from ACT scores (and send approved ones)
+      tags:
+      - Jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendAlertsJobInRequest'
+            examples:
+              Contract:
+                value:
+                  as_of: '2026-10-15'
+                  dry_run: false
+                summary: contract
+              PreviewOnly:
+                value:
+                  dry_run: true
+                summary: preview only
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SendAlertsJobInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SendAlertsJobInRequest'
+      security:
+      - ApiToken: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendAlertsJobAccepted'
+              examples:
+                Done:
+                  value:
+                    job_id: 1042
+                    job: send-alerts
+                    status: DONE
+                    summary:
+                      as_of: '2026-10-15'
+                      dry_run: false
+                      approval_required: true
+                      act_scores: 2
+                      alerts_created: 4
+                      pending_approval: 4
+                      messages_queued: 0
+                      suppressed_cooldown: 0
+                      suppressed_cap: 0
+                      already_drafted: 0
+                      no_subscribers: 0
+                      approved_dispatch:
+                        alerts_dispatched: 0
+                        messages_queued: 0
+                        suppressed_cooldown: 0
+                        suppressed_cap: 0
+                        skipped_replay: 0
+                        skipped_stale: 0
+                  summary: done
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+  /public/calibration:
+    get:
+      operationId: public_calibration
+      description: 'Rows of `V_CALIBRATION`: predicted probability vs observed frequency per 0.1 bin.'
+      summary: Calibration curve
+      tags:
+      - Public scorecard
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalibrationList'
+          description: ''
+  /public/scorecard:
+    get:
+      operationId: public_scorecard
+      description: 'Rows of `V_SCORECARD`: per alert type and ISO week, how many ward warnings went out, how many came true,
+        average warning time and Brier skill. Unauthenticated.'
+      summary: Public scorecard
+      tags:
+      - Public scorecard
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScorecardList'
+              examples:
+                GradedWeek:
+                  value:
+                    items:
+                    - alert_type: A2
+                      period: '2026-10-12'
+                      alerts_sent: 4
+                      hits: 3
+                      false_alarms: 1
+                      hit_rate: 0.75
+                      false_alarm_rate: 0.25
+                      avg_lead_days: 1.3
+                      brier_skill: 0.21
+                  summary: graded week
+          description: ''
+  /public/seasonal-model-card:
+    get:
+      operationId: public_seasonal_model_card
+      description: Honest test scores of each model variant on unseen seasons 2016-2025, with the per-year backtest and the
+        caveats. From the model artifact the backend runs.
+      summary: Seasonal model card (public)
+      tags:
+      - Seasonal outlook
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeasonalModelCard'
+          description: ''
+  /reports:
+    get:
+      operationId: reports_list
+      description: Newest first. `raw_text` is the farmer's SMS (or a USSD summary). Reports with `NEEDS_REVIEW` are the officers'
+        review queue (`V_REVIEW_QUEUE`).
+      summary: List reports (inbox / review queue)
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Max rows (default 200, at most 1000).
+      - in: query
+        name: since
+        schema:
+          type: string
+        description: ISO-8601 with offset, e.g. `2026-10-15T00:00:00+03:00` (URL-encode the `+` as `%2B`)
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - ACCEPTED
+          - AUTO_ACCEPTED
+          - CORRECTED
+          - NEEDS_REVIEW
+          - REJECTED
+        description: review_status
+      - in: query
+        name: ward_id
+        schema:
+          type: integer
+      tags:
+      - Reports
+      security:
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportList'
+              examples:
+                Contract:
+                  value:
+                    items:
+                    - report_id: 77
+                      ward_id: 12
+                      report_type: wet_bags
+                      report_count: 20
+                      unit: bags
+                      ai_confidence: 0.62
+                      review_status: NEEDS_REVIEW
+                      raw_text: magunia 20 mabichi
+                      source: SMS_AI
+                      received_at: '2026-10-15T09:12:03+03:00'
+                      reviewed_by_id: null
+                      payload:
+                        report_type: wet_bags
+                        count: 20
+                        unit: bags
+                        crop: maize
+                        species: null
+                        rain_reported: false
+                        moisture_pct: null
+                        language: sw
+                        confidence: 0.62
+                        review_reason: LOW_CONFIDENCE
+                  summary: contract
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+  /reports/{report_id}:
+    get:
+      operationId: report_get
+      summary: One report
+      parameters:
+      - in: path
+        name: report_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Reports
+      security:
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportOut'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                NOTFOUND:
+                  value:
+                    error:
+                      code: NOT_FOUND
+                      message: ward 999 not found
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: NOT_FOUND
+          description: Not found
+    patch:
+      operationId: report_review
+      description: Same write APEX makes (§1.3). `CORRECTED` needs a `payload`; its `report_type` and `count` also update
+        the report's columns, so a corrected wet-bag count moves the dryer plan.
+      summary: 'Officer review: accept / correct / reject'
+      parameters:
+      - in: path
+        name: report_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Reports
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedReportPatchInRequest'
+            examples:
+              CorrectTheCount:
+                value:
+                  review_status: CORRECTED
+                  payload:
+                    report_type: wet_bags
+                    count: 25
+                summary: correct the count
+              Accept:
+                value:
+                  review_status: ACCEPTED
+                  reviewed_by: 3
+                summary: accept
+              Reject:
+                value:
+                  review_status: REJECTED
+                summary: reject
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedReportPatchInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedReportPatchInRequest'
+      security:
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportOut'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                NOTFOUND:
+                  value:
+                    error:
+                      code: NOT_FOUND
+                      message: ward 999 not found
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: NOT_FOUND
+          description: Not found
+  /routes:
+    get:
+      operationId: routes_list
+      description: 'Routes, ordered stops and bookings (`V_DRYER_PLAN`). Default date: tomorrow.'
+      summary: Dryer plan for a day
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+        description: '`YYYY-MM-DD`; default tomorrow (EAT)'
+      tags:
+      - Dryer routes
+      security:
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteList'
+              examples:
+                Contract:
+                  value:
+                    route_date: '2026-10-16'
+                    routes:
+                    - route_id: 5
+                      dryer_id: 2
+                      dryer_name: Mobile dryer 2 (placeholder)
+                      is_placeholder: true
+                      status: NOTIFIED
+                      stops:
+                      - stop_order: 1
+                        stop_id: 9
+                        point_id: 3
+                        point_name: Moiben market
+                        ward_id: 12
+                        eta: '2026-10-16T08:00:00+03:00'
+                        planned_bags: 140
+                        urgency: 112.0
+                        bookings_offered: 3
+                        bookings_confirmed: 1
+                        bookings:
+                        - booking_id: 91
+                          subscriber_id: 44
+                          bags: 20
+                          fee_kes: 4200
+                          status: CONFIRMED
+                  summary: contract
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+  /seasonal/outlook:
+    get:
+      operationId: seasonal_outlook
+      description: The newest `SEASONAL_OUTLOOK` row per ward (and per season when `season` is given). APEX reads the same
+        data from `V_SEASONAL_OUTLOOK_LATEST`.
+      summary: Per-ward outlook (latest issue)
+      parameters:
+      - in: query
+        name: county
+        schema:
+          type: string
+      - in: query
+        name: season
+        schema:
+          type: string
+        description: 'e.g. `OND 2026`. Default: the newest season'
+      - in: query
+        name: ward_id
+        schema:
+          type: integer
+      tags:
+      - Seasonal outlook
+      security:
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeasonalOutlookList'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+  /sms/delivery:
+    post:
+      operationId: sms_delivery_report
+      description: 'Set as the **SMS delivery reports** callback in the Africa''s Talking dashboard: `https://<host>/ngao/v1/sms/delivery?k=<WEBHOOK_SECRET>`.
+        Maps the report onto `MESSAGES.status` by `provider_msg_id` (the `messageId` returned at send): `Success` → `DELIVERED`,
+        `Failed` / `Rejected` → `FAILED`; `Sent`, `Submitted`, `Buffered` are not final and change nothing.
+
+
+        Form-encoded (JSON also accepted). **Always `200`, empty body**; every raw body is logged. Extra field names can be
+        mapped with `SMS_DLR_FIELDS`.'
+      summary: Delivery report callback (Africa's Talking)
+      tags:
+      - SMS webhooks
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeliveryReportBodyRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryReportBodyRequest'
+            examples:
+              Delivered:
+                value:
+                  id: ATXid_7b2f0e8f1c2d4a6b9e3f
+                  status: Success
+                  phoneNumber: '+254712345678'
+                  networkCode: '63902'
+                  retryCount: '0'
+                summary: delivered
+              Failed:
+                value:
+                  id: ATXid_7b2f0e8f1c2d4a6b9e3f
+                  status: Failed
+                  phoneNumber: '+254712345678'
+                  networkCode: '63902'
+                  failureReason: UserIsInactive
+                  retryCount: '0'
+                summary: failed
+        required: true
+      security:
+      - WebhookSecret: []
+      - {}
+      responses:
+        '200':
+          description: Empty body, always
+  /sms/inbound:
+    post:
+      operationId: sms_inbound
+      description: 'Set as the **incoming messages** callback of your Africa''s Talking shortcode (sandbox shortcodes are
+        free): `https://<host>/ngao/v1/sms/inbound?k=<WEBHOOK_SECRET>`. Stores `MESSAGES(direction=IN)` and answers `200`
+        at once; processing runs in the background:
+
+
+        1. **Keywords first** (no AI): `STOP`; `LUGHA SW|EN` / `LANG SW|EN`; `1` / `NDIYO` (confirm the open dryer booking,
+        else NDIYO = harvested); `RVF [n] [species]`.
+
+        2. Otherwise the **reply reader** (OCI GenAI with the §2.4 JSON schema, or the keyword + number fallback) writes `REPORTS`:
+        `AUTO_ACCEPTED` when confident (≥ 0.7), else `NEEDS_REVIEW`.
+
+
+        Form-encoded (JSON also accepted). **Always `200`, empty body.**'
+      summary: Incoming SMS callback (Africa's Talking)
+      tags:
+      - SMS webhooks
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InboundSmsBodyRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InboundSmsBodyRequest'
+            examples:
+              FarmerReply(Kiswahili):
+                value:
+                  from: '+254712345678'
+                  to: '12345'
+                  text: Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu
+                  date: '2026-10-15 09:12:01'
+                  id: 6f3c1a2b-9d84-4e1f
+                  linkId: SampleLinkId123
+                  networkCode: '63902'
+                summary: farmer reply (Kiswahili)
+              ChangeLanguage:
+                value:
+                  from: '+254712345678'
+                  to: '12345'
+                  text: LANG EN
+                  id: a1b2c3
+                summary: change language
+              ConfirmBooking:
+                value:
+                  from: '+254712345678'
+                  to: '12345'
+                  text: '1'
+                  id: a1b2c4
+                summary: confirm booking
+              OperatorDryingReport:
+                value:
+                  from: '+254700000901'
+                  to: '12345'
+                  text: Dried 120 bags, 13%
+                  id: a1b2c5
+                summary: operator drying report
+        required: true
+      security:
+      - WebhookSecret: []
+      - {}
+      responses:
+        '200':
+          description: Empty body, always
+  /ussd/drying:
+    get:
+      operationId: ussd_drying
+      description: '`booking` is the subscriber''s next `BOOKINGS` row that is `OFFERED` or `CONFIRMED` and whose stop is
+        still ahead (null if none). `points` are the `COLLECTION_POINTS` in their ward, best first (market, coop store, depot,
+        school). Unknown or unregistered phones get `registered: false` and empty lists. Always `200`.'
+      summary: Drying state (menu 7)
+      parameters:
+      - in: query
+        name: phone
+        schema:
+          type: string
+        description: URL-encode the `+` as `%2B`
+        required: true
+        examples:
+          E.164:
+            value: '+254712345678'
+      tags:
+      - USSD contract
+      security:
+      - UssdToken: []
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DryingState'
+              examples:
+                OfferedSlot:
+                  value:
+                    registered: true
+                    booking:
+                      booking_id: 91
+                      status: OFFERED
+                      point_name: Moiben market
+                      eta: '2026-10-16T08:00:00+03:00'
+                      route_date: '2026-10-16'
+                      bags: 20
+                      fee_kes: 4200
+                    points:
+                    - point_id: 3
+                      point_name: Moiben market
+                  summary: offered slot
+                Unregistered:
+                  value:
+                    registered: false
+                    booking: null
+                    points: []
+                  summary: unregistered
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+  /ussd/drying/confirm:
+    post:
+      operationId: ussd_drying_confirm
+      description: 'Same effect as `POST /bookings/{id}/confirm` (and an SMS reply of `1`): `OFFERED` → `CONFIRMED` plus a
+        confirmation SMS. `404` when the booking does not belong to this phone; `409` when it is already `DRIED` or `NO_SHOW`.
+        Confirming twice is harmless.'
+      summary: Confirm a drying slot (menu 7)
+      tags:
+      - USSD contract
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DryingConfirmInRequest'
+            examples:
+              Contract:
+                value:
+                  phone: '+254712345678'
+                  booking_id: 91
+                summary: contract
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DryingConfirmInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DryingConfirmInRequest'
+        required: true
+      security:
+      - UssdToken: []
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingConfirmed'
+              examples:
+                Confirmed:
+                  value:
+                    booking_id: 91
+                    status: CONFIRMED
+                  summary: confirmed
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                NOTFOUND:
+                  value:
+                    error:
+                      code: NOT_FOUND
+                      message: ward 999 not found
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: NOT_FOUND
+          description: Not found
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                CONFLICT:
+                  value:
+                    error:
+                      code: CONFLICT
+                      message: alert 42 is SENT, not PENDING_APPROVAL
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Conflict with the current state
+  /ussd/language:
+    post:
+      operationId: ussd_language
+      description: First screen of a new number's first session (`CON Chagua lugha / Choose language`), and the main-menu
+        **Lugha / Language** item. Creates the subscriber row when the phone is new (phone + preferred_lang + ACTIVE); registration
+        fills ward, role and consent later.
+      summary: Save the language choice
+      tags:
+      - USSD contract
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LanguageInRequest'
+            examples:
+              Kiswahili:
+                value:
+                  phone: '+254712345678'
+                  preferred_lang: sw
+              English:
+                value:
+                  phone: 0712345678
+                  preferred_lang: en
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LanguageInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LanguageInRequest'
+        required: true
+      security:
+      - UssdToken: []
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LanguageSaved'
+              examples:
+                Saved:
+                  value:
+                    preferred_lang: sw
+                    subscriber_id: 44
+                  summary: saved
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+  /ussd/register:
+    post:
+      operationId: ussd_register
+      description: 'MERGE into `SUBSCRIBERS`: ward, role, preferred_lang, consent_at, status ACTIVE (a STOPPED subscriber
+        who registers again is re-activated). Optional farm/herd detail creates `FARMS` / `HERDS` rows. A welcome SMS in the
+        chosen language is queued and sent in the background, so this answers in well under 2 s.'
+      summary: Register (menu 1)
+      tags:
+      - USSD contract
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterInRequest'
+            examples:
+              Contract:
+                value:
+                  phone: '+254712345678'
+                  ward_id: 12
+                  role: farmer
+                  preferred_lang: sw
+                  consent: true
+                summary: contract
+              HerderWithHerd:
+                value:
+                  phone: '+254722000111'
+                  ward_id: 41
+                  role: herder
+                  preferred_lang: sw
+                  consent: true
+                  species: cattle
+                  head_count: 30
+                summary: herder with herd
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegisterInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegisterInRequest'
+        required: true
+      security:
+      - UssdToken: []
+      - ApiToken: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registered'
+              examples:
+                Registered:
+                  value:
+                    subscriber_id: 44
+                    status: ACTIVE
+                  summary: registered
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+  /ussd/report:
+    post:
+      operationId: ussd_report
+      description: INSERT `REPORTS` with `source=USSD`, `review_status=AUTO_ACCEPTED` (a menu, not an AI parse). A USSD-channel
+        `MESSAGES` row records who reported, so the dryer router can book that farmer. `other`, `stop` and `booking_confirm`
+        are not menu reports (`400`).
+      summary: Structured report (menu 2)
+      tags:
+      - USSD contract
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportInRequest'
+            examples:
+              WetBags:
+                value:
+                  phone: '+254712345678'
+                  session_id: s1
+                  report_type: wet_bags
+                  count: 20
+                  unit: bags
+                summary: wet bags
+              SickAnimals:
+                value:
+                  phone: '+254722000111'
+                  session_id: s7
+                  report_type: sick_animals
+                  count: 3
+                  unit: animals
+                  species: goats
+                summary: sick animals
+              Flooding:
+                value:
+                  phone: '+254712345678'
+                  report_type: flooding
+                summary: flooding
+              DryingRequest(menu7):
+                value:
+                  phone: '+254712345678'
+                  session_id: s9
+                  report_type: wet_bags
+                  count: 20
+                  unit: bags
+                  point_id: 3
+                summary: drying request (menu 7)
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReportInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReportInRequest'
+        required: true
+      security:
+      - UssdToken: []
+      - ApiToken: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportCreated'
+              examples:
+                Created:
+                  value:
+                    report_id: 77
+                  summary: created
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+  /ussd/seasonal-outlook:
+    get:
+      operationId: ussd_seasonal_outlook
+      description: 'The newest outlook for the subscriber''s ward as one short line in their language, shown above the El
+        Niño advice topics. Unregistered phones and wards without an outlook get a neutral line with `probability: null`.
+        Always `200`.'
+      summary: Season outlook line (menu 6)
+      parameters:
+      - in: query
+        name: phone
+        schema:
+          type: string
+        description: URL-encode the `+` as `%2B`
+        required: true
+      tags:
+      - USSD contract
+      security:
+      - UssdToken: []
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeasonalLine'
+              examples:
+                English:
+                  value:
+                    text: 'Kapseret: 34% chance Oct-Dec 2026 rain is far above normal.'
+                    registered: true
+                    season: OND 2026
+                    probability: 0.34
+                    category: MEDIUM
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+  /ussd/unsubscribe:
+    post:
+      operationId: ussd_unsubscribe
+      description: '`SUBSCRIBERS.status = STOPPED`; no further alerts. `404` for an unknown phone.'
+      summary: Unsubscribe
+      tags:
+      - USSD contract
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhoneInRequest'
+            examples:
+              Contract:
+                value:
+                  phone: '+254712345678'
+                summary: contract
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PhoneInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PhoneInRequest'
+        required: true
+      security:
+      - UssdToken: []
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unsubscribed'
+              examples:
+                Stopped:
+                  value:
+                    status: STOPPED
+                  summary: stopped
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                NOTFOUND:
+                  value:
+                    error:
+                      code: NOT_FOUND
+                      message: ward 999 not found
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: NOT_FOUND
+          description: Not found
+  /ussd/ward-status:
+    get:
+      operationId: ussd_ward_status
+      description: 'Today''s most important decision for the subscriber''s ward (ACT before WATCH before ABSTAIN), limited
+        to the services of their role, as one line in their language. Always `200`: unregistered phones get a ''please register''
+        line with `registered: false`.'
+      summary: Ward status line (menu 3)
+      parameters:
+      - in: query
+        name: phone
+        schema:
+          type: string
+        description: URL-encode the `+` as `%2B`
+        required: true
+        examples:
+          E.164:
+            value: '+254712345678'
+      tags:
+      - USSD contract
+      security:
+      - UssdToken: []
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WardStatusLine'
+              examples:
+                KiswahiliACT:
+                  value:
+                    text: 'Kata ya Moiben: siku za jua, uhakika 75%.'
+                    registered: true
+                    ward_id: 12
+                    decision: ACT
+                    alert_type: A1
+                  summary: Kiswahili ACT
+                English,NothingToday:
+                  value:
+                    text: 'Kimumu ward: no warnings today.'
+                    registered: true
+                    ward_id: 15
+                    decision: null
+                    alert_type: null
+                  summary: English, nothing today
+                Unregistered:
+                  value:
+                    text: Hujajiandikisha. Chagua 1 kujiandikisha.
+                    registered: false
+                    ward_id: null
+                    decision: null
+                    alert_type: null
+                  summary: unregistered
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+  /wards:
+    get:
+      operationId: wards_list
+      summary: List wards
+      parameters:
+      - in: query
+        name: county
+        schema:
+          type: string
+        description: Exact county name, case-insensitive
+        examples:
+          UasinGishu:
+            value: Uasin Gishu
+            summary: Uasin Gishu
+      tags:
+      - Wards & risk
+      security:
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WardList'
+              examples:
+                Contract:
+                  value:
+                    items:
+                    - ward_id: 12
+                      ward_name: Moiben
+                      county: Uasin Gishu
+                      centroid:
+                        lat: 0.82
+                        lon: 35.38
+                  summary: contract
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+  /wards/{ward_id}/risk:
+    get:
+      operationId: ward_risk
+      description: Live (non-replay) `RISK_SCORES` rows for the ward and date, optionally one service.
+      summary: A ward's decisions for a day
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+        description: 'Day in EAT, `YYYY-MM-DD`. Default: today.'
+        examples:
+          Today:
+            value: '2026-10-15'
+            summary: today
+      - in: query
+        name: service
+        schema:
+          type: string
+          enum:
+          - FARM
+          - HEALTH
+          - HERD
+        description: FARM = MvuaSmart, HERD = Ngao Mifugo, HEALTH = Ngao Afya
+      - in: path
+        name: ward_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Wards & risk
+      security:
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WardRisk'
+              examples:
+                Contract:
+                  value:
+                    ward_id: 12
+                    ward_name: Moiben
+                    score_date: '2026-10-15'
+                    risks:
+                    - alert_type: A1
+                      service: FARM
+                      probability: 0.75
+                      confidence_pct: 75
+                      decision: ACT
+                      abstain_reason: null
+                      model_version: a1-xgb-2026-10-14-3f2a1c9
+                    - alert_type: A2
+                      service: FARM
+                      probability: 0.41
+                      confidence_pct: 41
+                      decision: WATCH
+                      abstain_reason: null
+                      model_version: heuristic-v0-backend
+                  summary: contract
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                NOTFOUND:
+                  value:
+                    error:
+                      code: NOT_FOUND
+                      message: ward 999 not found
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: NOT_FOUND
+          description: Not found
+components:
+  schemas:
+    AlertApproved:
+      type: object
+      properties:
+        alert_id:
+          type: integer
+        status:
+          $ref: '#/components/schemas/ApprovedAlertStatusEnum'
+        dispatch:
+          $ref: '#/components/schemas/DispatchResult'
+      required:
+      - alert_id
+      - dispatch
+      - status
+    AlertList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertOut'
+      required:
+      - items
+    AlertOut:
+      type: object
+      properties:
+        alert_id:
+          type: integer
+          readOnly: true
+        score_id:
+          type: integer
+          readOnly: true
+        subscriber_id:
+          type: integer
+        phone:
+          type: string
+        alert_type_id:
+          type: string
+          readOnly: true
+        ward_id:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          readOnly: true
+        ward_name:
+          type: string
+        county:
+          type: string
+        hazard:
+          type: string
+          nullable: true
+          maxLength: 30
+        severity:
+          type: string
+          nullable: true
+          maxLength: 16
+        lang:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/AlertOutLangEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        body:
+          type: string
+          nullable: true
+          maxLength: 160
+        status:
+          type: string
+          maxLength: 16
+        probability:
+          type: number
+          format: double
+        confidence_pct:
+          type: integer
+        score_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+        approved_by:
+          type: string
+          nullable: true
+          maxLength: 100
+        approved_at:
+          type: string
+          format: date-time
+          nullable: true
+        sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        messages:
+          type: object
+          additionalProperties:
+            type: integer
+          description: 'The SMS linked by ALERTS.MESSAGE_ID, e.g. {"SENT": 1}. Empty until queued.'
+          readOnly: true
+      required:
+      - alert_id
+      - alert_type_id
+      - county
+      - messages
+      - phone
+      - score_id
+      - subscriber_id
+      - ward_id
+      - ward_name
+    AlertOutLangEnum:
+      enum:
+      - sw
+      - en
+      type: string
+      description: '* `sw` - Kiswahili
+
+        * `en` - English'
+    AlertPreview:
+      type: object
+      properties:
+        ward:
+          type: string
+        alert_type:
+          type: string
+        lang:
+          $ref: '#/components/schemas/LangEnum'
+        body:
+          type: string
+        template_source:
+          $ref: '#/components/schemas/TemplateSourceEnum'
+      required:
+      - alert_type
+      - body
+      - lang
+      - template_source
+      - ward
+    AlertRejected:
+      type: object
+      properties:
+        alert_id:
+          type: integer
+        status:
+          type: string
+          description: Always REJECTED
+      required:
+      - alert_id
+      - status
+    ApproveInRequest:
+      type: object
+      properties:
+        approved_by:
+          type: string
+          minLength: 1
+          default: api
+          description: Officer name, stored in ALERTS.approved_by
+          maxLength: 100
+    ApprovedAlertStatusEnum:
+      enum:
+      - APPROVED
+      - SENT
+      type: string
+      description: '* `APPROVED` - APPROVED
+
+        * `SENT` - SENT'
+    ApprovedDispatchSummary:
+      type: object
+      properties:
+        alerts_dispatched:
+          type: integer
+        messages_queued:
+          type: integer
+        suppressed_cooldown:
+          type: integer
+        suppressed_cap:
+          type: integer
+        skipped_replay:
+          type: integer
+        skipped_stale:
+          type: integer
+      required:
+      - alerts_dispatched
+      - messages_queued
+      - skipped_replay
+      - skipped_stale
+      - suppressed_cap
+      - suppressed_cooldown
+    BlankEnum:
+      enum:
+      - ''
+    BookingConfirmed:
+      type: object
+      properties:
+        booking_id:
+          type: integer
+        status:
+          type: string
+          description: Always CONFIRMED
+      required:
+      - booking_id
+      - status
+    BookingItem:
+      type: object
+      properties:
+        booking_id:
+          type: integer
+        subscriber_id:
+          type: integer
+        bags:
+          type: number
+          format: double
+          nullable: true
+        fee_kes:
+          type: number
+          format: double
+          nullable: true
+          description: 'Total fee: bags x (moisture - 13) x KES 30'
+        status:
+          $ref: '#/components/schemas/BookingStatusEnum'
+      required:
+      - bags
+      - booking_id
+      - fee_kes
+      - status
+      - subscriber_id
+    BookingStatusEnum:
+      enum:
+      - OFFERED
+      - CONFIRMED
+      - DRIED
+      - NO_SHOW
+      type: string
+      description: '* `OFFERED` - OFFERED
+
+        * `CONFIRMED` - CONFIRMED
+
+        * `DRIED` - DRIED
+
+        * `NO_SHOW` - NO_SHOW'
+    CalibrationList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalibrationRow'
+      required:
+      - items
+    CalibrationRow:
+      type: object
+      properties:
+        alert_type:
+          type: string
+        prob_bin:
+          type: number
+          format: double
+        predicted:
+          type: number
+          format: double
+        observed:
+          type: number
+          format: double
+        n:
+          type: integer
+      required:
+      - alert_type
+      - n
+      - observed
+      - predicted
+      - prob_bin
+    CategoryEnum:
+      enum:
+      - HIGH
+      - MEDIUM
+      - LOW
+      type: string
+      description: '* `HIGH` - HIGH
+
+        * `MEDIUM` - MEDIUM
+
+        * `LOW` - LOW'
+    Centroid:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: double
+          nullable: true
+        lon:
+          type: number
+          format: double
+          nullable: true
+      required:
+      - lat
+      - lon
+    CodeEnum:
+      enum:
+      - VALIDATION_ERROR
+      - UNAUTHORIZED
+      - FORBIDDEN
+      - NOT_FOUND
+      - CONFLICT
+      - UPSTREAM_ERROR
+      - INTERNAL
+      - METHOD_NOT_ALLOWED
+      type: string
+      description: '* `VALIDATION_ERROR` - VALIDATION_ERROR
+
+        * `UNAUTHORIZED` - UNAUTHORIZED
+
+        * `FORBIDDEN` - FORBIDDEN
+
+        * `NOT_FOUND` - NOT_FOUND
+
+        * `CONFLICT` - CONFLICT
+
+        * `UPSTREAM_ERROR` - UPSTREAM_ERROR
+
+        * `INTERNAL` - INTERNAL
+
+        * `METHOD_NOT_ALLOWED` - METHOD_NOT_ALLOWED'
+    DecisionEnum:
+      enum:
+      - ACT
+      - WATCH
+      - ABSTAIN
+      type: string
+      description: '* `ACT` - ACT
+
+        * `WATCH` - WATCH
+
+        * `ABSTAIN` - ABSTAIN'
+    DeliveryReportBodyRequest:
+      type: object
+      description: Africa's Talking delivery report (form-encoded).
+      properties:
+        id:
+          type: string
+          minLength: 1
+          description: messageId returned when the SMS was sent (MESSAGES.provider_msg_id)
+        status:
+          allOf:
+          - $ref: '#/components/schemas/DeliveryReportBodyStatusEnum'
+          description: 'Success = delivered to the handset; Failed/Rejected = FAILED
+
+
+            * `Sent` - Sent
+
+            * `Submitted` - Submitted
+
+            * `Buffered` - Buffered
+
+            * `Rejected` - Rejected
+
+            * `Success` - Success
+
+            * `Failed` - Failed'
+        phoneNumber:
+          type: string
+          minLength: 1
+        networkCode:
+          type: string
+          minLength: 1
+          description: e.g. 63902 Safaricom
+        failureReason:
+          type: string
+          description: e.g. InsufficientCredit, UserIsInactive, DeliveryFailure
+        retryCount:
+          type: string
+          minLength: 1
+      required:
+      - id
+      - status
+    DeliveryReportBodyStatusEnum:
+      enum:
+      - Sent
+      - Submitted
+      - Buffered
+      - Rejected
+      - Success
+      - Failed
+      type: string
+      description: '* `Sent` - Sent
+
+        * `Submitted` - Submitted
+
+        * `Buffered` - Buffered
+
+        * `Rejected` - Rejected
+
+        * `Success` - Success
+
+        * `Failed` - Failed'
+    DispatchJobAccepted:
+      type: object
+      properties:
+        job_id:
+          type: integer
+          description: Row in JOB_RUNS; see GET /jobs/{job_id}/status
+        job:
+          type: string
+        status:
+          type: string
+          description: Always DONE
+        summary:
+          $ref: '#/components/schemas/DispatchSummary'
+      required:
+      - job
+      - job_id
+      - status
+      - summary
+    DispatchJobInRequest:
+      type: object
+      properties:
+        limit:
+          type: integer
+          maximum: 1000
+          minimum: 1
+          description: Max SMS this call
+        retry_failed:
+          type: boolean
+          default: false
+          description: Re-queue OUT messages that FAILED in the last 24 h
+    DispatchResult:
+      type: object
+      properties:
+        messages_queued:
+          type: integer
+        suppressed_cooldown:
+          type: integer
+        suppressed_cap:
+          type: integer
+        skipped:
+          type: string
+          description: 'replay | stale: the alert was not sent'
+      required:
+      - messages_queued
+    DispatchSummary:
+      type: object
+      properties:
+        approved_dispatch:
+          $ref: '#/components/schemas/ApprovedDispatchSummary'
+        sms:
+          $ref: '#/components/schemas/SmsSummary'
+      required:
+      - approved_dispatch
+      - sms
+    DryingBooking:
+      type: object
+      properties:
+        booking_id:
+          type: integer
+        status:
+          $ref: '#/components/schemas/DryingBookingStatusEnum'
+        point_name:
+          type: string
+        eta:
+          type: string
+          format: date-time
+          nullable: true
+        route_date:
+          type: string
+          format: date
+        bags:
+          type: integer
+          nullable: true
+        fee_kes:
+          type: integer
+          nullable: true
+          description: Total drying fee for the booking (bags x fee per bag)
+      required:
+      - bags
+      - booking_id
+      - eta
+      - fee_kes
+      - point_name
+      - route_date
+      - status
+    DryingBookingStatusEnum:
+      enum:
+      - OFFERED
+      - CONFIRMED
+      type: string
+      description: '* `OFFERED` - OFFERED
+
+        * `CONFIRMED` - CONFIRMED'
+    DryingConfirmInRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          minLength: 1
+          description: 'Kenyan mobile: +2547XXXXXXXX, 2547XXXXXXXX or 07XXXXXXXX (stored as E.164)'
+        booking_id:
+          type: integer
+      required:
+      - booking_id
+      - phone
+    DryingPoint:
+      type: object
+      properties:
+        point_id:
+          type: integer
+        point_name:
+          type: string
+      required:
+      - point_id
+      - point_name
+    DryingState:
+      type: object
+      properties:
+        registered:
+          type: boolean
+        booking:
+          allOf:
+          - $ref: '#/components/schemas/DryingBooking'
+          nullable: true
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/DryingPoint'
+      required:
+      - booking
+      - points
+      - registered
+    ErrorBody:
+      type: object
+      properties:
+        code:
+          $ref: '#/components/schemas/CodeEnum'
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: {}
+          description: 'e.g. {"field": "ward_id"}; validation errors add `errors`.'
+        request_id:
+          type: string
+          description: Same value as the X-Request-ID response header.
+      required:
+      - code
+      - details
+      - message
+      - request_id
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorBody'
+      required:
+      - error
+    GradeJobInRequest:
+      type: object
+      properties:
+        as_of:
+          type: string
+          format: date
+          description: Grade windows that ended before this date
+    GradeOutcomesJobAccepted:
+      type: object
+      properties:
+        job_id:
+          type: integer
+          description: Row in JOB_RUNS; see GET /jobs/{job_id}/status
+        job:
+          type: string
+        status:
+          type: string
+          description: Always DONE
+        summary:
+          $ref: '#/components/schemas/GradeSummary'
+      required:
+      - job
+      - job_id
+      - status
+      - summary
+    GradeSummary:
+      type: object
+      properties:
+        as_of:
+          type: string
+          format: date
+        graded:
+          type: integer
+        hits:
+          type: integer
+        misses:
+          type: integer
+        waiting_for_data:
+          type: integer
+      required:
+      - as_of
+      - graded
+      - hits
+      - misses
+      - waiting_for_data
+    Health:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/HealthStatusEnum'
+        database:
+          type: string
+          description: oracle | sqlite | unreachable
+        sms_backend:
+          $ref: '#/components/schemas/SmsBackendEnum'
+        sms_dispatch:
+          $ref: '#/components/schemas/SmsDispatchEnum'
+        reply_reader:
+          $ref: '#/components/schemas/ReplyReaderEnum'
+        alerts_require_approval:
+          type: boolean
+      required:
+      - alerts_require_approval
+      - database
+      - reply_reader
+      - sms_backend
+      - sms_dispatch
+      - status
+    HealthStatusEnum:
+      enum:
+      - ok
+      - degraded
+      type: string
+      description: '* `ok` - ok
+
+        * `degraded` - degraded'
+    InboundSmsBodyRequest:
+      type: object
+      description: Africa's Talking incoming message (form-encoded).
+      properties:
+        from:
+          type: string
+          minLength: 1
+          description: Sender phone, +2547XXXXXXXX
+        to:
+          type: string
+          minLength: 1
+          description: Your shortcode
+        text:
+          type: string
+          minLength: 1
+          description: Message text
+        date:
+          type: string
+          minLength: 1
+        id:
+          type: string
+          minLength: 1
+          description: Provider message id
+        linkId:
+          type: string
+          minLength: 1
+          description: Only for premium / on-demand shortcodes
+        networkCode:
+          type: string
+          minLength: 1
+      required:
+      - from
+      - text
+    JobRunStatusEnum:
+      enum:
+      - RUNNING
+      - DONE
+      - FAILED
+      type: string
+      description: '* `RUNNING` - RUNNING
+
+        * `DONE` - DONE
+
+        * `FAILED` - FAILED'
+    JobStatus:
+      type: object
+      properties:
+        job_id:
+          type: integer
+        job:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobRunStatusEnum'
+        params:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        summary:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        error:
+          type: string
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+        finished_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - error
+      - finished_at
+      - job
+      - job_id
+      - params
+      - started_at
+      - status
+      - summary
+    LangEnum:
+      enum:
+      - sw
+      - en
+      type: string
+      description: '* `sw` - sw
+
+        * `en` - en'
+    LanguageInRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          minLength: 1
+          description: 'Kenyan mobile: +2547XXXXXXXX, 2547XXXXXXXX or 07XXXXXXXX (stored as E.164)'
+        preferred_lang:
+          $ref: '#/components/schemas/LangEnum'
+      required:
+      - phone
+      - preferred_lang
+    LanguageSaved:
+      type: object
+      properties:
+        preferred_lang:
+          $ref: '#/components/schemas/LangEnum'
+        subscriber_id:
+          type: integer
+      required:
+      - preferred_lang
+      - subscriber_id
+    NullEnum:
+      enum:
+      - null
+    PatchedReportPatchInRequest:
+      type: object
+      properties:
+        review_status:
+          $ref: '#/components/schemas/ReviewDecisionEnum'
+        payload:
+          type: object
+          additionalProperties: {}
+          description: Corrected fields, merged into the stored payload; report_type and count also update the columns. Required
+            for CORRECTED
+        reviewed_by:
+          type: integer
+          nullable: true
+          description: APP_USERS.user_id
+    PhoneInRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          minLength: 1
+          description: 'Kenyan mobile: +2547XXXXXXXX, 2547XXXXXXXX or 07XXXXXXXX (stored as E.164)'
+      required:
+      - phone
+    PlanRoutesJobAccepted:
+      type: object
+      properties:
+        job_id:
+          type: integer
+          description: Row in JOB_RUNS; see GET /jobs/{job_id}/status
+        job:
+          type: string
+        status:
+          type: string
+          description: Always DONE
+        summary:
+          $ref: '#/components/schemas/PlanRoutesSummary'
+      required:
+      - job
+      - job_id
+      - status
+      - summary
+    PlanRoutesJobInRequest:
+      type: object
+      properties:
+        route_date:
+          type: string
+          format: date
+          description: 'Default: tomorrow (EAT)'
+        replace:
+          type: boolean
+          default: true
+          description: Re-plan when that date only has unconfirmed bookings
+        notify:
+          type: boolean
+          default: true
+          description: Queue booking + operator SMS
+    PlanRoutesSummary:
+      type: object
+      properties:
+        route_date:
+          type: string
+          format: date
+        dryers:
+          type: integer
+        points_with_demand:
+          type: integer
+        routes:
+          type: integer
+        stops:
+          type: integer
+        planned_bags:
+          type: number
+          format: double
+        unserved_bags:
+          type: number
+          format: double
+        bookings:
+          type: integer
+        messages_queued:
+          type: integer
+        replaced_routes:
+          type: integer
+        placeholder_dryers:
+          type: integer
+      required:
+      - bookings
+      - dryers
+      - messages_queued
+      - placeholder_dryers
+      - planned_bags
+      - points_with_demand
+      - replaced_routes
+      - route_date
+      - routes
+      - stops
+      - unserved_bags
+    RegisterInRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          minLength: 1
+          description: 'Kenyan mobile: +2547XXXXXXXX, 2547XXXXXXXX or 07XXXXXXXX (stored as E.164)'
+        ward_id:
+          type: integer
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        preferred_lang:
+          allOf:
+          - $ref: '#/components/schemas/LangEnum'
+          description: 'Default: the language saved by /ussd/language, else sw
+
+
+            * `sw` - sw
+
+            * `en` - en'
+        consent:
+          type: boolean
+          description: Must be true (Data Protection Act consent at registration)
+        crop:
+          type: string
+          minLength: 1
+          maxLength: 30
+        est_bags:
+          type: number
+          format: double
+          minimum: 0
+        species:
+          $ref: '#/components/schemas/SpeciesEnum'
+        head_count:
+          type: number
+          format: double
+          minimum: 0
+      required:
+      - consent
+      - phone
+      - role
+      - ward_id
+    Registered:
+      type: object
+      properties:
+        subscriber_id:
+          type: integer
+        status:
+          type: string
+          description: Always ACTIVE
+      required:
+      - status
+      - subscriber_id
+    ReplayJobAccepted:
+      type: object
+      properties:
+        job_id:
+          type: integer
+          description: Row in JOB_RUNS; see GET /jobs/{job_id}/status
+        job:
+          type: string
+        status:
+          type: string
+          description: Always DONE
+        summary:
+          $ref: '#/components/schemas/ReplaySummary'
+      required:
+      - job
+      - job_id
+      - status
+      - summary
+    ReplayJobInRequest:
+      type: object
+      properties:
+        scenario:
+          allOf:
+          - $ref: '#/components/schemas/ScenarioEnum'
+          default: garissa_rvf_2006
+        from:
+          type: string
+          format: date
+          description: First replay date (default 2006-09-01)
+        to:
+          type: string
+          format: date
+          description: Last replay date (default 2007-01-15)
+        overwrite:
+          type: boolean
+          default: false
+          description: Also replace replay rows written by another model_version
+    ReplaySummary:
+      type: object
+      properties:
+        scenario:
+          type: string
+        county:
+          type: string
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        weeks:
+          type: integer
+        scores_written:
+          type: integer
+        kept_existing:
+          type: integer
+        first_act_date:
+          type: string
+          format: date
+          nullable: true
+        index_case_date:
+          type: string
+          format: date
+          description: Index human case symptom onset (CDC MMWR)
+        lead_days_before_index_case:
+          type: integer
+          nullable: true
+      required:
+      - county
+      - first_act_date
+      - from
+      - index_case_date
+      - kept_existing
+      - lead_days_before_index_case
+      - scenario
+      - scores_written
+      - to
+      - weeks
+    ReplyReaderEnum:
+      enum:
+      - rules
+      - genai
+      type: string
+      description: '* `rules` - rules
+
+        * `genai` - genai'
+    ReportCreated:
+      type: object
+      properties:
+        report_id:
+          type: integer
+      required:
+      - report_id
+    ReportInRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          minLength: 1
+          description: 'Kenyan mobile: +2547XXXXXXXX, 2547XXXXXXXX or 07XXXXXXXX (stored as E.164)'
+        session_id:
+          type: string
+          description: Wasiliana USSD session id (stored in the report payload)
+          maxLength: 100
+        report_type:
+          $ref: '#/components/schemas/ReportTypeEnum'
+        count:
+          type: number
+          format: double
+          maximum: 100000
+          minimum: 0
+          nullable: true
+        unit:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/UnitEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        species:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/SpeciesEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        ward_id:
+          type: integer
+          description: 'Default: the subscriber''s registered ward'
+        point_id:
+          type: integer
+          nullable: true
+          description: 'Menu 7: a wet_bags report asking for drying at this collection point (stored in the payload; the 18:00
+            router books it there)'
+      required:
+      - phone
+      - report_type
+    ReportList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportOut'
+      required:
+      - items
+    ReportOut:
+      type: object
+      properties:
+        report_id:
+          type: integer
+          readOnly: true
+        ward_id:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          readOnly: true
+        report_type:
+          type: string
+          maxLength: 20
+        report_count:
+          type: number
+          format: double
+          nullable: true
+        unit:
+          type: string
+          nullable: true
+          maxLength: 10
+        ai_confidence:
+          type: number
+          format: double
+          nullable: true
+        review_status:
+          type: string
+          maxLength: 14
+        raw_text:
+          type: string
+          nullable: true
+          description: The SMS text (or USSD summary)
+          readOnly: true
+        source:
+          type: string
+          maxLength: 12
+        payload:
+          nullable: true
+        received_at:
+          type: string
+          format: date-time
+        reviewed_by_id:
+          type: integer
+          nullable: true
+          readOnly: true
+      required:
+      - raw_text
+      - received_at
+      - report_id
+      - report_type
+      - reviewed_by_id
+      - ward_id
+    ReportTypeEnum:
+      enum:
+      - wet_bags
+      - sick_animals
+      - dead_animals
+      - flooding
+      - water_point_dry
+      - harvested
+      - rain
+      - bags_dried
+      - rvf_signs
+      type: string
+      description: '* `wet_bags` - wet_bags
+
+        * `sick_animals` - sick_animals
+
+        * `dead_animals` - dead_animals
+
+        * `flooding` - flooding
+
+        * `water_point_dry` - water_point_dry
+
+        * `harvested` - harvested
+
+        * `rain` - rain
+
+        * `bags_dried` - bags_dried
+
+        * `rvf_signs` - rvf_signs'
+    ResetDemoJobAccepted:
+      type: object
+      properties:
+        job_id:
+          type: integer
+          description: Row in JOB_RUNS; see GET /jobs/{job_id}/status
+        job:
+          type: string
+        status:
+          type: string
+          description: Always DONE
+        summary:
+          $ref: '#/components/schemas/ResetDemoSummary'
+      required:
+      - job
+      - job_id
+      - status
+      - summary
+    ResetDemoJobInRequest:
+      type: object
+      properties:
+        phones:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 20
+          description: 'Presenter phones to wipe. Default: DEMO_PHONES'
+        alerts_today:
+          type: boolean
+          default: true
+          description: Also delete alerts drafted today
+        routes:
+          type: boolean
+          default: true
+          description: Also delete routes from today on
+    ResetDemoSummary:
+      type: object
+      properties:
+        phones:
+          type: integer
+        reports:
+          type: integer
+        outcomes:
+          type: integer
+        bookings:
+          type: integer
+        routes:
+          type: integer
+        messages:
+          type: integer
+        alerts:
+          type: integer
+        subscribers:
+          type: integer
+      required:
+      - alerts
+      - bookings
+      - messages
+      - outcomes
+      - phones
+      - reports
+      - routes
+      - subscribers
+    ReviewDecisionEnum:
+      enum:
+      - ACCEPTED
+      - CORRECTED
+      - REJECTED
+      type: string
+      description: '* `ACCEPTED` - ACCEPTED
+
+        * `CORRECTED` - CORRECTED
+
+        * `REJECTED` - REJECTED'
+    RiskItem:
+      type: object
+      properties:
+        alert_type:
+          type: string
+          description: A1..A5, B1..B4, C1..C3
+        service:
+          $ref: '#/components/schemas/ServiceEnum'
+        probability:
+          type: number
+          format: double
+          nullable: true
+          description: Calibrated 0..1
+        confidence_pct:
+          type: integer
+          nullable: true
+          description: 0..100, shown in the SMS
+        decision:
+          $ref: '#/components/schemas/DecisionEnum'
+        abstain_reason:
+          type: string
+          nullable: true
+        model_version:
+          type: string
+          nullable: true
+      required:
+      - abstain_reason
+      - alert_type
+      - confidence_pct
+      - decision
+      - model_version
+      - probability
+      - service
+    RoleEnum:
+      enum:
+      - farmer
+      - herder
+      - both
+      - health_promoter
+      - operator
+      - committee
+      type: string
+      description: '* `farmer` - farmer
+
+        * `herder` - herder
+
+        * `both` - both
+
+        * `health_promoter` - health_promoter
+
+        * `operator` - operator
+
+        * `committee` - committee'
+    RouteItem:
+      type: object
+      properties:
+        route_id:
+          type: integer
+        dryer_id:
+          type: integer
+        dryer_name:
+          type: string
+          nullable: true
+        is_placeholder:
+          type: boolean
+          description: Demo dryers are labelled honestly
+        status:
+          $ref: '#/components/schemas/RouteStatusEnum'
+        stops:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteStopItem'
+      required:
+      - dryer_id
+      - dryer_name
+      - is_placeholder
+      - route_id
+      - status
+      - stops
+    RouteList:
+      type: object
+      properties:
+        route_date:
+          type: string
+          format: date
+        routes:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteItem'
+      required:
+      - route_date
+      - routes
+    RouteStatusEnum:
+      enum:
+      - PLANNED
+      - NOTIFIED
+      - DONE
+      type: string
+      description: '* `PLANNED` - PLANNED
+
+        * `NOTIFIED` - NOTIFIED
+
+        * `DONE` - DONE'
+    RouteStopItem:
+      type: object
+      properties:
+        stop_order:
+          type: integer
+        stop_id:
+          type: integer
+        point_id:
+          type: integer
+        point_name:
+          type: string
+        ward_id:
+          type: integer
+        eta:
+          type: string
+          format: date-time
+          description: +03:00, rounded up to 5 minutes
+        planned_bags:
+          type: number
+          format: double
+        urgency:
+          type: number
+          format: double
+          description: wet_bags x P(heavy rain 48 h) x aflatoxin boost
+        bookings_offered:
+          type: integer
+        bookings_confirmed:
+          type: integer
+        bookings:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookingItem'
+      required:
+      - bookings
+      - bookings_confirmed
+      - bookings_offered
+      - eta
+      - planned_bags
+      - point_id
+      - point_name
+      - stop_id
+      - stop_order
+      - urgency
+      - ward_id
+    ScenarioEnum:
+      enum:
+      - garissa_rvf_2006
+      type: string
+      description: '* `garissa_rvf_2006` - garissa_rvf_2006'
+    ScoreJobAccepted:
+      type: object
+      properties:
+        job_id:
+          type: integer
+          description: Row in JOB_RUNS; see GET /jobs/{job_id}/status
+        job:
+          type: string
+        status:
+          type: string
+          description: Always DONE
+        summary:
+          $ref: '#/components/schemas/ScoreSummary'
+      required:
+      - job
+      - job_id
+      - status
+      - summary
+    ScoreJobInRequest:
+      type: object
+      properties:
+        as_of:
+          type: string
+          format: date
+          description: 'Score date (EAT). Default: today'
+        county:
+          type: string
+          minLength: 1
+          description: 'Default: all counties'
+          maxLength: 60
+        alert_types:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 3
+          description: 'Default: every type with a rule (A1-A4, B1-B4, C2, C3)'
+        overwrite:
+          type: boolean
+          default: false
+          description: Replace rows from another model_version (e.g. Trevor's models)
+        dry_run:
+          type: boolean
+          default: false
+          description: Count decisions, write nothing
+    ScoreSummary:
+      type: object
+      properties:
+        as_of:
+          type: string
+          format: date
+        county:
+          type: string
+          nullable: true
+        model_version:
+          type: string
+        wards:
+          type: integer
+        scores_written:
+          type: integer
+        act:
+          type: integer
+        watch:
+          type: integer
+        abstain:
+          type: integer
+        below_watch:
+          type: integer
+          description: 'Probability below the watch threshold: nothing stored'
+        no_data:
+          type: integer
+          description: The rule's inputs are absent for that ward
+        kept_existing:
+          type: integer
+          description: Rows from another model_version (e.g. Trevor's) left untouched
+        act_wards:
+          type: array
+          items:
+            type: string
+          description: '''A1:Moiben'', ...'
+      required:
+      - abstain
+      - act
+      - act_wards
+      - as_of
+      - below_watch
+      - county
+      - kept_existing
+      - model_version
+      - no_data
+      - scores_written
+      - wards
+      - watch
+    ScorecardList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScorecardRow'
+      required:
+      - items
+    ScorecardRow:
+      type: object
+      properties:
+        alert_type:
+          type: string
+        period:
+          type: string
+          format: date
+          description: Monday of the ISO week
+        alerts_sent:
+          type: integer
+          description: Ward warnings that reached subscribers
+        hits:
+          type: integer
+        false_alarms:
+          type: integer
+        hit_rate:
+          type: number
+          format: double
+          nullable: true
+        false_alarm_rate:
+          type: number
+          format: double
+          nullable: true
+        avg_lead_days:
+          type: number
+          format: double
+          nullable: true
+        brier_skill:
+          type: number
+          format: double
+          nullable: true
+          description: 1 - BS/BS_climatology; > 0 beats the base rate
+      required:
+      - alert_type
+      - alerts_sent
+      - avg_lead_days
+      - brier_skill
+      - false_alarm_rate
+      - false_alarms
+      - hit_rate
+      - hits
+      - period
+    SeasonalLine:
+      type: object
+      properties:
+        text:
+          type: string
+          description: One line for the USSD screen, in the subscriber's language
+        registered:
+          type: boolean
+        season:
+          type: string
+          nullable: true
+        probability:
+          type: number
+          format: double
+          nullable: true
+        category:
+          type: string
+          nullable: true
+      required:
+      - category
+      - probability
+      - registered
+      - season
+      - text
+    SeasonalModelCard:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeasonalModelCardRow'
+        caveats:
+          type: string
+      required:
+      - caveats
+      - items
+    SeasonalModelCardRow:
+      type: object
+      properties:
+        model_version:
+          type: string
+        role:
+          type: string
+        target:
+          type: string
+        target_desc:
+          type: string
+        train_period:
+          type: string
+        test_period:
+          type: string
+        features:
+          type: string
+        auc:
+          type: number
+          format: double
+        auc_ci90:
+          type: array
+          items:
+            type: number
+            format: double
+        f1:
+          type: number
+          format: double
+        brier:
+          type: number
+          format: double
+        decision_threshold:
+          type: number
+          format: double
+        backtest:
+          type: object
+          additionalProperties: {}
+          description: '{year: [observed share of wet wards, mean predicted probability]}'
+      required:
+      - auc
+      - auc_ci90
+      - backtest
+      - brier
+      - decision_threshold
+      - f1
+      - features
+      - model_version
+      - role
+      - target
+      - target_desc
+      - test_period
+      - train_period
+    SeasonalOutlookItem:
+      type: object
+      properties:
+        ward_id:
+          type: integer
+        ward_name:
+          type: string
+        county:
+          type: string
+        season:
+          type: string
+        probability:
+          type: number
+          format: double
+          description: P(OND rain > 125% of the 1991-2020 mean)
+        category:
+          $ref: '#/components/schemas/CategoryEnum'
+        confidence:
+          type: number
+          format: double
+          nullable: true
+          description: probability x 100
+        model_version:
+          type: string
+        issued_at:
+          type: string
+          format: date-time
+        notes:
+          type: string
+          nullable: true
+      required:
+      - category
+      - confidence
+      - county
+      - issued_at
+      - model_version
+      - notes
+      - probability
+      - season
+      - ward_id
+      - ward_name
+    SeasonalOutlookJobAccepted:
+      type: object
+      properties:
+        job_id:
+          type: integer
+          description: Row in JOB_RUNS; see GET /jobs/{job_id}/status
+        job:
+          type: string
+        status:
+          type: string
+          description: Always DONE
+        summary:
+          $ref: '#/components/schemas/SeasonalSummary'
+      required:
+      - job
+      - job_id
+      - status
+      - summary
+    SeasonalOutlookJobInRequest:
+      type: object
+      properties:
+        year:
+          type: integer
+          maximum: 2100
+          minimum: 1982
+          description: 'Season year (OND <year>). Default: this year from October, else last year'
+        source:
+          allOf:
+          - $ref: '#/components/schemas/SeasonalSourceEnum'
+          description: 'auto: full 6-index model when ERA5 (CDSAPI_KEY) is configured, else SST-only. Default: SEASONAL_FEATURE_SOURCE
+
+
+            * `auto` - auto
+
+            * `sst` - sst
+
+            * `era5` - era5'
+        dry_run:
+          type: boolean
+          default: false
+          description: Compute, write nothing
+    SeasonalOutlookList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeasonalOutlookItem'
+      required:
+      - items
+    SeasonalSourceEnum:
+      enum:
+      - auto
+      - sst
+      - era5
+      type: string
+      description: '* `auto` - auto
+
+        * `sst` - sst
+
+        * `era5` - era5'
+    SeasonalSummary:
+      type: object
+      properties:
+        season:
+          type: string
+          description: e.g. OND 2026
+        status:
+          $ref: '#/components/schemas/SeasonalSummaryStatusEnum'
+        reason:
+          type: string
+          description: Why there is no outlook yet (waiting_for_data)
+        dry_run:
+          type: boolean
+        source:
+          type: string
+        model_version:
+          type: string
+          description: ngao-seasonal-v3-lit6 or ngao-seasonal-v3-sst4
+        variant:
+          type: string
+          description: lit6 (6 indices, needs ERA5) or sst4 (SST only)
+        features:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+          description: Index values used
+        threshold:
+          type: number
+          format: double
+          description: Decision threshold (best F1 in training)
+        wards:
+          type: integer
+        high:
+          type: integer
+          description: Wards with p >= 0.5
+        medium:
+          type: integer
+          description: Wards with threshold <= p < 0.5
+        low:
+          type: integer
+        probability_by_region:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+        s1_act:
+          type: integer
+          description: S1 RISK_SCORES rows at ACT (alerted after approval)
+        s1_watch:
+          type: integer
+        s1_alert_type:
+          type: string
+        model_card_rows:
+          type: integer
+        notes:
+          type: array
+          items:
+            type: string
+      required:
+      - dry_run
+      - season
+      - source
+      - status
+    SeasonalSummaryStatusEnum:
+      enum:
+      - ISSUED
+      - DRY_RUN
+      - waiting_for_data
+      type: string
+      description: '* `ISSUED` - ISSUED
+
+        * `DRY_RUN` - DRY_RUN
+
+        * `waiting_for_data` - waiting_for_data'
+    SendAlertsJobAccepted:
+      type: object
+      properties:
+        job_id:
+          type: integer
+          description: Row in JOB_RUNS; see GET /jobs/{job_id}/status
+        job:
+          type: string
+        status:
+          type: string
+          description: Always DONE
+        summary:
+          $ref: '#/components/schemas/SendAlertsSummary'
+      required:
+      - job
+      - job_id
+      - status
+      - summary
+    SendAlertsJobInRequest:
+      type: object
+      properties:
+        as_of:
+          type: string
+          format: date
+          description: 'Score date whose ACT rows are alerted. Default: today'
+        dry_run:
+          type: boolean
+          default: false
+          description: Render up to 5 previews, write nothing
+        county:
+          type: string
+          minLength: 1
+          maxLength: 60
+    SendAlertsSummary:
+      type: object
+      properties:
+        as_of:
+          type: string
+          format: date
+        dry_run:
+          type: boolean
+        approval_required:
+          type: boolean
+        act_scores:
+          type: integer
+        alerts_created:
+          type: integer
+        pending_approval:
+          type: integer
+        messages_queued:
+          type: integer
+        suppressed_cooldown:
+          type: integer
+        suppressed_cap:
+          type: integer
+        already_drafted:
+          type: integer
+        no_subscribers:
+          type: integer
+        preview:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertPreview'
+          description: dry_run only
+        approved_dispatch:
+          $ref: '#/components/schemas/ApprovedDispatchSummary'
+      required:
+      - act_scores
+      - alerts_created
+      - already_drafted
+      - approval_required
+      - as_of
+      - dry_run
+      - messages_queued
+      - no_subscribers
+      - pending_approval
+      - suppressed_cap
+      - suppressed_cooldown
+    ServiceEnum:
+      enum:
+      - FARM
+      - HERD
+      - HEALTH
+      type: string
+      description: '* `FARM` - FARM
+
+        * `HERD` - HERD
+
+        * `HEALTH` - HEALTH'
+    SimulatedInbound:
+      type: object
+      properties:
+        message_id:
+          type: integer
+        report:
+          allOf:
+          - $ref: '#/components/schemas/SimulatedReport'
+          nullable: true
+          description: null when the text was a keyword (STOP, LUGHA EN, 1, ...)
+      required:
+      - message_id
+      - report
+    SimulatedInboundRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          minLength: 1
+          description: Sender, any Kenyan format
+          maxLength: 20
+        text:
+          type: string
+          minLength: 1
+          description: The SMS text, exactly as the farmer would send it
+          maxLength: 1000
+      required:
+      - phone
+      - text
+    SimulatedReport:
+      type: object
+      properties:
+        report_id:
+          type: integer
+        report_type:
+          type: string
+        report_count:
+          type: number
+          format: double
+          nullable: true
+        review_status:
+          $ref: '#/components/schemas/SimulatedReportReviewStatusEnum'
+        ai_confidence:
+          type: number
+          format: double
+          nullable: true
+        source:
+          $ref: '#/components/schemas/SourceEnum'
+      required:
+      - ai_confidence
+      - report_count
+      - report_id
+      - report_type
+      - review_status
+      - source
+    SimulatedReportReviewStatusEnum:
+      enum:
+      - AUTO_ACCEPTED
+      - NEEDS_REVIEW
+      type: string
+      description: '* `AUTO_ACCEPTED` - AUTO_ACCEPTED
+
+        * `NEEDS_REVIEW` - NEEDS_REVIEW'
+    SmsBackendEnum:
+      enum:
+      - console
+      - africastalking
+      - wasiliana
+      type: string
+      description: '* `console` - console
+
+        * `africastalking` - africastalking
+
+        * `wasiliana` - wasiliana'
+    SmsDispatchEnum:
+      enum:
+      - inline
+      - worker
+      type: string
+      description: '* `inline` - inline
+
+        * `worker` - worker'
+    SmsSummary:
+      type: object
+      properties:
+        sent:
+          type: integer
+        simulated:
+          type: integer
+          description: 'Synthetic subscribers: marked SENT, never sent'
+        failed:
+          type: integer
+        retry_later:
+          type: integer
+      required:
+      - failed
+      - retry_later
+      - sent
+      - simulated
+    SourceEnum:
+      enum:
+      - SMS_AI
+      - SMS_KEYWORD
+      type: string
+      description: '* `SMS_AI` - SMS_AI
+
+        * `SMS_KEYWORD` - SMS_KEYWORD'
+    SpeciesEnum:
+      enum:
+      - cattle
+      - goats
+      - sheep
+      - camels
+      type: string
+      description: '* `cattle` - cattle
+
+        * `goats` - goats
+
+        * `sheep` - sheep
+
+        * `camels` - camels'
+    TemplateSourceEnum:
+      enum:
+      - ALERT_TEMPLATE
+      - ALERT_TYPES
+      - DEFAULT
+      type: string
+      description: '* `ALERT_TEMPLATE` - ALERT_TEMPLATE
+
+        * `ALERT_TYPES` - ALERT_TYPES
+
+        * `DEFAULT` - DEFAULT'
+    UnitEnum:
+      enum:
+      - bags
+      - animals
+      type: string
+      description: '* `bags` - bags
+
+        * `animals` - animals'
+    Unsubscribed:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Always STOPPED
+      required:
+      - status
+    WardItem:
+      type: object
+      properties:
+        ward_id:
+          type: integer
+        ward_name:
+          type: string
+        county:
+          type: string
+        centroid:
+          $ref: '#/components/schemas/Centroid'
+      required:
+      - centroid
+      - county
+      - ward_id
+      - ward_name
+    WardList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/WardItem'
+      required:
+      - items
+    WardRisk:
+      type: object
+      properties:
+        ward_id:
+          type: integer
+        ward_name:
+          type: string
+        score_date:
+          type: string
+          format: date
+        risks:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskItem'
+      required:
+      - risks
+      - score_date
+      - ward_id
+      - ward_name
+    WardStatusLine:
+      type: object
+      properties:
+        text:
+          type: string
+          description: One line for the USSD screen, in the subscriber's language
+        registered:
+          type: boolean
+        ward_id:
+          type: integer
+          nullable: true
+        decision:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/DecisionEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        alert_type:
+          type: string
+          nullable: true
+      required:
+      - alert_type
+      - decision
+      - registered
+      - text
+      - ward_id
+  securitySchemes:
+    ApiToken:
+      type: http
+      scheme: bearer
+      description: 'NGAO_API_TOKENS: APEX demo controls, scheduler, router, tests.'
+    UssdToken:
+      type: http
+      scheme: bearer
+      description: 'USSD_SERVICE_TOKEN: Louisa''s ussd/ service. Only /ussd/* endpoints.'
+    WebhookSecret:
+      type: apiKey
+      in: query
+      name: k
+      description: WEBHOOK_SECRET appended to the Africa's Talking callback URLs. A wrong secret is ignored silently (still
+        200).
+servers:
+- url: /ngao/v1
+  description: Contract path (ORDS-style); what ussd/ calls
+- url: /api/v1
+  description: Django base path (same routes)
+tags:
+- name: Health & docs
+  description: Liveness and configuration summary.
+- name: Jobs
+  description: §2.2 action endpoints for APEX demo controls and the scheduler. Each call runs synchronously, is recorded in
+    `JOB_RUNS`, and answers `202` with a summary.
+- name: Alerts
+  description: Officer approval of drafted alerts. This is the same as the APEX Alert Approvals page, which may also set `ALERTS.status='APPROVED'`
+    directly.
+- name: Wards & risk
+  description: '§2.3 reads: wards and today''s decisions per ward.'
+- name: Reports
+  description: §2.3 reads and officer review of farmer/herder reports (SMS replies and USSD menu 2).
+- name: Dryer routes
+  description: §2.3 tomorrow's dryer plan and booking confirmation.
+- name: USSD contract
+  description: §5 endpoints called by Louisa's `ussd/` service. Database only, no AI; well under 2 s.
+- name: SMS webhooks
+  description: §3 callbacks from Africa's Talking (form-encoded). They always answer `200` with an empty body. The parser
+    lives in `sms/providers/africastalking.py`.
+- name: Demo
+  description: Helpers for the Friday demo.
+- name: Public scorecard
+  description: 'Unauthenticated: every alert graded in public.'

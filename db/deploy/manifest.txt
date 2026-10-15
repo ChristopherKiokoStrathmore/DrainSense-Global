@@ -1,0 +1,18 @@
+# Ordered deploy manifest for NgaoDB (schema WKSP_NGAO).
+# One repo-relative path per line. Blank lines and # comments are ignored.
+# GitHub Actions runs these scripts in this order, then imports frontend/apex/f100.sql.
+#
+# Add a script: put a re-runnable .sql file in this directory and append its path here.
+# The guard rejects DROP TABLE, TRUNCATE, and DELETE FROM, and it rejects any path
+# whose file name is 001_backend_alignment.sql.
+#
+# Kept out of this list on purpose:
+#   db/schema.sql
+#     Shared draft of the full schema. Plain CREATE TABLE is not re-runnable.
+#   db/migrations/001_backend_alignment.sql
+#     Excluded from automation. Do not copy it into db/deploy/.
+db/deploy/000_live_objects.sql
+db/deploy/010_climate_seasonal.sql
+db/deploy/020_backend_bridge.sql
+db/deploy/030_seasonal_alert.sql
+db/deploy/040_cooperatives_registry.sql

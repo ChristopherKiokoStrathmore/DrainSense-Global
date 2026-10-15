@@ -1,0 +1,347 @@
+# Test, build and deploy the backend (Django API + scheduler) and the USSD service to the Oracle VM.
+# Pull requests only test: they get no secrets and never connect to the VM or NgaoDB.
+# Pushes to main also build linux/amd64 + linux/arm64 images (Always Free VMs are often Ampere A1),
+# push them to GHCR, and run Docker Compose on the VM over SSH. Setup: docs/DEPLOY_VM.md.
+name: Deploy backend VM
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - backend/**
+      - ussd/**
+      - deploy/vm/**
+      - db/deploy/decode-wallet.py
+      - .github/workflows/deploy-vm.yml
+  pull_request:
+    paths:
+      - backend/**
+      - ussd/**
+      - deploy/vm/**
+      - .github/workflows/deploy-vm.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  E2E_API_TOKEN: e2e-api-token
+  E2E_USSD_TOKEN: e2e-ussd-token
+
+jobs:
+  test:
+    name: Test backend, USSD and deploy scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.13 (backend)
+        id: py-backend
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Set up Python 3.12 (USSD)
+        id: py-ussd
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: ussd/requirements.txt
+
+      - name: Install dependencies
+        env:
+          PY_BACKEND: ${{ steps.py-backend.outputs.python-path }}
+          PY_USSD: ${{ steps.py-ussd.outputs.python-path }}
+        run: |
+          set -euo pipefail
+          "$PY_BACKEND" -m venv "$RUNNER_TEMP/venv-backend"
+          "$RUNNER_TEMP/venv-backend/bin/pip" install -q -r backend/requirements.txt
+          "$PY_USSD" -m venv "$RUNNER_TEMP/venv-ussd"
+          "$RUNNER_TEMP/venv-ussd/bin/pip" install -q -r ussd/requirements.txt
+
+      - name: Backend tests
+        working-directory: backend
+        run: '"$RUNNER_TEMP/venv-backend/bin/python" manage.py test -v 1'
+
+      - name: USSD tests
+        working-directory: ussd
+        run: '"$RUNNER_TEMP/venv-ussd/bin/python" -m pytest -q'
+
+      - name: USSD against the real backend (end to end)
+        working-directory: backend
+        env:
+          DJANGO_DEBUG: "true"
+          SQLITE_PATH: ${{ runner.temp }}/e2e.sqlite3
+          NGAO_API_TOKENS: ${{ env.E2E_API_TOKEN }}
+          USSD_SERVICE_TOKEN: ${{ env.E2E_USSD_TOKEN }}
+          SMS_BACKEND: console
+        run: |
+          set -euo pipefail
+          py="$RUNNER_TEMP/venv-backend/bin/python"
+          "$py" manage.py migrate -v 0
+          "$py" manage.py seed_reference --templates -v 0
+          "$py" manage.py seed_demo -v 0
+          "$py" manage.py runserver 127.0.0.1:8000 --noreload > "$RUNNER_TEMP/backend.log" 2>&1 &
+          for _ in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:8000/ngao/v1/health >/dev/null 2>&1 && break
+            sleep 1
+          done
+          cd ../ussd
+          NGAO_E2E_BACKEND_URL=http://127.0.0.1:8000/ngao/v1 \
+          NGAO_E2E_API_TOKEN="$NGAO_API_TOKENS" NGAO_E2E_USSD_TOKEN="$USSD_SERVICE_TOKEN" \
+            "$RUNNER_TEMP/venv-ussd/bin/python" -m pytest -q tests/test_backend_e2e.py || {
+              tail -50 "$RUNNER_TEMP/backend.log"; exit 1; }
+
+      - name: Deploy scripts
+        run: |
+          set -euo pipefail
+          python3 deploy/vm/render_env.py --self-test
+          shellcheck deploy/vm/bootstrap.sh deploy/vm/remote-deploy.sh
+          tmp="$(mktemp -d)"
+          cp deploy/vm/docker-compose.yml deploy/vm/Caddyfile "$tmp/"
+          touch "$tmp/backend.env" "$tmp/ussd.env"
+          NGAO_BACKEND_IMAGE=b NGAO_USSD_IMAGE=u NGAO_SITE_ADDRESS=example.org \
+            docker compose -f "$tmp/docker-compose.yml" config --quiet
+          docker run --rm -v "$PWD/deploy/vm/Caddyfile:/etc/caddy/Caddyfile:ro" -e NGAO_SITE_ADDRESS=example.org \
+            caddy:2.10.2-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+
+  build:
+    name: Build and push images
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      backend_image: ${{ steps.names.outputs.backend }}
+      ussd_image: ${{ steps.names.outputs.ussd }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Image names
+        id: names
+        env:
+          REPO_OWNER: ${{ github.repository_owner }}
+          SHA: ${{ github.sha }}
+        run: |
+          registry="ghcr.io/${REPO_OWNER,,}"
+          {
+            echo "backend=${registry}/ngao-backend:${SHA}"
+            echo "ussd=${registry}/ngao-ussd:${SHA}"
+            echo "backend_latest=${registry}/ngao-backend:main"
+            echo "ussd_latest=${registry}/ngao-ussd:main"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ steps.names.outputs.backend }}
+            ${{ steps.names.outputs.backend_latest }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: USSD image
+        uses: docker/build-push-action@v6
+        with:
+          context: ussd
+          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ steps.names.outputs.ussd }}
+            ${{ steps.names.outputs.ussd_latest }}
+          cache-from: type=gha,scope=ussd
+          cache-to: type=gha,mode=max,scope=ussd
+
+  deploy:
+    name: Deploy to Oracle VM
+    needs: build
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: read
+    concurrency:
+      group: ngao-vm-deploy
+      cancel-in-progress: false
+    env:
+      NGAO_VM_HOST: ${{ secrets.NGAO_VM_HOST }}
+      NGAO_VM_USER: ${{ secrets.NGAO_VM_USER }}
+      NGAO_VM_SSH_PORT: ${{ secrets.NGAO_VM_SSH_PORT }}
+      NGAO_DOMAIN: ${{ secrets.NGAO_DOMAIN }}
+      DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      NGAO_API_TOKENS: ${{ secrets.NGAO_API_TOKENS }}
+      USSD_SERVICE_TOKEN: ${{ secrets.USSD_SERVICE_TOKEN }}
+      WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
+      USSD_WEBHOOK_SECRET: ${{ secrets.USSD_WEBHOOK_SECRET }}
+      NGAO_DB_USER: ${{ secrets.NGAO_DB_USER }}
+      NGAO_DB_PASSWORD: ${{ secrets.NGAO_DB_PASSWORD }}
+      NGAO_DB_SERVICE: ${{ secrets.NGAO_DB_SERVICE }}
+      NGAO_DB_DSN: ${{ secrets.NGAO_DB_DSN }}
+      NGAO_DB_SCHEMA: ${{ secrets.NGAO_DB_SCHEMA }}
+      NGAO_DB_WALLET_PASSWORD: ${{ secrets.NGAO_DB_WALLET_PASSWORD }}
+      SMS_BACKEND: ${{ secrets.SMS_BACKEND }}
+      AT_USERNAME: ${{ secrets.AT_USERNAME }}
+      AT_API_KEY: ${{ secrets.AT_API_KEY }}
+      AT_SENDER_ID: ${{ secrets.AT_SENDER_ID }}
+      DEMO_PHONES: ${{ secrets.DEMO_PHONES }}
+      OCI_COMPARTMENT_ID: ${{ secrets.OCI_COMPARTMENT_ID }}
+      CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
+      # Non-secret settings can live in repository variables instead.
+      ALERTS_REQUIRE_APPROVAL: ${{ vars.ALERTS_REQUIRE_APPROVAL }}
+      REPLY_READER: ${{ vars.REPLY_READER }}
+      SEASONAL_FEATURE_SOURCE: ${{ vars.SEASONAL_FEATURE_SOURCE }}
+      LOG_LEVEL: ${{ vars.LOG_LEVEL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Require secrets and render env files
+        id: render
+        env:
+          BACKEND_IMAGE: ${{ needs.build.outputs.backend_image }}
+          USSD_IMAGE: ${{ needs.build.outputs.ussd_image }}
+          HAS_SSH_KEY: ${{ secrets.NGAO_VM_SSH_KEY != '' }}
+          HAS_WALLET: ${{ secrets.NGAO_DB_WALLET_B64 != '' }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [[ -n "$NGAO_VM_USER" ]] || missing+=(NGAO_VM_USER)
+          [[ "$HAS_SSH_KEY" == "true" ]] || missing+=(NGAO_VM_SSH_KEY)
+          [[ "$HAS_WALLET" == "true" ]] || missing+=(NGAO_DB_WALLET_B64)
+          if (( ${#missing[@]} )); then
+            echo "::error::Missing GitHub Actions secrets: ${missing[*]}. See docs/DEPLOY_VM.md."; exit 1
+          fi
+          bundle="$RUNNER_TEMP/bundle"
+          python3 deploy/vm/render_env.py --out "$bundle" --backend-image "$BACKEND_IMAGE" \
+            --ussd-image "$USSD_IMAGE" --github-output "$GITHUB_OUTPUT"
+          cp deploy/vm/docker-compose.yml deploy/vm/Caddyfile deploy/vm/remote-deploy.sh "$bundle/"
+
+      - name: Unpack the database wallet
+        env:
+          NGAO_DB_WALLET_B64: ${{ secrets.NGAO_DB_WALLET_B64 }}
+        run: |
+          set -euo pipefail
+          python3 db/deploy/decode-wallet.py --out "$RUNNER_TEMP/wallet.zip"
+          wallet="$RUNNER_TEMP/bundle/wallet"
+          mkdir -p "$wallet"
+          python3 -m zipfile -e "$RUNNER_TEMP/wallet.zip" "$wallet"
+          rm -f "$RUNNER_TEMP/wallet.zip"
+          [[ -f "$wallet/tnsnames.ora" ]] || { echo "::error::The wallet has no tnsnames.ora."; exit 1; }
+          [[ -f "$wallet/ewallet.pem" ]] || echo "::warning::The wallet has no ewallet.pem; python-oracledb thin mode needs it for mTLS. Download a fresh instance wallet."
+          # The containers run as a different uid than the SSH user: files readable, folder private on the host (/opt/ngao is 0750).
+          chmod 755 "$wallet"; chmod 644 "$wallet"/*
+
+      - name: Set up SSH
+        env:
+          SSH_KEY: ${{ secrets.NGAO_VM_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.NGAO_VM_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/ngao_vm
+          chmod 600 ~/.ssh/ngao_vm
+          port="${NGAO_VM_SSH_PORT:-22}"
+          if [[ -n "$KNOWN_HOSTS" ]]; then
+            printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            echo "::warning::NGAO_VM_KNOWN_HOSTS is not set; trusting the host key seen now (ssh-keyscan). Set it to pin the key."
+            ssh-keyscan -p "$port" -T 15 "$NGAO_VM_HOST" > ~/.ssh/known_hosts 2>/dev/null
+          fi
+          cat > ~/.ssh/config <<EOF
+          Host ngao-vm
+            HostName ${NGAO_VM_HOST}
+            User ${NGAO_VM_USER}
+            Port ${port}
+            IdentityFile ~/.ssh/ngao_vm
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+            ServerAliveInterval 30
+            ConnectTimeout 20
+          EOF
+          ssh ngao-vm 'echo "connected to $(hostname) ($(uname -m))"'
+
+      - name: Install Docker on first deploy
+        run: |
+          set -euo pipefail
+          if ssh ngao-vm 'command -v docker >/dev/null && docker compose version >/dev/null && test -w /opt/ngao' 2>/dev/null; then
+            echo "Docker is ready on the VM."
+          else
+            scp -q deploy/vm/bootstrap.sh ngao-vm:/tmp/ngao-bootstrap.sh
+            ssh ngao-vm 'sudo bash /tmp/ngao-bootstrap.sh "$(id -un)" && rm -f /tmp/ngao-bootstrap.sh'
+          fi
+
+      - name: Upload bundle and start the stack
+        env:
+          BASE_URL: ${{ steps.render.outputs.base_url }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          tar -C "$RUNNER_TEMP/bundle" -czf - . | ssh ngao-vm \
+            'rm -rf /opt/ngao/wallet && tar -xzf - -C /opt/ngao && chmod 600 /opt/ngao/backend.env /opt/ngao/ussd.env /opt/ngao/.env'
+          rm -rf "$RUNNER_TEMP/bundle"
+          # The user and URL are expanded here on purpose (quoted with %q); the token goes over stdin.
+          # shellcheck disable=SC2029
+          printf '%s\n' "$GHCR_TOKEN" | ssh ngao-vm \
+            "bash /opt/ngao/remote-deploy.sh $(printf '%q' "$GHCR_USER") $(printf '%q' "$BASE_URL")"
+
+      - name: Smoke test the public URL
+        env:
+          BASE_URL: ${{ steps.render.outputs.base_url }}
+          USSD_URL: ${{ steps.render.outputs.ussd_url }}
+        run: |
+          set -euo pipefail
+          # The first deploy waits for Let's Encrypt to issue the certificate.
+          for _ in $(seq 1 24); do
+            body="$(curl -fsS -m 10 "$BASE_URL/health" 2>/dev/null)" && break
+            sleep 5
+          done
+          echo "health: ${body:-unreachable}"
+          [[ "${body:-}" == *'"database":"oracle"'* ]] || {
+            echo "::error::$BASE_URL/health is not reachable over HTTPS or not on Oracle. Check the VM subnet security list allows 80/443."; exit 1; }
+          curl -fsS -m 10 "${USSD_URL%/ussd}/ussd-healthz" >/dev/null
+          code="$(curl -s -o /dev/null -w '%{http_code}' -m 10 "$BASE_URL/wards")"
+          [[ "$code" == "401" ]] || { echo "::error::/wards answered $code without a token (expected 401)"; exit 1; }
+          {
+            echo "### Ngao backend deployed"
+            echo "| What | URL |"
+            echo "|---|---|"
+            echo "| API docs | ${BASE_URL}/docs/ |"
+            echo "| Health | ${BASE_URL}/health |"
+            echo "| Wasiliana USSD callback | ${USSD_URL}?k=&lt;WEBHOOK_SECRET&gt; |"
+            echo "| Africa's Talking delivery reports | ${BASE_URL}/sms/delivery?k=&lt;WEBHOOK_SECRET&gt; |"
+            echo "| Africa's Talking incoming SMS | ${BASE_URL}/sms/inbound?k=&lt;WEBHOOK_SECRET&gt; |"
+          } >> "$GITHUB_STEP_SUMMARY"

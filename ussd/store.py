@@ -12,6 +12,7 @@ tests; it reads the same cooperative list from db/seed/cooperatives.csv.
 import csv
 import logging
 import os
+import re
 import threading
 import time
 from dataclasses import dataclass, field
@@ -22,9 +23,10 @@ COOP_CSV = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__
                         "db", "seed", "cooperatives.csv")
 
 
-def load_coops_csv(path: str = COOP_CSV) -> list[tuple[int, str]]:
+def load_coops_csv(path: str = COOP_CSV) -> list[tuple[int, str, int | None]]:
+    """(seed_id, short_name, None): local runs only; real ids and wards come from COOPERATIVES."""
     with open(path, newline="", encoding="utf-8") as f:
-        return [(int(r["coop_id"]), r["short_name"]) for r in csv.DictReader(f)]
+        return [(int(r["seed_id"]), r["short_name"], None) for r in csv.DictReader(f)]
 
 
 @dataclass
@@ -64,7 +66,7 @@ class SessionCache:
 
 
 class MemoryStore:
-    def __init__(self, coops: list[tuple[int, str]] | None = None):
+    def __init__(self, coops: list[tuple[int, str, int | None]] | None = None):
         self._coops = coops if coops is not None else load_coops_csv()
         self._langs: dict[str, str] = {}
         self.sessions: dict[str, dict] = {}
@@ -82,7 +84,8 @@ class MemoryStore:
     def upsert_session(self, session_id: str, phone: str, text: str) -> None:
         self.sessions[session_id] = {"phone": phone, "last_text": text, "updated_at": time.time()}
 
-    def cooperatives(self) -> list[tuple[int, str]]:
+    def cooperatives(self) -> list[tuple[int, str, int | None]]:
+        """(coop_id, label, ward_id) sorted by label."""
         return sorted(self._coops, key=lambda c: c[1].lower())
 
 
@@ -105,6 +108,17 @@ class OracleStore:
         if wallet:
             params.update(config_dir=wallet, wallet_location=wallet,
                           wallet_password=os.getenv("DB_WALLET_PASSWORD"))
+        schema = os.getenv("DB_SCHEMA")
+        if schema:
+            # Log in as one user (e.g. ADMIN), work in the app schema (WKSP_NGAO), like the backend.
+            if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_$#]{0,127}", schema):
+                raise ValueError("DB_SCHEMA must be a plain Oracle identifier")
+
+            def use_schema(conn, requested_tag):
+                with conn.cursor() as cur:
+                    cur.execute(f"ALTER SESSION SET CURRENT_SCHEMA = {schema}")
+
+            params["session_callback"] = use_schema
         return cls(oracledb.create_pool(**params))
 
     def preferred_lang(self, phone: str) -> str | None:
@@ -140,14 +154,15 @@ class OracleStore:
             )
             conn.commit()
 
-    def cooperatives(self) -> list[tuple[int, str]]:
+    def cooperatives(self) -> list[tuple[int, str, int | None]]:
+        """Real societies only (is_demo = 'N'), as (coop_id, label, ward_id)."""
         # The list changes rarely; cache it for 10 minutes to keep hops fast.
         if self._coop_cache and time.time() - self._coop_cache[0] < 600:
             return self._coop_cache[1]
         with self.pool.acquire() as conn, conn.cursor() as cur:
-            cur.execute("SELECT coop_id, short_name FROM cooperatives "
-                        "WHERE is_active = 'Y' ORDER BY UPPER(short_name)")
-            rows = [(int(i), n) for i, n in cur]
+            cur.execute("SELECT coop_id, NVL(short_name, coop_name), ward_id FROM cooperatives "
+                        "WHERE NVL(is_demo, 'Y') = 'N' ORDER BY UPPER(NVL(short_name, coop_name))")
+            rows = [(int(i), n, int(w) if w is not None else None) for i, n, w in cur]
         self._coop_cache = (time.time(), rows)
         return rows
 

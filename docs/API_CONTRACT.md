@@ -9,7 +9,7 @@ flowchart LR
   WA["Wasiliana"] -- "USSD session POST" --> US["ussd/ (Louisa)"]
   US -- "plain text CON/END" --> WA
   US -- "§5 /ngao/v1/ussd" --> BE["Backend (Dennis)"]
-  WA -- "SMS REST + callbacks" --> BE
+  AT["Africa's Talking"] -- "SMS send + delivery reports + incoming SMS" --> BE
   BE -- "§2 REST /ngao/v1" --> X["Demo controls · tests · router"]
   BE -- "writes §1.1 tables" --> DB[("ADB schema NGAO")]
   US -- "writes USSD_SESSIONS" --> DB
@@ -20,7 +20,7 @@ flowchart LR
 Four layers:
 1. **Database contract** (primary): tables the backend writes, views APEX reads, sessions Louisa writes.
 2. **REST API** `/ngao/v1`: actions (run scoring, send alerts, plan routes) and read endpoints for tests and the PWA.
-3. **Wasiliana**: USSD callback to `ussd/`, outbound SMS from the backend, delivery reports and inbound SMS once the field names are confirmed.
+3. **Providers**: Wasiliana carries the USSD callback to `ussd/`. **Africa's Talking** carries SMS: outbound from the backend, delivery reports and incoming SMS.
 4. **USSD to backend** (§5): Louisa calls Dennis for registration, reports, ward status, and unsubscribe. She does not send SMS.
 
 ## 0. Conventions
@@ -47,7 +47,8 @@ Four layers:
 | `MESSAGES` | Every inbound SMS (IN) and every send/DLR update (OUT) | direction, channel, phone, body, provider_msg_id, status |
 | `REPORTS` | Reply reader / USSD menu 2 via §6 | message_id, ward_id, report_type, report_count, payload, ai_confidence, review_status |
 | `ROUTES`, `ROUTE_STOPS`, `BOOKINGS` | Dryer router 18:00 / confirmations | see schema |
-| `ALERTS` | Alert engine (if owned by backend; else PL/SQL) | score_id, subscriber_id, alert_type, status |
+| `ALERTS` | Alert engine: one row per eligible subscriber of an ACT score, body rendered from `ALERT_TEMPLATE` and stored in at most 160 characters | score_id, subscriber_id, ward_id, alert_type (all required on the live table), hazard, severity, lang, body, status (`PENDING_APPROVAL` → `APPROVED`/`REJECTED` → `SENT`), approved_by, approved_at, sent_at, message_id |
+| `JOB_RUNS` | Every `/jobs/*` call when the table exists. The live NgaoDB has no `JOB_RUNS` table; the job still runs (§2.2) | job_name, params, status, summary |
 
 Louisa (`ussd/`) writes `USSD_SESSIONS` (session_id, phone, last_text, updated_at) on each hop. She does not write `SUBSCRIBERS`, `MESSAGES`, or `REPORTS`.
 
@@ -74,6 +75,7 @@ Trevor (`data/`) writes `WARDS`, `WARD_FEATURES_DAILY`, `FORECASTS`, `RISK_SCORE
 
 ### 1.3 Writes APEX makes
 - `REPORTS.review_status` (`ACCEPTED`/`CORRECTED`/`REJECTED`), `reviewed_by`, corrected `payload`.
+- `ALERTS.status` `PENDING_APPROVAL` → `APPROVED` or `REJECTED`, with `approved_by`, `approved_at` (Alert Approvals page). Each row is already one subscriber. The backend queues one `MESSAGES` row and stores its id in `ALERTS.MESSAGE_ID` (live `MESSAGES` has no `alert_id`), then sets `SENT` and `sent_at`. It never sends replay alerts or approvals older than 48 h.
 - Demo controls call **PL/SQL packages or REST §2.2**, never insert alerts directly.
 - `ASK_NGAO_LOG` inserts.
 
@@ -86,7 +88,8 @@ Base URL (Django, if chosen): `https://<vm-host>/api/v1` with the **same paths a
 
 | Caller | Mechanism |
 |---|---|
-| Wasiliana callbacks (USSD, and SMS once confirmed) | Public callback URL. If Wasiliana supports a shared secret, require `?k=<WEBHOOK_SECRET>` or the header they document. Confirm the exact check against [docs.wasiliana.com](https://docs.wasiliana.com) **[Assumption until confirmed]** |
+| Africa's Talking SMS callbacks | Public URL with `?k=<WEBHOOK_SECRET>` (AT does not sign callbacks); a wrong secret is ignored silently |
+| Wasiliana USSD callback (to `ussd/`) | Public callback URL; check per [ussd/README.md](../ussd/README.md) |
 | Louisa's USSD service calling §6 | `Authorization: Bearer <USSD_SERVICE_TOKEN>` |
 | APEX / demo controls / router | OAuth2 client-credentials (ORDS `OAUTH` client) or `Authorization: Bearer <token>` (DRF token) |
 | Public scorecard | Unauthenticated `GET /public/scorecard` |
@@ -97,8 +100,8 @@ Base URL (Django, if chosen): `https://<vm-host>/api/v1` with the **same paths a
 { "error": { "code": "VALIDATION_ERROR", "message": "ward_id is required", "details": {"field": "ward_id"}, "request_id": "8f2c..." } }
 ```
 Codes → HTTP: `VALIDATION_ERROR` 400 · `UNAUTHORIZED` 401 · `FORBIDDEN` 403 · `NOT_FOUND` 404 ·
-`CONFLICT` 409 · `UPSTREAM_ERROR` 502 (Wasiliana/GenAI) · `INTERNAL` 500.
-SMS webhook endpoints **always return 200** to Wasiliana (log errors). The USSD callback is the exception: it must return plain text within ~10 seconds.
+`CONFLICT` 409 · `UPSTREAM_ERROR` 502 (SMS provider/GenAI) · `INTERNAL` 500.
+SMS webhook endpoints **always return 200** to Africa's Talking (log errors). The USSD callback is the exception: it must return plain text within ~10 seconds.
 
 ### 2.2 Action endpoints (demo controls + scheduler)
 
@@ -109,6 +112,8 @@ SMS webhook endpoints **always return 200** to Wasiliana (log errors). The USSD 
 | POST | `/jobs/plan-routes` | `{"route_date":"2026-10-16"}` | Dryer router → routes, bookings, SMS |
 | POST | `/jobs/replay` | `{"scenario":"garissa_rvf_2006","from":"2006-09-01","to":"2007-01-15"}` | Fill replay tables |
 | POST | `/jobs/reset-demo` | `{}` | Reset demo subscribers/messages |
+| POST | `/jobs/dispatch` | `{"retry_failed":false}` | Fan out `APPROVED` alerts and send queued SMS now (additive) |
+| POST | `/jobs/grade-outcomes` | `{"as_of":"2026-10-15"}` | Grade passed A1/A2 windows → `OUTCOMES` (additive) |
 
 Response `202`:
 ```json
@@ -145,6 +150,8 @@ Response `202`:
 
 `GET /public/scorecard` → rows of `V_SCORECARD`.
 
+Additive (v1-draft.4): `GET /alerts?status=PENDING_APPROVAL`, `POST /alerts/{id}/approve` and `/reject` `{"approved_by":"..."}` (same effect as the APEX page), `GET /jobs/{job_id}/status`, `GET /public/calibration` (rows of `V_CALIBRATION`), `GET /health` (unauthenticated), `POST /demo/inbound-sms` `{"phone","text"}` (the §3.4 reply path without Wasiliana forwarding, API token).
+
 ### 2.4 Internal: reply-reader contract (OCI GenAI output)
 
 The model must return **only** this JSON (validated server-side; anything else → `NEEDS_REVIEW`):
@@ -157,16 +164,17 @@ The model must return **only** this JSON (validated server-side; anything else �
 Rules: `confidence < 0.7` or `report_type = other` → `review_status = NEEDS_REVIEW`. Exact keywords
 (`STOP`, `1`, `NDIYO`, `RVF`, and `LUGHA` or `LANG` followed by `SW` or `EN`) are handled **before** the AI call. `language` in the JSON is `sw` or `en` (Swahili or English, chosen by the user).
 
-## 3. Wasiliana (SMS and USSD)
+## 3. Providers: Wasiliana (USSD) and Africa's Talking (SMS)
 
-Wasiliana is the Kenyan SMS, USSD, and airtime provider. Dennis has used it before.
+USSD runs on **Wasiliana** (Louisa's `ussd/`). SMS runs on **Africa's Talking** (the backend); Wasiliana SMS
+stays in the backend as a fallback (`SMS_BACKEND=wasiliana`).
 
 Two callback surfaces, two owners:
 
-| Surface | Who receives it | Owner |
-|---|---|---|
-| USSD session callback | `ussd/` public URL | Louisa |
-| Outbound SMS, delivery reports, inbound SMS | `backend/` | Dennis |
+| Surface | Provider | Who receives it | Owner |
+|---|---|---|---|
+| USSD session callback | Wasiliana | `ussd/` public URL | Louisa |
+| Outbound SMS, delivery reports, incoming SMS | Africa's Talking | `backend/` | Dennis |
 
 ### 3.1 USSD callback mode
 
@@ -186,27 +194,36 @@ END Asante! Umesajiliwa.
 
 **Confirm exact request field names against Wasiliana docs ([docs.wasiliana.com](https://docs.wasiliana.com)).** The handler needs a session id, the subscriber phone number, and the text entered so far. Do not hard-code a guessed JSON or form body; isolate the parse in one adapter in `ussd/`.
 
-Screen text is in Swahili or English, chosen by the user. On a new number the first screen is the language prompt in §5; that choice is saved to `preferred_lang` before the menu below. Main menu: `1` Register / Jiandikishe → role (farmer / herder / both) → **cooperative** (numbered list from `COOPERATIVES`, plus Other / not listed) → **membership number** (skipped for Other) → consent. County and ward are not asked; the backend derives them from the cooperative; `2` Report / Ripoti → wet bags (count), sick or dead animals (type, count), flooding, water point dry, or other (ask them to send an SMS; Louisa does not send one); `3` Ward status / Hali ya kata yangu; `4` **Lugha / Language** (change `preferred_lang`, then continue in the new language); `5` Stop alerts / Acha ujumbe (confirm, then `/ussd/unsubscribe`); `6` El Niño advice / Ushauri wa El Niño (static tips, no backend call); `7` **Dry wet maize / Kausha mahindi** (request drying, or confirm a slot the dryer router offered; see §5).
+Screen text is in Swahili or English, chosen by the user. On a new number the first screen is the language prompt in §5; that choice is saved to `preferred_lang` before the menu below. Main menu: `1` Register / Jiandikishe → role (farmer / herder / both) → **cooperative** (numbered list of real societies from `COOPERATIVES` where `is_demo = 'N'`, plus Other / not listed) → **membership number** (skipped for Other) → consent. County and ward are not asked; the ward comes from the cooperative; `2` Report / Ripoti → wet bags (count), sick or dead animals (type, count), flooding, water point dry, or other (ask them to send an SMS; Louisa does not send one); `3` Ward status / Hali ya kata yangu; `4` **Lugha / Language** (change `preferred_lang`, then continue in the new language); `5` Stop alerts / Acha ujumbe (confirm, then `/ussd/unsubscribe`); `6` El Niño advice / Ushauri wa El Niño (static tips, no backend call); `7` **Dry wet maize / Kausha mahindi** (request drying, or confirm a slot the dryer router offered; see §5).
 
 Registration, reports, ward status, and unsubscribe go through [§5](#5-ussd-to-backend-contract). Louisa writes only `USSD_SESSIONS`.
 
-### 3.2 Outbound SMS (Dennis → Wasiliana REST)
+### 3.2 Outbound SMS (Dennis → Africa's Talking)
 
-Dennis is the only sender. The alert engine and dryer router queue rows in `MESSAGES` (`direction=OUT`, `status=QUEUED`). A worker dequeues them and calls the **Wasiliana SMS REST API** with the **API key** and the registered **sender ID**.
+Dennis is the only sender. The alert engine and dryer router queue rows in `MESSAGES` (`direction=OUT`, `status=QUEUED`). A worker dequeues them and calls Africa's Talking (shape from the official `africastalking` Python SDK):
 
-Store the provider message id returned by Wasiliana in `MESSAGES.provider_msg_id`. **Confirm the exact URL, headers, and JSON against [docs.wasiliana.com](https://docs.wasiliana.com).** The Python package **`pytek-wasiliana`** is an optional client for this call; a thin `requests` wrapper is also fine. Either way the env vars are `WASILIANA_API_KEY` and `WASILIANA_SENDER_ID`.
+```
+POST https://api.africastalking.com/version1/messaging          (sandbox: https://api.sandbox.africastalking.com/...)
+apiKey: <AT_API_KEY>       Accept: application/json       Content-Type: application/x-www-form-urlencoded
+username=<AT_USERNAME>&to=+254712345678&message=...&bulkSMSMode=1[&from=<AT_SENDER_ID>]
+```
+Response: `{"SMSMessageData": {"Message": "Sent to 1/1 ...", "Recipients": [{"statusCode": 101, "number": "+2547...", "status": "Success", "cost": "KES 0.8000", "messageId": "ATXid_..."}]}}`. Store `messageId` in `MESSAGES.provider_msg_id`. `statusCode` 100/101/102 = accepted; 500/501/502 = retry; anything else (e.g. 403 InvalidPhoneNumber, 405 InsufficientBalance, 406 UserInBlacklist) = `FAILED`. `AT_USERNAME=sandbox` sends to the AT simulator only.
 
 ### 3.3 Delivery reports
 
-Wasiliana can POST a delivery report to a backend callback (`POST /sms/delivery`). **Confirm exact field names against Wasiliana docs ([docs.wasiliana.com](https://docs.wasiliana.com)).** The adapter maps the confirmed payload onto `MESSAGES.status` (`SENT` → `DELIVERED` / `FAILED`) using `provider_msg_id`. Until the field names are confirmed, log the raw body and do not guess the keys in the rest of the code.
+Africa's Talking POSTs (form-encoded) to `POST /sms/delivery?k=<WEBHOOK_SECRET>`:
+```
+id=ATXid_...&status=Success&phoneNumber=+254712345678&networkCode=63902&failureReason=&retryCount=0
+```
+`id` matches `MESSAGES.provider_msg_id`. `Success` → `DELIVERED`; `Failed` / `Rejected` → `FAILED`; `Sent`, `Submitted`, `Buffered` are not final and change nothing. Response: `200` empty, always; raw bodies are logged.
 
-Response: `200` empty. Failures are logged; do not return 4xx/5xx to Wasiliana for a payload we have not finished mapping.
+### 3.4 Incoming SMS
 
-### 3.4 Inbound SMS — open item
-
-**Inbound SMS forwarding is an open item.** Confirm with Wasiliana whether they POST inbound SMS to our callback, and **confirm exact field names against Wasiliana docs ([docs.wasiliana.com](https://docs.wasiliana.com))** before the reply reader depends on them.
-
-Intended backend path once that is confirmed: `POST /sms/inbound` → insert `MESSAGES` (`direction=IN`) → reply reader (§2.4). Processing may be async. The HTTP handler returns `200` immediately. Keywords `STOP`, `1`, `NDIYO`, `RVF`, and `LUGHA` or `LANG` followed by `SW` or `EN` (§5) are handled before any GenAI call. Until forwarding is confirmed, structured USSD menu 2 (via §5) is the path that does not depend on inbound SMS.
+Needs a shortcode (sandbox shortcodes are free; live: dedicated, or shared + keyword) whose incoming-messages callback is `POST /sms/inbound?k=<WEBHOOK_SECRET>` (form-encoded):
+```
+from=+254712345678&to=12345&text=Nimevuna magunia 20...&date=2026-10-15 09:12:01&id=...&linkId=...&networkCode=63902
+```
+→ insert `MESSAGES` (`direction=IN`) → keywords `STOP`, `1`, `NDIYO`, `RVF`, and `LUGHA` or `LANG` followed by `SW` or `EN` (§5) before any GenAI call → reply reader (§2.4). The handler returns `200` immediately; processing is async. Until a shortcode is set up, `POST /demo/inbound-sms` and USSD menu 2 (§5) cover the reply path.
 
 ## 4. Message templates
 Alerts are rendered from `ALERT_TEMPLATE` using the subscriber's `preferred_lang` (Swahili or English, chosen by the user). The unique key is `(hazard, severity, lang)` with `lang` in (`sw`, `en`) and `body` `VARCHAR2(160)`. Slots: `{ward}`, `{day}`, `{confidence}`, `{point}`, `{time}`, `{fee}`.
@@ -242,14 +259,14 @@ CON Chagua lugha / Choose language
 | Method | Path | Body | Effect |
 |---|---|---|---|
 | POST | `/ussd/language` | `{"phone":"+254712345678","preferred_lang":"sw"}` | Set `SUBSCRIBERS.preferred_lang` to `sw` or `en`. Create the subscriber row when the phone is new (phone + `preferred_lang` + `status`) so the choice is saved before registration finishes; registration fills role, ward, and consent. `200` `{"preferred_lang":"sw"}` |
-| POST | `/ussd/register` | `{"phone":"+254712345678","coop_id":4,"membership_no":"TF-0042","role":"farmer","preferred_lang":"sw","consent":true}` | MERGE `SUBSCRIBERS`, including `preferred_lang` (`sw` or `en`), `coop_id`, and `membership_no`. Set `ward_id` from `COOPERATIVES.ward_id` (null if the cooperative has no confirmed ward yet). `coop_id` and `membership_no` are both null when the farmer chose Other / not listed. Membership numbers are stored as given (uppercase, `A-Z 0-9 / -`, ≤ 20) and verified later with the cooperative. `201` `{"subscriber_id":44,"status":"ACTIVE"}`. **Changed:** replaces `ward_id` in the body |
+| POST | `/ussd/register` | `{"phone":"+254712345678","ward_id":12,"coop_id":17,"membership_no":"TF-0042","role":"farmer","preferred_lang":"sw","consent":true}` | MERGE `SUBSCRIBERS`, including `preferred_lang` (`sw` or `en`). USSD sends `ward_id` from the chosen cooperative (`COOPERATIVES.ward_id`) and omits it when that is null or the farmer chose Other / not listed. `coop_id` and `membership_no` are additive: store them on `SUBSCRIBERS`; both are null for Other. Membership numbers arrive uppercase (`A-Z 0-9 / -`, ≤ 20) and are stored as given, to be verified with the cooperative. **Requested change:** accept a missing `ward_id` (take it from `coop_id` when present, else leave it null) so Other and unconfirmed-ward farmers can register. `201` `{"subscriber_id":44,"status":"ACTIVE"}` |
 | POST | `/ussd/report` | `{"phone":"+254712345678","session_id":"s1","report_type":"wet_bags","count":20,"unit":"bags"}` | INSERT `REPORTS` with `source=USSD`, `review_status=AUTO_ACCEPTED` (a structured menu, not an AI parse). `201` `{"report_id":77}` |
 | GET | `/ussd/ward-status?phone=+254712345678` | — | Short line in Swahili or English, chosen by the user, for menu 3 (today's decision for the subscriber's ward, or a sentence that says we have no score). `200` `{"text":"Kata ya Moiben: siku za jua, uhakika 75%."}` when `preferred_lang` is `sw` |
 | POST | `/ussd/unsubscribe` | `{"phone":"+254712345678"}` | `SUBSCRIBERS.status=STOPPED`. `200` `{"status":"STOPPED"}` |
-| GET | `/ussd/drying?phone=+254712345678` | — | **[Proposed, menu 7]** Drying state for the subscriber. `booking` = their next `BOOKINGS` row with status `OFFERED` or `CONFIRMED` and a stop `eta` in the future (null if none). `points` = `COLLECTION_POINTS` in their ward. `200` `{"registered":true,"booking":{"booking_id":91,"status":"OFFERED","point_name":"Moiben market","eta":"2026-10-16T08:00:00+03:00","bags":20,"fee_kes":600},"points":[{"point_id":3,"point_name":"Moiben market"}]}`. Unknown phone → `200` `{"registered":false,"booking":null,"points":[]}` |
-| POST | `/ussd/drying/confirm` | `{"phone":"+254712345678","booking_id":91}` | **[Proposed, menu 7]** Same effect as `POST /bookings/{id}/confirm` (§2.3), with a check that the booking belongs to this phone. `200` `{"booking_id":91,"status":"CONFIRMED"}`; `404` if not theirs; `409` if no longer `OFFERED` |
+| GET | `/ussd/drying?phone=+254712345678` | — | **[Menu 7]** Drying state for the subscriber. `booking` = their next `BOOKINGS` row with status `OFFERED` or `CONFIRMED` and a stop `eta` in the future (null if none). `points` = `COLLECTION_POINTS` in their ward. `200` `{"registered":true,"booking":{"booking_id":91,"status":"OFFERED","point_name":"Moiben market","eta":"2026-10-16T08:00:00+03:00","route_date":"2026-10-16","bags":20,"fee_kes":4200},"points":[{"point_id":3,"point_name":"Moiben market"}]}`. Unknown phone → `200` `{"registered":false,"booking":null,"points":[]}` |
+| POST | `/ussd/drying/confirm` | `{"phone":"+254712345678","booking_id":91}` | **[Menu 7]** Same effect as `POST /bookings/{id}/confirm` (§2.3), with a check that the booking belongs to this phone. `200` `{"booking_id":91,"status":"CONFIRMED"}`; `404` if not theirs; `409` if `DRIED` or `NO_SHOW` (confirming twice is harmless) |
 
-**Drying request (menu 7, proposed).** `POST /ussd/report` may carry an optional `point_id` (additive): a `wet_bags` report with `point_id` means the farmer asked for drying at that collection point. Store it in `REPORTS.payload` so the 18:00 dryer router can count wet bags per point and create the `OFFERED` booking and A5 SMS. The router should count only the latest `wet_bags` report per subscriber in its 3-day window, since a farmer may report in menu 2 and then request in menu 7.
+**Drying request (menu 7).** `POST /ussd/report` may carry an optional `point_id` (additive): a `wet_bags` report with `point_id` means the farmer asked for drying at that collection point. Store it in `REPORTS.payload` so the 18:00 dryer router can count wet bags per point and create the `OFFERED` booking and A5 SMS. The router should count only the latest `wet_bags` report per subscriber in its 3-day window, since a farmer may report in menu 2 and then request in menu 7.
 
 `report_type` uses the same set as §2.4. Menu 2 only sends types the menu collected (wet bags, sick or dead animals, flooding, water point dry). "Other" tells the farmer to send an SMS; it does not call `/ussd/report`.
 
@@ -264,4 +281,8 @@ Session rows stay in `ussd/`: each hop upserts `USSD_SESSIONS` (`session_id`, `p
 | v1-draft.2 | 2026-10-14 | Wasiliana replaces Africa's Talking. USSD service is `ussd/` (Louisa); §5 is the USSD to backend contract. Inbound SMS forwarding and delivery-report field names left open pending docs.wasiliana.com |
 | v1-draft.3 | 2026-10-14 | Language choice: `preferred_lang`, first-session prompt, main-menu Lugha / Language, SMS `LUGHA`/`LANG`, alerts rendered from `ALERT_TEMPLATE` |
 | v1-draft.4 | 2026-10-14 | USSD main menu items 5–7 (Stop alerts, El Niño advice, Dry wet maize). Proposed §5 `GET /ussd/drying`, `POST /ussd/drying/confirm`, optional `point_id` on `/ussd/report` |
-| v1-draft.5 | 2026-10-15 | Registration asks for cooperative + membership number instead of county + ward. New `COOPERATIVES` table (seed `db/seed/cooperatives.csv`); `SUBSCRIBERS.coop_id`, `membership_no`; `/ussd/register` body takes `coop_id` + `membership_no`, and the backend derives `ward_id` |
+| v1-draft.5 | 2026-10-14 | Alert approval workflow as built in APEX (`PENDING_APPROVAL`/`APPROVED`/`REJECTED`/`SENT`); additive endpoints (`/jobs/dispatch`, `/jobs/grade-outcomes`, `/alerts/*`, `/jobs/{id}/status`, `/public/calibration`, `/health`, `/demo/inbound-sms`). Do **not** run `db/migrations/001_backend_alignment.sql` on the live NgaoDB. The backend writes the live per-subscriber `ALERTS` row (`MESSAGE_ID` on the alert, no `JOB_RUNS`). |
+| v1-draft.6 | 2026-10-14 | SMS moves to **Africa's Talking** (send, delivery reports, incoming SMS; §3.2–3.4, form-encoded callbacks). USSD stays on Wasiliana (`ussd/`, unchanged). Wasiliana SMS kept as a backend fallback |
+| v1-draft.7 | 2026-10-15 | §5 menu 7 implemented: `GET /ussd/drying`, `POST /ussd/drying/confirm`; `point_id` on `/ussd/report` is stored and the 18:00 router books that point. `fee_kes` is the booking total. APEX can call §2.2 through the `NGAO_BACKEND` PL/SQL package (`db/deploy/020_backend_bridge.sql`). Backend + USSD deploy: [DEPLOY_VM.md](DEPLOY_VM.md) |
+| v1-draft.8 | 2026-10-15 | Seasonal outlook (v3 model, [SEASONAL_MODEL.md](SEASONAL_MODEL.md)): `POST /jobs/seasonal-outlook`, `GET /seasonal/outlook`, `GET /public/seasonal-model-card`, §5 `GET /ussd/seasonal-outlook` (USSD menu 6 title). Backend writes `SEASONAL_OUTLOOK`, `SEASONAL_MODEL_RUNS`, `SEASONAL_BACKTEST` and alert type `S1` scores (`db/deploy/030_seasonal_alert.sql`) |
+| v1-draft.9 | 2026-10-15 | USSD registration asks for cooperative + membership number instead of county + ward. `/ussd/register` adds `coop_id` and `membership_no`; USSD sends `ward_id` from the chosen cooperative. **Requested:** make `ward_id` optional when `coop_id` is given (or for Other), and store `coop_id` + `membership_no`. `db/deploy/040_cooperatives_registry.sql` adds `short_name`, `sub_county`, `location_basis`, `coop_type`, `source_url` to `COOPERATIVES` and `membership_no` to `SUBSCRIBERS`, and merges 14 real societies (`is_demo = 'N'`) |

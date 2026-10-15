@@ -5,7 +5,8 @@
 <p align="center">
   <img alt="Oracle APEX" src="https://img.shields.io/badge/Oracle-APEX-C74634?logo=oracle&logoColor=white" />
   <img alt="Oracle Autonomous Database" src="https://img.shields.io/badge/Oracle-Autonomous%20Database-F80000?logo=oracle&logoColor=white" />
-  <img alt="Wasiliana" src="https://img.shields.io/badge/Wasiliana-SMS%2FUSSD-0B6E4F" />
+  <img alt="Africa's Talking" src="https://img.shields.io/badge/Africa's%20Talking-SMS-F26522" />
+  <img alt="Wasiliana" src="https://img.shields.io/badge/Wasiliana-USSD-0B6E4F" />
   <img alt="status: hackathon prototype" src="https://img.shields.io/badge/status-hackathon%20prototype-F5A623" />
 </p>
 
@@ -40,8 +41,9 @@ Valley fever outbreak in Garissa**, on the shared dashboard.
 | Doc | Read it for |
 |---|---|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | All moving parts, component & data-pipeline diagrams, sequence diagrams, ER diagram |
-| [docs/API_CONTRACT.md](docs/API_CONTRACT.md) | **The frontend ↔ backend contract**, plus the USSD ↔ backend contract: tables/views, REST endpoints, Wasiliana webhooks, error format |
+| [docs/API_CONTRACT.md](docs/API_CONTRACT.md) | **The frontend ↔ backend contract**, plus the USSD ↔ backend contract: tables/views, REST endpoints, SMS webhooks (Africa's Talking), error format |
 | [docs/ORACLE_APEX.md](docs/ORACLE_APEX.md) | How we use Autonomous DB, APEX, PWA, Select AI, ORDS; exporting APEX into git |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | How a push to `main` deploys APEX app 100 and the `db/deploy/` scripts to NgaoDB |
 | [docs/EXECUTION_PLAN.md](docs/EXECUTION_PLAN.md) | Wed/Thu/Fri timeline, owners, milestones, cut list, demo script, risks |
 | [db/schema.sql](db/schema.sql) | Draft DDL for the shared schema (source of truth) |
 
@@ -70,7 +72,8 @@ flowchart LR
   end
   USSD["USSD menus (Louisa · ussd-louisa)"]
   GENAI["OCI Generative AI<br/>reply → JSON"]
-  WA["Wasiliana<br/>SMS · USSD"]
+  WA["Wasiliana<br/>USSD"]
+  AT["Africa's Talking<br/>SMS"]
   APEX["Oracle APEX dashboard + PWA<br/>(Chris · frontend-chris)"]
   FARMER(["Farmers · herders<br/>any phone"])
   OFFICER(["County officers · vets<br/>cooperatives · operators"])
@@ -83,10 +86,11 @@ flowchart LR
   OML --> ENG --> TBL
   API <--> TBL
   API <--> GENAI
-  API <--> WA
+  API <--> AT
   USSD <--> WA
   USSD --> API
   WA <--> FARMER
+  AT <--> FARMER
   ORDS -.-> API
   APEX <--> TBL
   APEX --> SAI --> TBL
@@ -102,7 +106,7 @@ flowchart LR
 | Person | Branch | Owns | Folder |
 |---|---|---|---|
 | **Chris** | **`frontend-chris`** | APEX dashboard + PWA | `frontend/` |
-| **Dennis** | **`backend-dennis`** | APIs, alert engine, Wasiliana SMS, reply reader, dryer router | `backend/` |
+| **Dennis** | **`backend-dennis`** | APIs, alert engine, Africa's Talking SMS, reply reader, dryer router | `backend/` |
 | **Trevor** | **`data-modelling-trevor`** | Data pipelines, GEE exports, OML4Py models, risk scoring | `data/` |
 | **Louisa** | **`ussd-louisa`** | USSD menus and flows via Wasiliana, sessions | `ussd/` |
 | **Esther** | **`slides-esther`** | Slides | `docs/pitch/` |
@@ -180,7 +184,7 @@ MVUA-SMART/
 |---|---|---|
 | 05:00 | Pull new data → `ward_features_daily` | Trevor · `data/pipelines` (DBMS_SCHEDULER / OCI job) |
 | ~05:30 | Score every ward → `risk_scores` (calibrated prob + Act/Watch/Abstain) | Trevor · OML4Py / SQL rules |
-| 06:00 | Send Act alerts to matching subscribers, cooldowns applied | Alert engine → Wasiliana SMS (Dennis) |
+| 06:00 | Send Act alerts to matching subscribers, cooldowns applied | Alert engine → Africa's Talking SMS (Dennis) |
 | All day | USSD register / report / ward status | Louisa's `ussd/` service via Wasiliana |
 | All day | Replies → OCI GenAI → `reports` (or review queue) | Backend reply reader |
 | 18:00 | Plan tomorrow's dryer routes → `routes`, `bookings`; booking SMS | Dryer router |
@@ -191,7 +195,7 @@ For the demo every step is triggered **on cue** from the hidden APEX **Demo cont
 ### Run it locally / for development
 - **Database:** run `db/schema.sql` in the Autonomous DB (SQL Worksheet in Database Actions) under schema `NGAO`.
 - **Dashboard:** APEX workspace on the same ADB; import `frontend/apex/` (see [ORACLE_APEX.md](docs/ORACLE_APEX.md)).
-- **Backend:** see [backend/README.md](backend/README.md); copy `.env.example` → `.env`. Outbound SMS uses the Wasiliana REST API (`WASILIANA_API_KEY`, `WASILIANA_SENDER_ID`). The Python package `pytek-wasiliana` is an optional client.
+- **Backend:** see [backend/README.md](backend/README.md); copy `.env.example` → `.env`. SMS (send, delivery reports, incoming) uses **Africa's Talking** (`SMS_BACKEND=africastalking`, `AT_USERNAME`, `AT_API_KEY`, optional `AT_SENDER_ID`; `AT_USERNAME=sandbox` for the free simulator). Swagger UI at `/ngao/v1/docs/`.
 - **USSD:** see [ussd/README.md](ussd/README.md). Wasiliana POSTs each session to the callback URL; the service replies with plain text prefixed `CON` or `END`.
 - **Data:** see [data/README.md](data/README.md).
 
@@ -207,7 +211,7 @@ For the demo every step is triggered **on cue** from the hidden APEX **Demo cont
 
 ## ⚠️ Open decisions
 
-1. **Django/DRF vs ORDS** for Wasiliana SMS webhooks and alert sending. The brief uses ORDS inside the DB; this README originally planned Django. Either works against the same schema; see [ARCHITECTURE.md § Open decisions](docs/ARCHITECTURE.md#open-decisions). Louisa's USSD callback is a separate public URL either way.
+1. **Django/DRF vs ORDS** for SMS webhooks and alert sending (backend built in Django/DRF). The brief uses ORDS inside the DB; this README originally planned Django. Either works against the same schema; see [ARCHITECTURE.md § Open decisions](docs/ARCHITECTURE.md#open-decisions). Louisa's USSD callback is a separate public URL either way.
 2. Where the Django service is hosted if chosen (OCI Always Free VM + public HTTPS, or a tunnel for the demo). The USSD callback needs a public URL too.
 3. React/Next.js web frontend is **dropped** in favour of APEX + APEX PWA (brief + judging favour Oracle). Reopen only if needed.
-4. **Inbound SMS forwarding** from Wasiliana is an open item. Confirm whether inbound SMS is posted to our callback, and the exact field names, against [docs.wasiliana.com](https://docs.wasiliana.com) before the reply reader depends on them. Delivery-report field names are the same kind of check.
+4. **Incoming SMS** needs an Africa's Talking shortcode (free in the sandbox) with its callback set to `/ngao/v1/sms/inbound`. Until then the demo uses `/demo/inbound-sms` and USSD menu 2.
