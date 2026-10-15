@@ -42,6 +42,7 @@ Valley fever outbreak in Garissa**, on the shared dashboard.
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | All moving parts, component & data-pipeline diagrams, sequence diagrams, ER diagram |
 | [docs/API_CONTRACT.md](docs/API_CONTRACT.md) | **The frontend ↔ backend contract**, plus the USSD ↔ backend contract: tables/views, REST endpoints, Wasiliana webhooks, error format |
 | [docs/ORACLE_APEX.md](docs/ORACLE_APEX.md) | How we use Autonomous DB, APEX, PWA, Select AI, ORDS; exporting APEX into git |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | How a push to `main` deploys APEX app 100 and the `db/deploy/` scripts to NgaoDB |
 | [docs/EXECUTION_PLAN.md](docs/EXECUTION_PLAN.md) | Wed/Thu/Fri timeline, owners, milestones, cut list, demo script, risks |
 | [db/schema.sql](db/schema.sql) | Draft DDL for the shared schema (source of truth) |
 
