@@ -30,7 +30,7 @@ def _reply(message, key, lang, **slots):
 
 
 def _lang(message):
-    return message.subscriber.preferred_lang if message.subscriber else "sw"
+    return message.subscriber.spoken_lang() if message.subscriber else "sw"
 
 
 def handle(message):

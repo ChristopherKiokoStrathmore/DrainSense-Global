@@ -1,14 +1,18 @@
-"""Alert engine (ARCHITECTURE §5, M3): ACT scores -> ALERTS -> MESSAGES.
+"""Alert engine (ARCHITECTURE §5): ACT scores -> one ALERTS row per subscriber -> one SMS.
 
-Flow, matching the APEX app's Alert Approvals page (page 3):
-  1. draft_alerts(as_of)   one ALERT per (ACT score, language of the ward's eligible subscribers),
-                           body rendered from ALERT_TEMPLATE, status PENDING_APPROVAL
-                           (APPROVED straight away when ALERTS_REQUIRE_APPROVAL is off).
-  2. officer approves      APEX sets status APPROVED (or REJECTED), or POST /alerts/{id}/approve.
-  3. dispatch_approved()   fans each APPROVED alert out to its subscribers as queued MESSAGES,
+Flow, matching the live APEX Alert Approvals page (page 3, V_ALERT_QUEUE):
+  1. draft_alerts(as_of)   one ALERT per eligible subscriber of an ACT score. Each row has
+                           score_id, subscriber_id, ward_id, alert_type and a body of at most
+                           160 characters. Status is PENDING_APPROVAL (APPROVED immediately
+                           when ALERTS_REQUIRE_APPROVAL is off).
+  2. officer approves      APEX sets that row to APPROVED (or REJECTED), or POST /alerts/{id}/approve.
+  3. dispatch_approved()   queues one SMS for each APPROVED row that has no MESSAGE_ID yet,
                            applying the per-subscriber cooldown and the weekly routine cap.
-  4. sms dispatcher        sends; the alert becomes SENT with sent_at.
+  4. sms dispatcher        sends; the alert becomes SENT and ALERTS.MESSAGE_ID points at the
+                           MESSAGES row. MESSAGES has no alert_id column on the live database.
 Watch and Abstain never produce SMS: they are for officers on the dashboard.
+Status values written here are the ones the approvals page already uses:
+PENDING_APPROVAL, APPROVED, REJECTED, SENT.
 """
 import datetime as dt
 import logging
@@ -19,8 +23,8 @@ from django.db import transaction
 from django.utils import timezone
 
 from alerts.catalogue import DEFAULT_AUDIENCE
-from alerts.templates import render_alert
-from ngao.models import Alert, Message, RiskScore, Subscriber
+from alerts.templates import fit_alert_body, render_alert
+from ngao.models import Alert, RiskScore, Subscriber, normalize_decision
 from ngao_core.errors import ConflictError, NotFoundError
 from ngao_core.timeutil import today_eat, weekday_name
 from sms.dispatcher import kick, queue_sms
@@ -47,6 +51,37 @@ def eligible_subscribers(ward_id, alert_type):
     )
 
 
+def ensure_risk_score(ward_id, alert_type, score_date, is_replay=False, score=None, **defaults):
+    """Return the RISK_SCORES row for (ward, date, alert type, replay), creating it if needed.
+
+    Live RISK_SCORES is unique on that key, and ALERTS.SCORE_ID is NOT NULL and a foreign key.
+    An existing row (Trevor's model, or an earlier score run) is reused and not overwritten.
+    A new row always has DECISION in ACT/WATCH/ABSTAIN (default ACT: this helper exists so an
+    alert can point at a score) and IS_REPLAY of Y or N. A NULL is_replay is the non-replay row
+    and is stored as N so the unique key and V_WARD_RISK_LATEST (`is_replay='N'`) agree.
+    """
+    if score is not None:
+        return score
+    alert_type_id = getattr(alert_type, "pk", alert_type)
+    replay = bool(is_replay)
+    supplied = defaults.pop("decision", RiskScore.ACT)
+    if supplied is None or (isinstance(supplied, str) and not supplied.strip()):
+        supplied = RiskScore.ACT
+    decision = normalize_decision(supplied)
+    row = RiskScore.matching(
+        ward_id=ward_id, score_date=score_date, alert_type_id=alert_type_id, is_replay=replay,
+    )
+    if row is not None:
+        if row.is_replay is None:
+            row.is_replay = False
+            row.save(update_fields=["is_replay"])
+        return row
+    return RiskScore.objects.create(
+        ward_id=ward_id, score_date=score_date, alert_type_id=alert_type_id, is_replay=replay,
+        decision=decision, model_version=defaults.pop("model_version", "backend-alert"), **defaults,
+    )
+
+
 def _slots(score, lang):
     day = score.score_date + dt.timedelta(days=1)
     if score.alert_type_id == "A1":
@@ -64,9 +99,19 @@ def _slots(score, lang):
     }
 
 
+def _still_eligible(subscriber, alert_type):
+    return (
+        subscriber is not None
+        and subscriber.status == Subscriber.ACTIVE
+        and subscriber.consent_at is not None
+        and subscriber.role in audience_roles(alert_type)
+    )
+
+
 def draft_alerts(as_of=None, dry_run=False, county=None):
     as_of = as_of or today_eat()
     require_approval = settings.NGAO_ALERTS_REQUIRE_APPROVAL
+    cap = settings.NGAO_WEEKLY_ROUTINE_CAP
     summary = {"as_of": as_of.isoformat(), "dry_run": dry_run, "approval_required": require_approval,
                "act_scores": 0, "alerts_created": 0, "pending_approval": 0, "messages_queued": 0,
                "suppressed_cooldown": 0, "suppressed_cap": 0, "already_drafted": 0,
@@ -85,34 +130,42 @@ def draft_alerts(as_of=None, dry_run=False, county=None):
         for score in scores:
             summary["act_scores"] += 1
             alert_type = score.alert_type
-            langs = sorted(set(
-                eligible_subscribers(score.ward_id, alert_type).values_list("preferred_lang", flat=True)
-            ))
-            if not langs:
+            subscribers = list(eligible_subscribers(score.ward_id, alert_type))
+            if not subscribers:
                 summary["no_subscribers"] += 1
                 continue
-            for lang in langs:
-                if Alert.objects.filter(score=score, lang=lang).exists():
+            for subscriber in subscribers:
+                if Alert.objects.filter(score=score, subscriber=subscriber).exists():
                     summary["already_drafted"] += 1
                     continue
                 since = now - dt.timedelta(hours=alert_type.cooldown_hours or 48)
                 recent = (
-                    Alert.objects.filter(ward_id=score.ward_id, alert_type=alert_type, lang=lang, created_at__gte=since)
-                    .exclude(status__in=[Alert.REJECTED, Alert.SUPPRESSED])
+                    Alert.objects.filter(subscriber=subscriber, alert_type=alert_type, created_at__gte=since)
+                    .exclude(status=Alert.REJECTED)
                 )
                 if recent.exists():
                     summary["suppressed_cooldown"] += 1
                     continue
+                if not alert_type.overrides_cap and _routine_count_7d(subscriber) >= cap:
+                    summary["suppressed_cap"] += 1
+                    continue
+                lang = subscriber.spoken_lang()
                 body, hazard, severity, source = render_alert(alert_type, lang, **_slots(score, lang))
+                body = fit_alert_body(body)
                 if dry_run:
                     summary["alerts_created"] += 1
                     if len(summary["preview"]) < 5:
                         summary["preview"].append({"ward": score.ward.ward_name, "alert_type": alert_type.pk,
                                                    "lang": lang, "body": body, "template_source": source})
                     continue
+                # score is already the unique (ward, date, type, replay) row; ensure_risk_score
+                # is what a caller without that row uses, and it must not insert a second one.
+                score_row = ensure_risk_score(
+                    score.ward_id, alert_type, score.score_date, is_replay=score.is_replay, score=score,
+                )
                 alert = Alert.objects.create(
-                    score=score, alert_type=alert_type, ward_id=score.ward_id, hazard=hazard,
-                    severity=severity, lang=lang, body=body,
+                    score=score_row, subscriber=subscriber, alert_type=alert_type, ward_id=score.ward_id,
+                    hazard=hazard, severity=severity, lang=lang, body=body,
                     status=Alert.PENDING_APPROVAL if require_approval else Alert.APPROVED,
                     approved_by=None if require_approval else "auto",
                     approved_at=None if require_approval else now,
@@ -121,7 +174,7 @@ def draft_alerts(as_of=None, dry_run=False, county=None):
                 if require_approval:
                     summary["pending_approval"] += 1
                 else:
-                    result = fan_out(alert)
+                    result = deliver_alert(alert)
                     summary["messages_queued"] += result["messages_queued"]
                     summary["suppressed_cooldown"] += result["suppressed_cooldown"]
                     summary["suppressed_cap"] += result["suppressed_cap"]
@@ -134,62 +187,62 @@ def draft_alerts(as_of=None, dry_run=False, county=None):
 
 def _routine_count_7d(subscriber):
     since = timezone.now() - dt.timedelta(days=7)
-    return (
-        Message.objects.filter(subscriber=subscriber, direction=Message.OUT, alert__isnull=False,
-                               alert__alert_type__overrides_cap=False, created_at__gte=since)
-        .exclude(status=Message.FAILED)
-        .count()
-    )
+    return Alert.objects.filter(
+        subscriber=subscriber, status=Alert.SENT, alert_type__overrides_cap=False, created_at__gte=since,
+    ).count()
 
 
-def fan_out(alert):
-    """Queue one SMS per eligible subscriber for an APPROVED alert."""
+def deliver_alert(alert):
+    """Queue the single SMS for this subscriber alert and set ALERTS.MESSAGE_ID."""
     result = {"messages_queued": 0, "suppressed_cooldown": 0, "suppressed_cap": 0}
-    alert_type = alert.alert_type
-    cap = settings.NGAO_WEEKLY_ROUTINE_CAP
+    locked = (
+        Alert.objects.select_for_update()
+        .select_related("subscriber", "alert_type")
+        .get(pk=alert.pk)
+    )
+    if locked.message_id:
+        return result
+    subscriber = locked.subscriber
+    alert_type = locked.alert_type
+    if not _still_eligible(subscriber, alert_type):
+        return result
     since = timezone.now() - dt.timedelta(hours=alert_type.cooldown_hours or 48)
-    subscribers = eligible_subscribers(alert.ward_id, alert_type).filter(preferred_lang=alert.lang)
-    for subscriber in subscribers:
-        if Message.objects.filter(alert=alert, subscriber=subscriber).exists():
-            continue
-        recent = (
-            Message.objects.filter(subscriber=subscriber, alert__alert_type=alert_type, created_at__gte=since)
-            .exclude(status=Message.FAILED)
-        )
-        if recent.exists():
-            result["suppressed_cooldown"] += 1
-            continue
-        if not alert_type.overrides_cap and _routine_count_7d(subscriber) >= cap:
-            result["suppressed_cap"] += 1
-            continue
-        queue_sms(subscriber.phone, alert.body, subscriber=subscriber, alert=alert)
-        result["messages_queued"] += 1
-    if result["messages_queued"] == 0 and not alert.messages.exists():
-        alert.status = Alert.SUPPRESSED
-        alert.save(update_fields=["status"])
+    recent = (
+        Alert.objects.filter(subscriber=subscriber, alert_type=alert_type, message__isnull=False,
+                             created_at__gte=since)
+        .exclude(pk=locked.pk)
+        .exclude(status=Alert.REJECTED)
+    )
+    if recent.exists():
+        result["suppressed_cooldown"] += 1
+        return result
+    if not alert_type.overrides_cap and _routine_count_7d(subscriber) >= settings.NGAO_WEEKLY_ROUTINE_CAP:
+        result["suppressed_cap"] += 1
+        return result
+    queue_sms(subscriber.phone, locked.body, subscriber=subscriber, alert=locked)
+    result["messages_queued"] = 1
     return result
 
 
 def _dispatchable(alert):
     """Never send a replay alert or an approval that arrived too late to be useful."""
-    if alert.score_id:
-        if alert.score.is_replay:
-            return False, "replay"
-        max_age_days = math.ceil(settings.NGAO_ALERT_MAX_AGE_HOURS / 24)
-        if alert.score.score_date < today_eat() - dt.timedelta(days=max_age_days):
-            return False, "stale"
+    if alert.score_id and alert.score.is_replay:
+        return False, "replay"
+    max_age_days = math.ceil(settings.NGAO_ALERT_MAX_AGE_HOURS / 24)
+    if alert.score_id and alert.score.score_date < today_eat() - dt.timedelta(days=max_age_days):
+        return False, "stale"
     if alert.created_at < timezone.now() - dt.timedelta(hours=settings.NGAO_ALERT_MAX_AGE_HOURS):
         return False, "stale"
     return True, None
 
 
 def dispatch_approved():
-    """Fan out every APPROVED alert that has no messages yet (approved in APEX or via REST)."""
+    """Send every APPROVED alert that has no MESSAGE_ID yet (approved in APEX or via REST)."""
     summary = {"alerts_dispatched": 0, "messages_queued": 0, "suppressed_cooldown": 0,
                "suppressed_cap": 0, "skipped_replay": 0, "skipped_stale": 0}
     pending = (
-        Alert.objects.filter(status=Alert.APPROVED, messages__isnull=True)
-        .select_related("score", "alert_type")
+        Alert.objects.filter(status=Alert.APPROVED, message__isnull=True)
+        .select_related("score", "alert_type", "subscriber")
     )
     with transaction.atomic():
         for alert in pending:
@@ -197,7 +250,7 @@ def dispatch_approved():
             if not ok:
                 summary[f"skipped_{why}"] += 1
                 continue
-            result = fan_out(alert)
+            result = deliver_alert(alert)
             summary["alerts_dispatched"] += 1
             for key in ("messages_queued", "suppressed_cooldown", "suppressed_cap"):
                 summary[key] += result[key]
@@ -208,7 +261,10 @@ def dispatch_approved():
 
 def approve(alert_id, approved_by):
     with transaction.atomic():
-        alert = Alert.objects.select_related("alert_type", "score").filter(pk=alert_id).first()
+        alert = (
+            Alert.objects.select_related("alert_type", "score", "subscriber")
+            .filter(pk=alert_id).first()
+        )
         if alert is None:
             raise NotFoundError(f"alert {alert_id} not found")
         if alert.status != Alert.PENDING_APPROVAL:
@@ -216,7 +272,7 @@ def approve(alert_id, approved_by):
         alert.status, alert.approved_by, alert.approved_at = Alert.APPROVED, approved_by, timezone.now()
         alert.save(update_fields=["status", "approved_by", "approved_at"])
         ok, why = _dispatchable(alert)
-        result = fan_out(alert) if ok else {"messages_queued": 0, "skipped": why}
+        result = deliver_alert(alert) if ok else {"messages_queued": 0, "skipped": why}
     if result.get("messages_queued"):
         kick()
     alert.refresh_from_db()

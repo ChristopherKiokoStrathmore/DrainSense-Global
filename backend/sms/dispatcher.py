@@ -23,10 +23,15 @@ SIMULATED = "SIMULATED"
 
 
 def queue_sms(phone, body, subscriber=None, alert=None):
-    return Message.objects.create(
+    """Queue an OUT SMS. Live MESSAGES has no alert_id; the alert points at this row."""
+    message = Message.objects.create(
         direction=Message.OUT, channel=Message.SMS, phone=phone, subscriber=subscriber,
-        body=body[:1000], status=Message.QUEUED, alert=alert,
+        body=(body or "")[:1000], status=Message.QUEUED,
     )
+    if alert is not None:
+        alert.message = message
+        alert.save(update_fields=["message"])
+    return message
 
 
 def kick():
@@ -59,7 +64,6 @@ def send_queued(limit=None):
             Message.objects.filter(direction=Message.OUT, channel=Message.SMS, status=Message.QUEUED)
             .order_by("message_id").values_list("message_id", flat=True)[:limit]
         )
-        touched_alerts = set()
         give_up_before = timezone.now() - dt.timedelta(hours=settings.NGAO_SMS_RETRY_HOURS)
         for message_id in ids:
             with transaction.atomic():
@@ -84,12 +88,10 @@ def send_queued(limit=None):
                         message.status = Message.FAILED
                         summary["failed"] += 1
                 message.save(update_fields=["status", "provider_msg_id"])
-                if message.alert_id and message.status == Message.SENT:
-                    touched_alerts.add(message.alert_id)
-        if touched_alerts:
-            Alert.objects.filter(pk__in=touched_alerts, status=Alert.APPROVED).update(
-                status=Alert.SENT, sent_at=timezone.now()
-            )
+                if message.status == Message.SENT:
+                    Alert.objects.filter(message_id=message.pk, status=Alert.APPROVED).update(
+                        status=Alert.SENT, sent_at=timezone.now()
+                    )
     if any(summary.values()):
         logger.info("SMS dispatch: %s", summary)
     return summary

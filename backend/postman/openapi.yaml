@@ -37,7 +37,7 @@ paths:
   /alerts:
     get:
       operationId: alerts_list
-      description: One row per (score, language). `messages` counts the subscriber SMS by status.
+      description: One row per subscriber (the live `ALERTS` shape). `messages` is the linked SMS, if queued.
       summary: List alerts
       parameters:
       - in: query
@@ -66,7 +66,6 @@ paths:
           - PENDING_APPROVAL
           - REJECTED
           - SENT
-          - SUPPRESSED
       - in: query
         name: ward_id
         schema:
@@ -94,6 +93,8 @@ paths:
                       hazard: dry_window
                       severity: warning
                       lang: sw
+                      subscriber_id: 7
+                      phone: '+254700000101'
                       body: 'MvuaSmart: Siku 3 za jua zinatarajiwa kuanzia Alhamisi katika kata yako (uhakika 75%). Vuna mahindi
                         sasa na uyakaushe. Jibu NDIYO ukivuna.'
                       status: PENDING_APPROVAL
@@ -140,10 +141,10 @@ paths:
   /alerts/{alert_id}/approve:
     post:
       operationId: alert_approve
-      description: '`PENDING_APPROVAL` → `APPROVED`, then queues one SMS per eligible subscriber in that language (per-subscriber
-        48 h cooldown and 3/week routine cap; floods and disease skip the cap). The alert becomes `SENT` once the first SMS
-        is handed to Africa''s Talking, or `SUPPRESSED` when nobody is eligible. Replay alerts and alerts older than 48 h
-        are approved but **not** sent (`dispatch.skipped`).'
+      description: '`PENDING_APPROVAL` → `APPROVED`, then queues the one SMS for this subscriber (48 h cooldown and 3/week
+        routine cap; floods and disease skip the cap). `ALERTS.MESSAGE_ID` is set to that `MESSAGES` row. The alert becomes
+        `SENT` once Africa''s Talking accepts the SMS. A subscriber who is no longer eligible is left `APPROVED` and not sent.
+        Replay alerts and alerts older than 48 h are approved but **not** sent (`dispatch.skipped`).'
       summary: Approve an alert (sends it)
       parameters:
       - in: path
@@ -183,7 +184,7 @@ paths:
                     alert_id: 42
                     status: SENT
                     dispatch:
-                      messages_queued: 3
+                      messages_queued: 1
                       suppressed_cooldown: 0
                       suppressed_cap: 0
                   summary: approved
@@ -543,7 +544,8 @@ paths:
   /jobs/{job_id}/status:
     get:
       operationId: job_status
-      description: 'The `JOB_RUNS` row for a job id returned by any `/jobs/*` call: params, summary, error text.'
+      description: 'The recorded run for a job id returned by any `/jobs/*` call: params, summary, error text. Persisted in
+        `JOB_RUNS` when that table exists; otherwise kept for this process only.'
       summary: One job run
       parameters:
       - in: path
@@ -599,7 +601,9 @@ paths:
         marked `SENT` with `provider_msg_id=''SIMULATED''`.
 
 
-        Answers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).'
+        Answers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists
+        (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is
+        kept for this process.'
       summary: Send approved alerts and queued SMS now
       tags:
       - Jobs
@@ -703,7 +707,9 @@ paths:
         wait (`waiting_for_data`).
 
 
-        Answers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).'
+        Answers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists
+        (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is
+        kept for this process.'
       summary: Grade past alerts → OUTCOMES (scorecard)
       tags:
       - Jobs
@@ -808,7 +814,9 @@ paths:
         stop list. `409` once any booking for that date is confirmed.
 
 
-        Answers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).'
+        Answers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists
+        (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is
+        kept for this process.'
       summary: Plan tomorrow's dryer routes + booking SMS
       tags:
       - Jobs
@@ -929,7 +937,9 @@ paths:
         Replay rows are **never** alerted.
 
 
-        Answers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).'
+        Answers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists
+        (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is
+        kept for this process.'
       summary: Run the Garissa 2006 RVF replay
       tags:
       - Jobs
@@ -1030,7 +1040,9 @@ paths:
         alerts drafted today and routes from today on. The synthetic dataset is untouched.
 
 
-        Answers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).'
+        Answers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists
+        (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is
+        kept for this process.'
       summary: Reset the live demo
       tags:
       - Jobs
@@ -1136,7 +1148,9 @@ paths:
         - Rows written by **another model_version** (Trevor''s trained models) are kept unless `overwrite=true`.
 
 
-        Answers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).'
+        Answers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists
+        (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is
+        kept for this process.'
       summary: Score wards → RISK_SCORES
       tags:
       - Jobs
@@ -1248,9 +1262,9 @@ paths:
   /jobs/send-alerts:
     post:
       operationId: job_send_alerts
-      description: 'For every `ACT` score of `as_of` (not replay, not A5) drafts **one `ALERTS` row per language** spoken
-        by the ward''s eligible subscribers (ACTIVE, consented, role in the alert''s audience). The body is rendered from
-        `ALERT_TEMPLATE` (hazard, severity, lang) in Swahili or English.
+      description: 'For every `ACT` score of `as_of` (not replay, not A5) drafts **one `ALERTS` row per eligible subscriber**
+        (ACTIVE, consented, role in the alert''s audience), which is what live `V_ALERT_QUEUE` can show. The body is rendered
+        from `ALERT_TEMPLATE` (hazard, severity, lang) in that subscriber''s language and stored in at most 160 characters.
 
 
         - `ALERTS_REQUIRE_APPROVAL=true` (default): status `PENDING_APPROVAL`; an officer approves in APEX or via `POST /alerts/{alert_id}/approve`.
@@ -1262,7 +1276,9 @@ paths:
         - Also fans out any alert already `APPROVED` in APEX (`approved_dispatch`).
 
 
-        Answers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).'
+        Answers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists
+        (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is
+        kept for this process.'
       summary: Draft alerts from ACT scores (and send approved ones)
       tags:
       - Jobs
@@ -2528,8 +2544,11 @@ components:
           readOnly: true
         score_id:
           type: integer
-          nullable: true
           readOnly: true
+        subscriber_id:
+          type: integer
+        phone:
+          type: string
         alert_type_id:
           type: string
           readOnly: true
@@ -2560,7 +2579,7 @@ components:
         body:
           type: string
           nullable: true
-          maxLength: 480
+          maxLength: 160
         status:
           type: string
           maxLength: 16
@@ -2591,14 +2610,16 @@ components:
           type: object
           additionalProperties:
             type: integer
-          description: 'Subscriber SMS for this alert by status, e.g. {"SENT": 3}'
+          description: 'The SMS linked by ALERTS.MESSAGE_ID, e.g. {"SENT": 1}. Empty until queued.'
           readOnly: true
       required:
       - alert_id
       - alert_type_id
       - county
       - messages
+      - phone
       - score_id
+      - subscriber_id
       - ward_id
       - ward_name
     AlertOutLangEnum:
@@ -2652,13 +2673,10 @@ components:
       enum:
       - APPROVED
       - SENT
-      - SUPPRESSED
       type: string
       description: '* `APPROVED` - APPROVED
 
-        * `SENT` - SENT
-
-        * `SUPPRESSED` - SUPPRESSED'
+        * `SENT` - SENT'
     ApprovedDispatchSummary:
       type: object
       properties:

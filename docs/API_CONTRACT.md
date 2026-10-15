@@ -47,8 +47,8 @@ Four layers:
 | `MESSAGES` | Every inbound SMS (IN) and every send/DLR update (OUT) | direction, channel, phone, body, provider_msg_id, status |
 | `REPORTS` | Reply reader / USSD menu 2 via §6 | message_id, ward_id, report_type, report_count, payload, ai_confidence, review_status |
 | `ROUTES`, `ROUTE_STOPS`, `BOOKINGS` | Dryer router 18:00 / confirmations | see schema |
-| `ALERTS` | Alert engine: one row per (ACT score, language), body rendered from `ALERT_TEMPLATE` | score_id, ward_id, alert_type, hazard, severity, lang, body, status (`PENDING_APPROVAL` → `APPROVED`/`REJECTED` → `SENT`, or `SUPPRESSED`), approved_by, approved_at, sent_at |
-| `JOB_RUNS` | Every `/jobs/*` call (§2.2) | job_name, params, status, summary |
+| `ALERTS` | Alert engine: one row per eligible subscriber of an ACT score, body rendered from `ALERT_TEMPLATE` and stored in at most 160 characters | score_id, subscriber_id, ward_id, alert_type (all required on the live table), hazard, severity, lang, body, status (`PENDING_APPROVAL` → `APPROVED`/`REJECTED` → `SENT`), approved_by, approved_at, sent_at, message_id |
+| `JOB_RUNS` | Every `/jobs/*` call when the table exists. The live NgaoDB has no `JOB_RUNS` table; the job still runs (§2.2) | job_name, params, status, summary |
 
 Louisa (`ussd/`) writes `USSD_SESSIONS` (session_id, phone, last_text, updated_at) on each hop. She does not write `SUBSCRIBERS`, `MESSAGES`, or `REPORTS`.
 
@@ -75,7 +75,7 @@ Trevor (`data/`) writes `WARDS`, `WARD_FEATURES_DAILY`, `FORECASTS`, `RISK_SCORE
 
 ### 1.3 Writes APEX makes
 - `REPORTS.review_status` (`ACCEPTED`/`CORRECTED`/`REJECTED`), `reviewed_by`, corrected `payload`.
-- `ALERTS.status` `PENDING_APPROVAL` → `APPROVED` or `REJECTED`, with `approved_by`, `approved_at` (Alert Approvals page). The backend fans out every `APPROVED` alert to the ward's subscribers in that `lang` as `MESSAGES` rows with `alert_id`, then sets `SENT` and `sent_at`. It never sends replay alerts or approvals older than 48 h.
+- `ALERTS.status` `PENDING_APPROVAL` → `APPROVED` or `REJECTED`, with `approved_by`, `approved_at` (Alert Approvals page). Each row is already one subscriber. The backend queues one `MESSAGES` row and stores its id in `ALERTS.MESSAGE_ID` (live `MESSAGES` has no `alert_id`), then sets `SENT` and `sent_at`. It never sends replay alerts or approvals older than 48 h.
 - Demo controls call **PL/SQL packages or REST §2.2**, never insert alerts directly.
 - `ASK_NGAO_LOG` inserts.
 
@@ -276,5 +276,5 @@ Session rows stay in `ussd/`: each hop upserts `USSD_SESSIONS` (`session_id`, `p
 | v1-draft | 2026-10-14 | Initial contract |
 | v1-draft.2 | 2026-10-14 | Wasiliana replaces Africa's Talking. USSD service is `ussd/` (Louisa); §5 is the USSD to backend contract. Inbound SMS forwarding and delivery-report field names left open pending docs.wasiliana.com |
 | v1-draft.3 | 2026-10-14 | Language choice: `preferred_lang`, first-session prompt, main-menu Lugha / Language, SMS `LUGHA`/`LANG`, alerts rendered from `ALERT_TEMPLATE` |
-| v1-draft.4 | 2026-10-14 | Alert approval workflow as built in APEX (`ALERTS` per score × language, `PENDING_APPROVAL`/`APPROVED`/`REJECTED`/`SENT`), `MESSAGES.alert_id`, `JOB_RUNS`; additive endpoints (`/jobs/dispatch`, `/jobs/grade-outcomes`, `/alerts/*`, `/jobs/{id}/status`, `/public/calibration`, `/health`, `/demo/inbound-sms`). Existing ADB: `db/migrations/001_backend_alignment.sql` |
+| v1-draft.4 | 2026-10-14 | Alert approval workflow as built in APEX (`PENDING_APPROVAL`/`APPROVED`/`REJECTED`/`SENT`); additive endpoints (`/jobs/dispatch`, `/jobs/grade-outcomes`, `/alerts/*`, `/jobs/{id}/status`, `/public/calibration`, `/health`, `/demo/inbound-sms`). Do **not** run `db/migrations/001_backend_alignment.sql` on the live NgaoDB. The backend writes the live per-subscriber `ALERTS` row (`MESSAGE_ID` on the alert, no `JOB_RUNS`). |
 | v1-draft.5 | 2026-10-14 | SMS moves to **Africa's Talking** (send, delivery reports, incoming SMS; §3.2–3.4, form-encoded callbacks). USSD stays on Wasiliana (`ussd/`, unchanged). Wasiliana SMS kept as a backend fallback |

@@ -16,10 +16,10 @@ from rest_framework.views import APIView
 from alerts import engine
 from alerts.scorecard import calibration, scorecard
 from api import openapi as doc
-from api.jobs import run_job
+from api.jobs import get_job, run_job
 from api.serializers import (JOB_INPUTS, AlertList, AlertOut, ApproveIn, ReportList, ReportOut, ReportPatchIn,
                              parse_job_params)
-from ngao.models import Alert, AppUser, JobRun, Report, RiskScore, Ward
+from ngao.models import Alert, AppUser, Report, RiskScore, Ward
 from ngao_core.errors import InvalidInput, NotFoundError
 from ngao_core.timeutil import EAT, iso_eat, today_eat
 from routing.service import confirm_booking, routes_for
@@ -111,8 +111,10 @@ class _JobView(APIView):
 def _job_schema(job, summary, title, description, request_examples, summary_example, error_codes=(400, 401, 403)):
     return extend_schema(
         tags=["Jobs"], auth=doc.API_AUTH, operation_id=f"job_{job.replace('-', '_')}", summary=title,
-        description=description + "\n\nAnswers `202` once the job has **finished** (`status: DONE`); "
-                                  "the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).",
+        description=description + "\n\nAnswers `202` once the job has **finished** (`status: DONE`). "
+                                  "The run is stored in `JOB_RUNS` when that table exists "
+                                  "(see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; "
+                                  "the job still runs and the status is kept for this process.",
         request=JOB_INPUTS[job],
         responses={202: doc.job_response(job.title().replace("-", ""), summary), **doc.errors(*error_codes)},
         examples=[doc.example(name, body, request=True) for name, body in request_examples]
@@ -146,9 +148,10 @@ class SendAlertsJobView(_JobView):
 
     @_job_schema(
         "send-alerts", doc.SendAlertsSummary, "Draft alerts from ACT scores (and send approved ones)",
-        "For every `ACT` score of `as_of` (not replay, not A5) drafts **one `ALERTS` row per language** spoken by "
-        "the ward's eligible subscribers (ACTIVE, consented, role in the alert's audience). The body is rendered "
-        "from `ALERT_TEMPLATE` (hazard, severity, lang) in Swahili or English.\n\n"
+        "For every `ACT` score of `as_of` (not replay, not A5) drafts **one `ALERTS` row per eligible subscriber** "
+        "(ACTIVE, consented, role in the alert's audience), which is what live `V_ALERT_QUEUE` can show. The body is "
+        "rendered from `ALERT_TEMPLATE` (hazard, severity, lang) in that subscriber's language and stored in at most "
+        "160 characters.\n\n"
         "- `ALERTS_REQUIRE_APPROVAL=true` (default): status `PENDING_APPROVAL`; an officer approves in APEX or via "
         "`POST /alerts/{alert_id}/approve`.\n"
         "- Otherwise: `APPROVED` by `auto` and fanned out at once.\n"
@@ -257,11 +260,12 @@ class GradeOutcomesJobView(_JobView):
 class JobDetailView(APIView):
     @extend_schema(
         tags=["Jobs"], auth=doc.API_AUTH, operation_id="job_status", summary="One job run",
-        description="The `JOB_RUNS` row for a job id returned by any `/jobs/*` call: params, summary, error text.",
+        description="The recorded run for a job id returned by any `/jobs/*` call: params, summary, error text. "
+                    "Persisted in `JOB_RUNS` when that table exists; otherwise kept for this process only.",
         responses={200: doc.JobStatus, **doc.errors(401, 404)},
     )
     def get(self, request, job_id):
-        run = JobRun.objects.filter(pk=job_id).first()
+        run = get_job(job_id)
         if run is None:
             raise NotFoundError(f"job {job_id} not found")
         return Response({"job_id": run.job_id, "job": run.job_name, "status": run.status, "params": run.params,
@@ -490,6 +494,7 @@ class PublicCalibrationView(APIView):
 ALERT_EXAMPLE = {
     "alert_id": 42, "score_id": 1301, "alert_type_id": "A1", "ward_id": 12, "ward_name": "Moiben",
     "county": "Uasin Gishu", "hazard": "dry_window", "severity": "warning", "lang": "sw",
+    "subscriber_id": 7, "phone": "+254700000101",
     "body": "MvuaSmart: Siku 3 za jua zinatarajiwa kuanzia Alhamisi katika kata yako (uhakika 75%). "
             "Vuna mahindi sasa na uyakaushe. Jibu NDIYO ukivuna.",
     "status": "PENDING_APPROVAL", "probability": 0.75, "confidence_pct": 75, "score_date": "2026-10-15",
@@ -501,9 +506,9 @@ ALERT_EXAMPLE = {
 class AlertsView(APIView):
     @extend_schema(
         tags=["Alerts"], auth=doc.API_AUTH, operation_id="alerts_list", summary="List alerts",
-        description="One row per (score, language). `messages` counts the subscriber SMS by status.",
+        description="One row per subscriber (the live `ALERTS` shape). `messages` is the linked SMS, if queued.",
         parameters=[
-            OpenApiParameter("status", str, enum=["PENDING_APPROVAL", "APPROVED", "REJECTED", "SENT", "SUPPRESSED"]),
+            OpenApiParameter("status", str, enum=["PENDING_APPROVAL", "APPROVED", "REJECTED", "SENT"]),
             OpenApiParameter("date", str, description="Score date `YYYY-MM-DD`"),
             OpenApiParameter("ward_id", int), OpenApiParameter("lang", str, enum=["sw", "en"]),
             doc.LIMIT_PARAM,
@@ -512,7 +517,7 @@ class AlertsView(APIView):
         examples=[doc.example("pending", {"items": [ALERT_EXAMPLE]}, response=True)],
     )
     def get(self, request):
-        alerts = Alert.objects.select_related("ward", "score").order_by("-created_at")
+        alerts = Alert.objects.select_related("ward", "score", "subscriber", "message").order_by("-created_at")
         status_filter = request.query_params.get("status")
         if status_filter:
             alerts = alerts.filter(status=status_filter.upper())
@@ -532,16 +537,16 @@ class AlertsView(APIView):
 class AlertApproveView(APIView):
     @extend_schema(
         tags=["Alerts"], auth=doc.API_AUTH, operation_id="alert_approve", summary="Approve an alert (sends it)",
-        description="`PENDING_APPROVAL` → `APPROVED`, then queues one SMS per eligible subscriber in that language "
-                    "(per-subscriber 48 h cooldown and 3/week routine cap; floods and disease skip the cap). The "
-                    "alert becomes `SENT` once the first SMS is handed to Africa's Talking, or `SUPPRESSED` when nobody is "
-                    "eligible. Replay alerts and alerts older than 48 h are approved but **not** sent "
-                    "(`dispatch.skipped`).",
+        description="`PENDING_APPROVAL` → `APPROVED`, then queues the one SMS for this subscriber "
+                    "(48 h cooldown and 3/week routine cap; floods and disease skip the cap). "
+                    "`ALERTS.MESSAGE_ID` is set to that `MESSAGES` row. The alert becomes `SENT` once Africa's Talking "
+                    "accepts the SMS. A subscriber who is no longer eligible is left `APPROVED` and not sent. "
+                    "Replay alerts and alerts older than 48 h are approved but **not** sent (`dispatch.skipped`).",
         request=ApproveIn,
         responses={200: doc.AlertApproved, **doc.errors(400, 401, 404, 409)},
         examples=[doc.example("officer", {"approved_by": "agri.officer.uasingishu"}, request=True),
                   doc.example("approved", {"alert_id": 42, "status": "SENT",
-                                           "dispatch": {"messages_queued": 3, "suppressed_cooldown": 0,
+                                           "dispatch": {"messages_queued": 1, "suppressed_cooldown": 0,
                                                         "suppressed_cap": 0}}, response=True)],
     )
     def post(self, request, alert_id):

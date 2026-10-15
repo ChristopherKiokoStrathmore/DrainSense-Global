@@ -5,6 +5,7 @@ from collections import defaultdict
 
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 
 from ngao.models import AlertType, Forecast, RiskScore, Ward, WardFeatureDaily
 from ngao_core.errors import InvalidInput
@@ -99,12 +100,17 @@ def run_scoring(as_of, county=None, alert_types=None, overwrite=False, is_replay
         raise InvalidInput(f"no wards in county '{county}'", field="county")
     types = _alert_types(alert_types)
     inputs = load_inputs(wards, as_of)
-    existing = {
-        (rs.ward_id, rs.alert_type_id): rs
-        for rs in RiskScore.objects.filter(
-            ward__in=wards, score_date=as_of, is_replay=is_replay, alert_type__in=types
-        )
-    }
+    # NULL is_replay is not the same key as 'N' on Oracle, and the views filter on 'N' or 'Y'.
+    # Treat a NULL flag as non-replay so a rescore updates that row instead of inserting another.
+    replay_key = Q(is_replay=True) if is_replay else (Q(is_replay=False) | Q(is_replay__isnull=True))
+    existing = {}
+    for row in RiskScore.objects.filter(
+        ward__in=wards, score_date=as_of, alert_type__in=types,
+    ).filter(replay_key):
+        key = (row.ward_id, row.alert_type_id)
+        previous = existing.get(key)
+        if previous is None or (previous.is_replay is None and row.is_replay is not None):
+            existing[key] = row
 
     summary = {"as_of": as_of.isoformat(), "county": county, "model_version": model_version,
                "wards": len(wards), "scores_written": 0, "act": 0, "watch": 0, "abstain": 0,
@@ -120,6 +126,9 @@ def run_scoring(as_of, county=None, alert_types=None, overwrite=False, is_replay
                 decision = decide(signal, alert_type.act_threshold, alert_type.watch_threshold)
                 current = existing.get((ward.ward_id, alert_type.alert_type))
                 if current and current.model_version != model_version and not overwrite:
+                    if current.is_replay is None and not dry_run:
+                        current.is_replay = bool(is_replay)
+                        current.save(update_fields=["is_replay"])
                     summary["kept_existing"] += 1  # e.g. Trevor's trained model or Chris's seed rows
                     continue
                 if decision is None:
@@ -142,10 +151,16 @@ def run_scoring(as_of, county=None, alert_types=None, overwrite=False, is_replay
                     "abstain_reason": (signal.abstain_reason or "")[:200] or None,
                     "model_version": model_version,
                 }
-                RiskScore.objects.update_or_create(
-                    ward=ward, score_date=as_of, alert_type=alert_type, is_replay=is_replay,
-                    defaults=values,
-                )
+                if current is None:
+                    current = RiskScore(
+                        ward=ward, score_date=as_of, alert_type=alert_type, is_replay=bool(is_replay),
+                    )
+                for field, value in values.items():
+                    setattr(current, field, value)
+                if current.is_replay is None:
+                    current.is_replay = bool(is_replay)
+                current.save()
+                existing[(ward.ward_id, alert_type.alert_type)] = current
                 summary["scores_written"] += 1
     logger.info("scoring %s %s: %s", as_of, county or "all", summary)
     return summary

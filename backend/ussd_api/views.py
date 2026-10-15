@@ -223,7 +223,7 @@ class ReportView(APIView):
 
 def ward_status_text(subscriber, day=None):
     day = day or today_eat()
-    lang = subscriber.preferred_lang if subscriber else "sw"
+    lang = subscriber.spoken_lang() if subscriber else "sw"
     if subscriber is None or subscriber.ward_id is None:
         return fill(WARD_STATUS_LINES["UNREGISTERED"][lang]), None
     ward = subscriber.ward

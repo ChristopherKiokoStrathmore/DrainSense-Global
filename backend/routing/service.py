@@ -233,7 +233,7 @@ def _book_farmers(stop, entry, planned_bags, booked, summary, notify):
         left -= take
         count += 1
         if notify:
-            lang = subscriber.preferred_lang
+            lang = subscriber.spoken_lang()
             body, *_ = render_alert("A5", lang, point=stop.point.point_name,
                                     day=weekday_name(stop.route.route_date, lang),
                                     time=clock_text(stop.eta, lang), fee=per_bag)
@@ -244,7 +244,7 @@ def _book_farmers(stop, entry, planned_bags, booked, summary, notify):
 
 def _notify_operator(dryer, route_date, stop_lines):
     operator = Subscriber.objects.filter(phone=dryer.operator_phone).first()
-    lang = operator.preferred_lang if operator else "sw"
+    lang = operator.spoken_lang() if operator else "sw"
     unit = "bags" if lang == "en" else "magunia"
     stops = "; ".join(
         f"{i}. {name} {eta.astimezone(EAT):%H:%M} ({round(bags)} {unit})"
@@ -293,7 +293,7 @@ def confirm_booking(booking_id=None, booking=None, notify=True):
         booking.save(update_fields=["status"])
         if notify:
             subscriber = booking.subscriber
-            lang = subscriber.preferred_lang
+            lang = subscriber.spoken_lang()
             stop = booking.stop
             body = render_system("booking_confirmed", lang, bags=round(booking.bags or 0),
                                  point=stop.point.point_name, day=weekday_name(stop.route.route_date, lang),

@@ -9,8 +9,16 @@ from ngao.models import AlertTemplate, AlertType
 
 logger = logging.getLogger(__name__)
 
-SMS_SEGMENT = 160
-MAX_SEGMENTS = 2
+SMS_SEGMENT = 160  # live ALERTS.BODY is VARCHAR2(160)
+
+
+def fit_alert_body(body, limit=SMS_SEGMENT):
+    """Compose an alert body that fits ALERTS.BODY (160 bytes and 160 characters)."""
+    text = (body or "").strip()
+    if len(text) <= limit and len(text.encode("utf-8")) <= limit:
+        return text
+    raw = text.encode("utf-8")[:limit]
+    return raw.decode("utf-8", errors="ignore")[:limit]
 
 
 class _Slots(dict):
@@ -60,10 +68,7 @@ def alert_template(alert_type, lang, severity=None):
 
 def render_alert(alert_type, lang, severity=None, **slots):
     template, hazard, severity, source = alert_template(alert_type, lang, severity)
-    body = fill(template, **slots)
-    if len(body) > SMS_SEGMENT * MAX_SEGMENTS:
-        logger.warning("alert %s (%s) renders to %d chars (> 2 SMS)", alert_type, lang, len(body))
-    return body, hazard, severity, source
+    return fill(template, **slots), hazard, severity, source
 
 
 def render_system(key, lang, **slots):

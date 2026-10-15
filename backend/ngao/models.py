@@ -1,19 +1,29 @@
-"""Django models for the shared ADB schema NGAO (db/schema.sql is the source of truth).
+"""Django models for the live NgaoDB schema (WKSP_NGAO).
 
-Table and column names match the DDL exactly; Django's Oracle backend upper-cases them, so
-db_table "risk_scores" is RISK_SCORES. In Oracle the tables are created by db/schema.sql and
-`manage.py migrate` is never run; the migrations in this app only build the SQLite schema used
-for development and tests. `manage.py check_schema` compares these models with a live database.
+Table and column names match the live columns; Django's Oracle backend upper-cases them, so
+db_table "risk_scores" is RISK_SCORES. In Oracle the tables already exist and `manage.py migrate`
+is never run; the migrations in this app only build the SQLite schema used for development and
+tests. `manage.py check_schema` compares these models with a connected database.
 
-Ownership (API_CONTRACT §1.1): the backend writes SUBSCRIBERS, FARMS, HERDS, MESSAGES, REPORTS,
-ALERTS, ROUTES, ROUTE_STOPS, BOOKINGS, OUTCOMES and JOB_RUNS. Trevor writes WARDS,
+The live ALERTS row is one subscriber, not one ward: SUBSCRIBER_ID, SCORE_ID, WARD_ID and
+ALERT_TYPE are NOT NULL, BODY is VARCHAR2(160), and the outbound SMS is ALERTS.MESSAGE_ID.
+MESSAGES has no alert_id column. JOB_RUNS is not on the live database; the model stays so local
+SQLite can record jobs, and the job runner skips it when the table is absent.
+
+Live RISK_SCORES.DECISION is NOT NULL VARCHAR2(7) (ACT, WATCH, ABSTAIN — the values
+V_WARD_RISK_LATEST colours on). IS_REPLAY is CHAR(1), nullable, and part of the unique key, so
+this backend writes Y or N and never NULL. SUBSCRIBERS.PREFERRED_LANG is CHAR(2) NOT NULL and is
+the language SMS and USSD read; LANGUAGE is a nullable copy kept in sync.
+
+Ownership: the backend writes SUBSCRIBERS, FARMS, HERDS, MESSAGES, REPORTS, ALERTS, ROUTES,
+ROUTE_STOPS, BOOKINGS, OUTCOMES, and JOB_RUNS when that table exists. Trevor writes WARDS,
 WARD_FEATURES_DAILY, FORECASTS and RISK_SCORES (the backend's fallback scorer writes RISK_SCORES
 too, but never over a row produced by another model_version). Louisa writes USSD_SESSIONS.
 """
 from django.db import models
 from django.utils import timezone
 
-from ngao.fields import JSONColumn, YesNoField
+from ngao.fields import CharCodeField, JSONColumn, YesNoField
 
 LANGS = [("sw", "Kiswahili"), ("en", "English")]
 SERVICES = [("FARM", "MvuaSmart"), ("HERD", "Ngao Mifugo"), ("HEALTH", "Ngao Afya")]
@@ -136,6 +146,8 @@ class Forecast(models.Model):
 class RiskScore(models.Model):
     ACT, WATCH, ABSTAIN = "ACT", "WATCH", "ABSTAIN"
     DECISIONS = [(ACT, "Act"), (WATCH, "Watch"), (ABSTAIN, "Abstain")]
+    # Live DECISION is VARCHAR2(7) NOT NULL. These three are the only values the views colour.
+    DECISION_CODES = frozenset({ACT, WATCH, ABSTAIN})
 
     score_id = models.AutoField(primary_key=True)
     ward = models.ForeignKey(Ward, on_delete=models.DO_NOTHING, db_column="ward_id")
@@ -147,7 +159,10 @@ class RiskScore(models.Model):
     decision = models.CharField(max_length=7, choices=DECISIONS)
     abstain_reason = models.CharField(max_length=200, null=True, blank=True)
     model_version = models.CharField(max_length=60, null=True, blank=True)
-    is_replay = YesNoField(default=False)
+    # Nullable on the live table, but part of uq_rs. NULL is not equal to 'N' in Oracle, so a
+    # missing flag would hide the row from V_WARD_RISK_LATEST (is_replay='N') and allow a second
+    # row with the same ward, date and alert type. Always store Y or N.
+    is_replay = YesNoField(default=False, null=True)
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
@@ -157,6 +172,41 @@ class RiskScore(models.Model):
                 fields=["ward", "score_date", "alert_type", "is_replay"], name="uq_rs"
             )
         ]
+
+    def save(self, *args, **kwargs):
+        decision = normalize_decision(self.decision)
+        extra = []
+        if self.decision != decision:
+            self.decision = decision
+            extra.append("decision")
+        if self.is_replay is None:
+            self.is_replay = False
+            extra.append("is_replay")
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None and extra:
+            kwargs["update_fields"] = list(dict.fromkeys([*update_fields, *extra]))
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def matching(cls, *, ward_id, score_date, alert_type_id, is_replay=False):
+        """The row for this unique key. A NULL is_replay counts as non-replay ('N')."""
+        base = cls.objects.filter(
+            ward_id=ward_id, score_date=score_date, alert_type_id=alert_type_id,
+        )
+        if is_replay:
+            return base.filter(is_replay=True).first()
+        return base.filter(is_replay=False).first() or base.filter(is_replay__isnull=True).first()
+
+
+def normalize_decision(value):
+    """ACT, WATCH or ABSTAIN. Anything else cannot be stored in the live DECISION column."""
+    code = "" if value is None else str(value).strip().upper()
+    if code not in RiskScore.DECISION_CODES:
+        raise ValueError(
+            "RISK_SCORES.DECISION is NOT NULL VARCHAR2(7) and must be ACT, WATCH or ABSTAIN; "
+            f"got {value!r}"
+        )
+    return code
 
 
 # ----- People & conversations ----------------------------------------------------------------
@@ -172,8 +222,9 @@ class Subscriber(models.Model):
         Ward, on_delete=models.DO_NOTHING, db_column="ward_id", null=True, blank=True
     )
     role = models.CharField(max_length=16, null=True, blank=True)  # null until registration
-    language = models.CharField(max_length=2, default="sw", null=True)  # legacy, kept in sync
-    preferred_lang = models.CharField(max_length=2, default="sw", choices=LANGS)
+    language = models.CharField(max_length=2, default="sw", null=True)  # legacy VARCHAR2, kept in sync
+    # Live PREFERRED_LANG is CHAR(2) NOT NULL. This is the column SMS and USSD read.
+    preferred_lang = CharCodeField(max_length=2, default="sw", choices=LANGS)
     consent_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=10, default=ACTIVE)
     is_demo = YesNoField(default=False)
@@ -184,9 +235,36 @@ class Subscriber(models.Model):
     def __str__(self):
         return self.phone
 
+    @staticmethod
+    def canonical_lang(value, default=None):
+        """sw or en, the only values live PREFERRED_LANG accepts. Blank uses default."""
+        code = "" if value is None else str(value).strip().lower()
+        if not code:
+            if default is None:
+                raise ValueError("SUBSCRIBERS.PREFERRED_LANG is CHAR(2) NOT NULL")
+            code = default
+        if code not in ("sw", "en"):
+            raise ValueError(f"SUBSCRIBERS.PREFERRED_LANG must be sw or en, not {value!r}")
+        return code
+
+    def spoken_lang(self):
+        """Language for SMS and USSD. Reads PREFERRED_LANG, never the nullable LANGUAGE column."""
+        try:
+            return self.canonical_lang(self.preferred_lang)
+        except ValueError:
+            return "sw"
+
     def set_language(self, lang):
-        self.preferred_lang = lang
-        self.language = lang
+        self.preferred_lang = self.canonical_lang(lang)
+        self.language = self.preferred_lang
+
+    def save(self, *args, **kwargs):
+        before = self.preferred_lang
+        self.preferred_lang = self.canonical_lang(self.preferred_lang, default="sw")
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None and self.preferred_lang != before:
+            kwargs["update_fields"] = list(dict.fromkeys([*update_fields, "preferred_lang"]))
+        super().save(*args, **kwargs)
 
 
 class Farm(models.Model):
@@ -230,11 +308,6 @@ class Message(models.Model):
     provider_msg_id = models.CharField(max_length=100, null=True, blank=True)
     status = models.CharField(max_length=12, default=QUEUED)
     created_at = models.DateTimeField(default=timezone.now)
-    # Which ward-level alert an OUT message delivers (db/migrations/001_backend_alignment.sql).
-    alert = models.ForeignKey(
-        "Alert", on_delete=models.DO_NOTHING, db_column="alert_id", null=True, blank=True,
-        related_name="messages",
-    )
 
     class Meta:
         db_table = "messages"
@@ -242,29 +315,30 @@ class Message(models.Model):
 
 
 class Alert(models.Model):
-    """One alert per (risk score, language): drafted by the engine, approved by an officer in APEX
-    (Alert Approvals page), then fanned out to the ward's subscribers as MESSAGES."""
+    """One live ALERTS row per subscriber.
 
-    PENDING_APPROVAL, APPROVED, REJECTED = "PENDING_APPROVAL", "APPROVED", "REJECTED"
-    SENT, SUPPRESSED = "SENT", "SUPPRESSED"
+    Drafted for each eligible subscriber of an ACT score, approved on the APEX Alert Approvals
+    page (V_ALERT_QUEUE), then sent as one SMS. V_ALERT_QUEUE inner-joins subscribers, wards and
+    risk_scores, so those foreign keys are required. The SMS link is message_id on this row.
+    Status values the approvals page already filters and writes: PENDING_APPROVAL, APPROVED,
+    REJECTED, SENT.
+    """
+
+    PENDING_APPROVAL, APPROVED, REJECTED, SENT = "PENDING_APPROVAL", "APPROVED", "REJECTED", "SENT"
 
     alert_id = models.AutoField(primary_key=True)
-    score = models.ForeignKey(
-        RiskScore, on_delete=models.DO_NOTHING, db_column="score_id", null=True, blank=True
-    )
-    subscriber = models.ForeignKey(  # legacy per-subscriber column; ward-level alerts leave it null
-        Subscriber, on_delete=models.DO_NOTHING, db_column="subscriber_id", null=True, blank=True
-    )
+    score = models.ForeignKey(RiskScore, on_delete=models.DO_NOTHING, db_column="score_id")
+    subscriber = models.ForeignKey(Subscriber, on_delete=models.DO_NOTHING, db_column="subscriber_id")
     alert_type = models.ForeignKey(AlertType, on_delete=models.DO_NOTHING, db_column="alert_type")
     ward = models.ForeignKey(Ward, on_delete=models.DO_NOTHING, db_column="ward_id")
-    message = models.ForeignKey(  # legacy; OUT messages point back via MESSAGES.alert_id
+    message = models.ForeignKey(  # live ALERTS.MESSAGE_ID -> MESSAGES; null until the SMS is queued
         Message, on_delete=models.DO_NOTHING, db_column="message_id", null=True, blank=True,
         related_name="+",
     )
     hazard = models.CharField(max_length=30, null=True, blank=True)
     severity = models.CharField(max_length=16, null=True, blank=True)
     lang = models.CharField(max_length=2, null=True, blank=True, choices=LANGS)
-    body = models.CharField(max_length=480, null=True, blank=True)
+    body = models.CharField(max_length=160, null=True, blank=True)  # live VARCHAR2(160)
     status = models.CharField(max_length=16, default=PENDING_APPROVAL)
     created_at = models.DateTimeField(default=timezone.now)
     approved_by = models.CharField(max_length=100, null=True, blank=True)
@@ -404,7 +478,11 @@ class Outcome(models.Model):
 
 
 class JobRun(models.Model):
-    """One row per §2.2 action call; job_id in the 202 response (db/migrations/001)."""
+    """One row per §2.2 action call when the table exists.
+
+    The live NgaoDB has no JOB_RUNS table. Local SQLite (and any database that has the table)
+    still records runs. api.jobs.run_job keeps the HTTP contract without this table.
+    """
 
     RUNNING, DONE, FAILED = "RUNNING", "DONE", "FAILED"
 

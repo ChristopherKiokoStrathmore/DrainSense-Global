@@ -1,13 +1,21 @@
-"""Action jobs (API_CONTRACT §2.2): run synchronously, recorded in JOB_RUNS.
+"""Action jobs (API_CONTRACT §2.2): run synchronously.
 
 Called by the APEX Demo controls page, the scheduler (manage.py scheduler / cron) and
 `manage.py run_job`. Each job returns a summary dict that goes into the 202 response.
+
+JOB_RUNS is not a live NgaoDB table. When it exists (local SQLite, or a database that
+created it) the run is stored there. When it does not, the job still runs and the result
+is kept in this process so GET /jobs/{id}/status works until restart.
 """
 import datetime as dt
+import itertools
 import json
 import logging
+import threading
+from types import SimpleNamespace
 
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import DatabaseError, connection
 from django.utils import timezone
 
 from ngao.models import JobRun
@@ -89,21 +97,94 @@ JOBS = {
 }
 
 
-def run_job(name, params):
-    """Run one job and record it. Raises the job's exception after marking the row FAILED."""
-    job = JobRun.objects.create(job_name=name, params=_jsonable(params), status=JobRun.RUNNING)
+_memory_jobs = {}
+_memory_ids = itertools.count(1)
+_memory_lock = threading.Lock()
+
+
+def _missing_relation(exc):
+    text = str(exc).lower()
+    return "ora-00942" in text or "no such table" in text or "job_runs" in text
+
+
+def job_runs_available():
+    """True when this connection can see JOB_RUNS. Cached on the connection."""
+    cached = getattr(connection, "_ngao_job_runs", None)
+    if cached is not None:
+        return cached
+    available = False
+    try:
+        with connection.cursor() as cursor:
+            if connection.vendor == "oracle":
+                cursor.execute("SELECT COUNT(*) FROM user_tables WHERE table_name = 'JOB_RUNS'")
+                available = bool(cursor.fetchone()[0])
+            else:
+                available = "job_runs" in connection.introspection.table_names(cursor)
+    except DatabaseError:
+        available = False
+    connection._ngao_job_runs = available
+    return available
+
+
+def _remember(job):
+    with _memory_lock:
+        _memory_jobs[job.job_id] = job
+    return job
+
+
+def _new_memory_job(name, params):
+    now = timezone.now()
+    with _memory_lock:
+        job_id = next(_memory_ids)
+    return SimpleNamespace(
+        job_id=job_id, job_name=name, params=_jsonable(params), status=JobRun.RUNNING,
+        summary=None, error_text=None, started_at=now, finished_at=None,
+    )
+
+
+def _finish(job, *, persist):
+    if not persist:
+        return _remember(job)
+    job.save(update_fields=["status", "summary", "error_text", "finished_at"])
+    return job
+
+
+def _execute(name, params, job, persist):
     try:
         summary = JOBS[name](params)
     except Exception as exc:
         job.status = JobRun.FAILED
         job.error_text = (exc.message if isinstance(exc, ApiError) else repr(exc))[:1000]
         job.finished_at = timezone.now()
-        job.save(update_fields=["status", "error_text", "finished_at"])
+        _finish(job, persist=persist)
         if not isinstance(exc, ApiError):
             logger.exception("job %s (%s) failed", name, job.job_id)
         raise
     job.status = JobRun.DONE
     job.summary = _jsonable(summary)
     job.finished_at = timezone.now()
-    job.save(update_fields=["status", "summary", "finished_at"])
-    return job
+    return _finish(job, persist=persist)
+
+
+def get_job(job_id):
+    """The stored run, from JOB_RUNS or from this process when that table is absent."""
+    if job_runs_available():
+        return JobRun.objects.filter(pk=job_id).first()
+    with _memory_lock:
+        return _memory_jobs.get(int(job_id))
+
+
+def run_job(name, params):
+    """Run one job and record it. Raises the job's exception after marking the run FAILED."""
+    if not job_runs_available():
+        logger.info("JOB_RUNS is not in this database; job %s will not be persisted", name)
+        return _execute(name, params, _new_memory_job(name, params), persist=False)
+    try:
+        job = JobRun.objects.create(job_name=name, params=_jsonable(params), status=JobRun.RUNNING)
+    except DatabaseError as exc:
+        if not _missing_relation(exc):
+            raise
+        connection._ngao_job_runs = False
+        logger.warning("JOB_RUNS is not in this database (%s); running %s without persisting", exc, name)
+        return _execute(name, params, _new_memory_job(name, params), persist=False)
+    return _execute(name, params, job, persist=True)

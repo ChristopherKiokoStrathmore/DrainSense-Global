@@ -44,7 +44,7 @@ def process(message_id):
     if settings.NGAO_SEND_REPORT_ACK and message.subscriber and report.review_status == Report.AUTO_ACCEPTED:
         from alerts.templates import render_system
 
-        queue_sms(message.phone, render_system("report_ack", message.subscriber.preferred_lang),
+        queue_sms(message.phone, render_system("report_ack", message.subscriber.spoken_lang()),
                   subscriber=message.subscriber)
         kick()
     return report

@@ -11,6 +11,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import DatabaseError, connection
 
 NGAO_APPS = ("ngao",)
+# Live NgaoDB has no JOB_RUNS table. Jobs still run; the row is persisted only when the table exists.
+OPTIONAL_TABLES = {"job_runs"}
 
 
 def _db_columns(table):
@@ -41,7 +43,7 @@ def _check_conditions(table):
 
 
 def _region_named_timestamps():
-    """TIMESTAMP WITH TIME ZONE values stored with a region name (fix: migration 001 step 4)."""
+    """TIMESTAMP WITH TIME ZONE values stored with a region name (python-oracledb thin mode, DPY-3022)."""
     if connection.vendor != "oracle":
         return []
     found = []
@@ -72,6 +74,10 @@ class Command(BaseCommand):
             table = model._meta.db_table
             existing = _db_columns(table)
             if not existing:
+                if table in OPTIONAL_TABLES:
+                    self.stdout.write(self.style.WARNING(
+                        f"{table.upper()}: not in this database; jobs still run, without a persisted row"))
+                    continue
                 self.stdout.write(self.style.ERROR(f"MISSING TABLE {table.upper()}"))
                 problems += 1
                 continue
@@ -90,5 +96,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(
                 f"{table}.{column}: {count} rows use a named time zone (unreadable in thin mode, DPY-3022)"))
         if problems:
-            raise CommandError(f"{problems} schema problem(s); see db/migrations/001_backend_alignment.sql")
+            raise CommandError(
+                f"{problems} schema problem(s). The backend targets the live NgaoDB columns. "
+                "Do not run db/migrations/001_backend_alignment.sql against that database."
+            )
         self.stdout.write(self.style.SUCCESS("schema matches the backend models"))

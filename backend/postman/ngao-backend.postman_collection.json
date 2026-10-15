@@ -193,7 +193,7 @@
                 }
               ]
             },
-            "description": "Deletes everything belonging to the presenter phones (`phones`, default `DEMO_PHONES`): the subscriber row (so the USSD language prompt shows again), messages, reports, bookings, farms, herds, USSD sessions. Also deletes alerts drafted today and routes from today on. The synthetic dataset is untouched.\n\nAnswers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
+            "description": "Deletes everything belonging to the presenter phones (`phones`, default `DEMO_PHONES`): the subscriber row (so the USSD language prompt shows again), messages, reports, bookings, farms, herds, USSD sessions. Also deletes alerts drafted today and routes from today on. The synthetic dataset is untouched.\n\nAnswers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is kept for this process.\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"phones\": [\n    \"{{demo_phone}}\"\n  ]\n}",
@@ -1126,7 +1126,7 @@
                 }
               ]
             },
-            "description": "Runs the **heuristic-v0** fallback rules on leakage-safe inputs (only rows with `available_date <= as_of`) and upserts `RISK_SCORES` with `model_version='heuristic-v0-backend'`.\n\n- Decisions: `ACT` (≥ act threshold), `WATCH` (≥ watch threshold), `ABSTAIN` (GFS/ECMWF disagree or inputs partly missing, with `abstain_reason`). Below watch nothing is stored.\n- Rows written by **another model_version** (Trevor's trained models) are kept unless `overwrite=true`.\n\nAnswers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
+            "description": "Runs the **heuristic-v0** fallback rules on leakage-safe inputs (only rows with `available_date <= as_of`) and upserts `RISK_SCORES` with `model_version='heuristic-v0-backend'`.\n\n- Decisions: `ACT` (≥ act threshold), `WATCH` (≥ watch threshold), `ABSTAIN` (GFS/ECMWF disagree or inputs partly missing, with `abstain_reason`). Below watch nothing is stored.\n- Rows written by **another model_version** (Trevor's trained models) are kept unless `overwrite=true`.\n\nAnswers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is kept for this process.\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -1438,7 +1438,7 @@
                 }
               ]
             },
-            "description": "For every `ACT` score of `as_of` (not replay, not A5) drafts **one `ALERTS` row per language** spoken by the ward's eligible subscribers (ACTIVE, consented, role in the alert's audience). The body is rendered from `ALERT_TEMPLATE` (hazard, severity, lang) in Swahili or English.\n\n- `ALERTS_REQUIRE_APPROVAL=true` (default): status `PENDING_APPROVAL`; an officer approves in APEX or via `POST /alerts/{alert_id}/approve`.\n- Otherwise: `APPROVED` by `auto` and fanned out at once.\n- A ward-level cooldown (`ALERT_TYPES.cooldown_hours`, 48 h) stops repeat drafts; reruns are idempotent (`already_drafted`).\n- Also fans out any alert already `APPROVED` in APEX (`approved_dispatch`).\n\nAnswers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
+            "description": "For every `ACT` score of `as_of` (not replay, not A5) drafts **one `ALERTS` row per eligible subscriber** (ACTIVE, consented, role in the alert's audience), which is what live `V_ALERT_QUEUE` can show. The body is rendered from `ALERT_TEMPLATE` (hazard, severity, lang) in that subscriber's language and stored in at most 160 characters.\n\n- `ALERTS_REQUIRE_APPROVAL=true` (default): status `PENDING_APPROVAL`; an officer approves in APEX or via `POST /alerts/{alert_id}/approve`.\n- Otherwise: `APPROVED` by `auto` and fanned out at once.\n- A ward-level cooldown (`ALERT_TYPES.cooldown_hours`, 48 h) stops repeat drafts; reruns are idempotent (`already_drafted`).\n- Also fans out any alert already `APPROVED` in APEX (`approved_dispatch`).\n\nAnswers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is kept for this process.\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -1772,7 +1772,7 @@
                 }
               ]
             },
-            "description": "One row per (score, language). `messages` counts the subscriber SMS by status.\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token"
+            "description": "One row per subscriber (the live `ALERTS` shape). `messages` is the linked SMS, if queued.\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token"
           },
           "event": [
             {
@@ -2082,7 +2082,7 @@
                 }
               ]
             },
-            "description": "`PENDING_APPROVAL` → `APPROVED`, then queues one SMS per eligible subscriber in that language (per-subscriber 48 h cooldown and 3/week routine cap; floods and disease skip the cap). The alert becomes `SENT` once the first SMS is handed to Africa's Talking, or `SUPPRESSED` when nobody is eligible. Replay alerts and alerts older than 48 h are approved but **not** sent (`dispatch.skipped`).\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token, `404` Not found, `409` Conflict with the current state",
+            "description": "`PENDING_APPROVAL` → `APPROVED`, then queues the one SMS for this subscriber (48 h cooldown and 3/week routine cap; floods and disease skip the cap). `ALERTS.MESSAGE_ID` is set to that `MESSAGES` row. The alert becomes `SENT` once Africa's Talking accepts the SMS. A subscriber who is no longer eligible is left `APPROVED` and not sent. Replay alerts and alerts older than 48 h are approved but **not** sent (`dispatch.skipped`).\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token, `404` Not found, `409` Conflict with the current state",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"approved_by\": \"postman.officer\"\n}",
@@ -3684,7 +3684,7 @@
                 }
               ]
             },
-            "description": "Greedy dryer router (ARCHITECTURE §6.3):\n\n1. **Demand**: accepted `wet_bags` reports of the last 3 days, the latest per farmer, at the ward's collection point.\n2. **Urgency**: wet bags × P(heavy rain 48 h, A2) × aflatoxin boost (A3 ACT 1.5, WATCH 1.2).\n3. **Capacity**: t/h × hours ÷ 0.09 bags per day; the most urgent point goes to the dryer with the most room; points are split across dryers when needed.\n4. **ETA**: 08:00 EAT + travel at 30 km/h + drying time, rounded up to 5 minutes.\n\nCreates `ROUTES`, `ROUTE_STOPS`, `BOOKINGS (OFFERED)` and queues the A5 booking SMS (`Jibu 1`) plus each operator's stop list. `409` once any booking for that date is confirmed.\n\nAnswers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here, `409` Conflict with the current state",
+            "description": "Greedy dryer router (ARCHITECTURE §6.3):\n\n1. **Demand**: accepted `wet_bags` reports of the last 3 days, the latest per farmer, at the ward's collection point.\n2. **Urgency**: wet bags × P(heavy rain 48 h, A2) × aflatoxin boost (A3 ACT 1.5, WATCH 1.2).\n3. **Capacity**: t/h × hours ÷ 0.09 bags per day; the most urgent point goes to the dryer with the most room; points are split across dryers when needed.\n4. **ETA**: 08:00 EAT + travel at 30 km/h + drying time, rounded up to 5 minutes.\n\nCreates `ROUTES`, `ROUTE_STOPS`, `BOOKINGS (OFFERED)` and queues the A5 booking SMS (`Jibu 1`) plus each operator's stop list. `409` once any booking for that date is confirmed.\n\nAnswers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is kept for this process.\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here, `409` Conflict with the current state",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -4722,7 +4722,7 @@
                 }
               ]
             },
-            "description": "Re-runs the scorer week by week with `is_replay='Y'`, reading only data that was available on each date. Returns the first `ACT` date and the lead time before the index human case (symptom onset 30 Nov 2006, CDC MMWR). Replay rows are **never** alerted.\n\nAnswers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
+            "description": "Re-runs the scorer week by week with `is_replay='Y'`, reading only data that was available on each date. Returns the first `ACT` date and the lead time before the index human case (symptom onset 30 Nov 2006, CDC MMWR). Replay rows are **never** alerted.\n\nAnswers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is kept for this process.\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"scenario\": \"garissa_rvf_2006\",\n  \"from\": \"2006-09-01\",\n  \"to\": \"2007-01-15\"\n}",
@@ -5029,7 +5029,7 @@
                 }
               ]
             },
-            "description": "The `JOB_RUNS` row for a job id returned by any `/jobs/*` call: params, summary, error text.\n\n**Responses:** `200`, `401` Missing or invalid bearer token, `404` Not found"
+            "description": "The recorded run for a job id returned by any `/jobs/*` call: params, summary, error text. Persisted in `JOB_RUNS` when that table exists; otherwise kept for this process only.\n\n**Responses:** `200`, `401` Missing or invalid bearer token, `404` Not found"
           },
           "event": [
             {
@@ -5189,7 +5189,7 @@
                 }
               ]
             },
-            "description": "Grades ACT/WATCH scores whose window has passed against observed rain in `WARD_FEATURES_DAILY`: A1 hit = 3 consecutive days < 2 mm starting on day 1-5; A2 hit = a day > 20 mm on day 1-2. Scores without all observations wait (`waiting_for_data`).\n\nAnswers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
+            "description": "Grades ACT/WATCH scores whose window has passed against observed rain in `WARD_FEATURES_DAILY`: A1 hit = 3 consecutive days < 2 mm starting on day 1-5; A2 hit = a day > 20 mm on day 1-2. Scores without all observations wait (`waiting_for_data`).\n\nAnswers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is kept for this process.\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -5955,7 +5955,7 @@
                 }
               ]
             },
-            "description": "Deletes everything belonging to the presenter phones (`phones`, default `DEMO_PHONES`): the subscriber row (so the USSD language prompt shows again), messages, reports, bookings, farms, herds, USSD sessions. Also deletes alerts drafted today and routes from today on. The synthetic dataset is untouched.\n\nAnswers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
+            "description": "Deletes everything belonging to the presenter phones (`phones`, default `DEMO_PHONES`): the subscriber row (so the USSD language prompt shows again), messages, reports, bookings, farms, herds, USSD sessions. Also deletes alerts drafted today and routes from today on. The synthetic dataset is untouched.\n\nAnswers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is kept for this process.\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"phones\": [\n    \"{{demo_phone}}\"\n  ]\n}",
@@ -6337,7 +6337,7 @@
                 }
               ]
             },
-            "description": "The `JOB_RUNS` row for a job id returned by any `/jobs/*` call: params, summary, error text.\n\n**Responses:** `200`, `401` Missing or invalid bearer token, `404` Not found"
+            "description": "The recorded run for a job id returned by any `/jobs/*` call: params, summary, error text. Persisted in `JOB_RUNS` when that table exists; otherwise kept for this process only.\n\n**Responses:** `200`, `401` Missing or invalid bearer token, `404` Not found"
           },
           "event": [
             {
@@ -6460,7 +6460,7 @@
                 }
               ]
             },
-            "description": "Fans out every `APPROVED` alert that has no messages yet (e.g. approved on the APEX page), then sends the `MESSAGES` queue through Africa's Talking. The scheduler does this every 15 s anyway. Synthetic subscribers are marked `SENT` with `provider_msg_id='SIMULATED'`.\n\nAnswers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
+            "description": "Fans out every `APPROVED` alert that has no messages yet (e.g. approved on the APEX page), then sends the `MESSAGES` queue through Africa's Talking. The scheduler does this every 15 s anyway. Synthetic subscribers are marked `SENT` with `provider_msg_id='SIMULATED'`.\n\nAnswers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is kept for this process.\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -6720,7 +6720,7 @@
                 }
               ]
             },
-            "description": "Grades ACT/WATCH scores whose window has passed against observed rain in `WARD_FEATURES_DAILY`: A1 hit = 3 consecutive days < 2 mm starting on day 1-5; A2 hit = a day > 20 mm on day 1-2. Scores without all observations wait (`waiting_for_data`).\n\nAnswers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
+            "description": "Grades ACT/WATCH scores whose window has passed against observed rain in `WARD_FEATURES_DAILY`: A1 hit = 3 consecutive days < 2 mm starting on day 1-5; A2 hit = a day > 20 mm on day 1-2. Scores without all observations wait (`waiting_for_data`).\n\nAnswers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is kept for this process.\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -6980,7 +6980,7 @@
                 }
               ]
             },
-            "description": "Greedy dryer router (ARCHITECTURE §6.3):\n\n1. **Demand**: accepted `wet_bags` reports of the last 3 days, the latest per farmer, at the ward's collection point.\n2. **Urgency**: wet bags × P(heavy rain 48 h, A2) × aflatoxin boost (A3 ACT 1.5, WATCH 1.2).\n3. **Capacity**: t/h × hours ÷ 0.09 bags per day; the most urgent point goes to the dryer with the most room; points are split across dryers when needed.\n4. **ETA**: 08:00 EAT + travel at 30 km/h + drying time, rounded up to 5 minutes.\n\nCreates `ROUTES`, `ROUTE_STOPS`, `BOOKINGS (OFFERED)` and queues the A5 booking SMS (`Jibu 1`) plus each operator's stop list. `409` once any booking for that date is confirmed.\n\nAnswers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here, `409` Conflict with the current state",
+            "description": "Greedy dryer router (ARCHITECTURE §6.3):\n\n1. **Demand**: accepted `wet_bags` reports of the last 3 days, the latest per farmer, at the ward's collection point.\n2. **Urgency**: wet bags × P(heavy rain 48 h, A2) × aflatoxin boost (A3 ACT 1.5, WATCH 1.2).\n3. **Capacity**: t/h × hours ÷ 0.09 bags per day; the most urgent point goes to the dryer with the most room; points are split across dryers when needed.\n4. **ETA**: 08:00 EAT + travel at 30 km/h + drying time, rounded up to 5 minutes.\n\nCreates `ROUTES`, `ROUTE_STOPS`, `BOOKINGS (OFFERED)` and queues the A5 booking SMS (`Jibu 1`) plus each operator's stop list. `409` once any booking for that date is confirmed.\n\nAnswers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is kept for this process.\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here, `409` Conflict with the current state",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"route_date\": \"2026-10-16\"\n}",
@@ -7291,7 +7291,7 @@
                 }
               ]
             },
-            "description": "Re-runs the scorer week by week with `is_replay='Y'`, reading only data that was available on each date. Returns the first `ACT` date and the lead time before the index human case (symptom onset 30 Nov 2006, CDC MMWR). Replay rows are **never** alerted.\n\nAnswers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
+            "description": "Re-runs the scorer week by week with `is_replay='Y'`, reading only data that was available on each date. Returns the first `ACT` date and the lead time before the index human case (symptom onset 30 Nov 2006, CDC MMWR). Replay rows are **never** alerted.\n\nAnswers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is kept for this process.\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"scenario\": \"garissa_rvf_2006\",\n  \"from\": \"2006-09-01\",\n  \"to\": \"2007-01-15\"\n}",
@@ -7551,7 +7551,7 @@
                 }
               ]
             },
-            "description": "Deletes everything belonging to the presenter phones (`phones`, default `DEMO_PHONES`): the subscriber row (so the USSD language prompt shows again), messages, reports, bookings, farms, herds, USSD sessions. Also deletes alerts drafted today and routes from today on. The synthetic dataset is untouched.\n\nAnswers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
+            "description": "Deletes everything belonging to the presenter phones (`phones`, default `DEMO_PHONES`): the subscriber row (so the USSD language prompt shows again), messages, reports, bookings, farms, herds, USSD sessions. Also deletes alerts drafted today and routes from today on. The synthetic dataset is untouched.\n\nAnswers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is kept for this process.\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -7811,7 +7811,7 @@
                 }
               ]
             },
-            "description": "Runs the **heuristic-v0** fallback rules on leakage-safe inputs (only rows with `available_date <= as_of`) and upserts `RISK_SCORES` with `model_version='heuristic-v0-backend'`.\n\n- Decisions: `ACT` (≥ act threshold), `WATCH` (≥ watch threshold), `ABSTAIN` (GFS/ECMWF disagree or inputs partly missing, with `abstain_reason`). Below watch nothing is stored.\n- Rows written by **another model_version** (Trevor's trained models) are kept unless `overwrite=true`.\n\nAnswers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
+            "description": "Runs the **heuristic-v0** fallback rules on leakage-safe inputs (only rows with `available_date <= as_of`) and upserts `RISK_SCORES` with `model_version='heuristic-v0-backend'`.\n\n- Decisions: `ACT` (≥ act threshold), `WATCH` (≥ watch threshold), `ABSTAIN` (GFS/ECMWF disagree or inputs partly missing, with `abstain_reason`). Below watch nothing is stored.\n- Rows written by **another model_version** (Trevor's trained models) are kept unless `overwrite=true`.\n\nAnswers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is kept for this process.\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"as_of\": \"2026-10-15\",\n  \"county\": \"Uasin Gishu\"\n}",
@@ -8071,7 +8071,7 @@
                 }
               ]
             },
-            "description": "For every `ACT` score of `as_of` (not replay, not A5) drafts **one `ALERTS` row per language** spoken by the ward's eligible subscribers (ACTIVE, consented, role in the alert's audience). The body is rendered from `ALERT_TEMPLATE` (hazard, severity, lang) in Swahili or English.\n\n- `ALERTS_REQUIRE_APPROVAL=true` (default): status `PENDING_APPROVAL`; an officer approves in APEX or via `POST /alerts/{alert_id}/approve`.\n- Otherwise: `APPROVED` by `auto` and fanned out at once.\n- A ward-level cooldown (`ALERT_TYPES.cooldown_hours`, 48 h) stops repeat drafts; reruns are idempotent (`already_drafted`).\n- Also fans out any alert already `APPROVED` in APEX (`approved_dispatch`).\n\nAnswers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
+            "description": "For every `ACT` score of `as_of` (not replay, not A5) drafts **one `ALERTS` row per eligible subscriber** (ACTIVE, consented, role in the alert's audience), which is what live `V_ALERT_QUEUE` can show. The body is rendered from `ALERT_TEMPLATE` (hazard, severity, lang) in that subscriber's language and stored in at most 160 characters.\n\n- `ALERTS_REQUIRE_APPROVAL=true` (default): status `PENDING_APPROVAL`; an officer approves in APEX or via `POST /alerts/{alert_id}/approve`.\n- Otherwise: `APPROVED` by `auto` and fanned out at once.\n- A ward-level cooldown (`ALERT_TYPES.cooldown_hours`, 48 h) stops repeat drafts; reruns are idempotent (`already_drafted`).\n- Also fans out any alert already `APPROVED` in APEX (`approved_dispatch`).\n\nAnswers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is kept for this process.\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"as_of\": \"2026-10-15\",\n  \"dry_run\": false\n}",
@@ -8363,7 +8363,7 @@
                 }
               ]
             },
-            "description": "One row per (score, language). `messages` counts the subscriber SMS by status.\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token"
+            "description": "One row per subscriber (the live `ALERTS` shape). `messages` is the linked SMS, if queued.\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token"
           },
           "event": [
             {
@@ -8615,7 +8615,7 @@
                 }
               ]
             },
-            "description": "`PENDING_APPROVAL` → `APPROVED`, then queues one SMS per eligible subscriber in that language (per-subscriber 48 h cooldown and 3/week routine cap; floods and disease skip the cap). The alert becomes `SENT` once the first SMS is handed to Africa's Talking, or `SUPPRESSED` when nobody is eligible. Replay alerts and alerts older than 48 h are approved but **not** sent (`dispatch.skipped`).\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token, `404` Not found, `409` Conflict with the current state",
+            "description": "`PENDING_APPROVAL` → `APPROVED`, then queues the one SMS for this subscriber (48 h cooldown and 3/week routine cap; floods and disease skip the cap). `ALERTS.MESSAGE_ID` is set to that `MESSAGES` row. The alert becomes `SENT` once Africa's Talking accepts the SMS. A subscriber who is no longer eligible is left `APPROVED` and not sent. Replay alerts and alerts older than 48 h are approved but **not** sent (`dispatch.skipped`).\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token, `404` Not found, `409` Conflict with the current state",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"approved_by\": \"agri.officer.uasingishu\"\n}",
@@ -12569,7 +12569,7 @@
                 }
               ]
             },
-            "description": "Runs the **heuristic-v0** fallback rules on leakage-safe inputs (only rows with `available_date <= as_of`) and upserts `RISK_SCORES` with `model_version='heuristic-v0-backend'`.\n\n- Decisions: `ACT` (≥ act threshold), `WATCH` (≥ watch threshold), `ABSTAIN` (GFS/ECMWF disagree or inputs partly missing, with `abstain_reason`). Below watch nothing is stored.\n- Rows written by **another model_version** (Trevor's trained models) are kept unless `overwrite=true`.\n\nAnswers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
+            "description": "Runs the **heuristic-v0** fallback rules on leakage-safe inputs (only rows with `available_date <= as_of`) and upserts `RISK_SCORES` with `model_version='heuristic-v0-backend'`.\n\n- Decisions: `ACT` (≥ act threshold), `WATCH` (≥ watch threshold), `ABSTAIN` (GFS/ECMWF disagree or inputs partly missing, with `abstain_reason`). Below watch nothing is stored.\n- Rows written by **another model_version** (Trevor's trained models) are kept unless `overwrite=true`.\n\nAnswers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is kept for this process.\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -13355,7 +13355,7 @@
                 }
               ]
             },
-            "description": "`PENDING_APPROVAL` → `APPROVED`, then queues one SMS per eligible subscriber in that language (per-subscriber 48 h cooldown and 3/week routine cap; floods and disease skip the cap). The alert becomes `SENT` once the first SMS is handed to Africa's Talking, or `SUPPRESSED` when nobody is eligible. Replay alerts and alerts older than 48 h are approved but **not** sent (`dispatch.skipped`).\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token, `404` Not found, `409` Conflict with the current state",
+            "description": "`PENDING_APPROVAL` → `APPROVED`, then queues the one SMS for this subscriber (48 h cooldown and 3/week routine cap; floods and disease skip the cap). `ALERTS.MESSAGE_ID` is set to that `MESSAGES` row. The alert becomes `SENT` once Africa's Talking accepts the SMS. A subscriber who is no longer eligible is left `APPROVED` and not sent. Replay alerts and alerts older than 48 h are approved but **not** sent (`dispatch.skipped`).\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token, `404` Not found, `409` Conflict with the current state",
             "body": {
               "mode": "raw",
               "raw": "{}",
