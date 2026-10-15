@@ -24,7 +24,7 @@ from django.utils import timezone
 
 from alerts.catalogue import DEFAULT_AUDIENCE
 from alerts.templates import fit_alert_body, render_alert
-from ngao.models import Alert, RiskScore, Subscriber
+from ngao.models import Alert, RiskScore, Subscriber, normalize_decision
 from ngao_core.errors import ConflictError, NotFoundError
 from ngao_core.timeutil import today_eat, weekday_name
 from sms.dispatcher import kick, queue_sms
@@ -56,15 +56,30 @@ def ensure_risk_score(ward_id, alert_type, score_date, is_replay=False, score=No
 
     Live RISK_SCORES is unique on that key, and ALERTS.SCORE_ID is NOT NULL and a foreign key.
     An existing row (Trevor's model, or an earlier score run) is reused and not overwritten.
+    A new row always has DECISION in ACT/WATCH/ABSTAIN (default ACT: this helper exists so an
+    alert can point at a score) and IS_REPLAY of Y or N. A NULL is_replay is the non-replay row
+    and is stored as N so the unique key and V_WARD_RISK_LATEST (`is_replay='N'`) agree.
     """
     if score is not None:
         return score
     alert_type_id = getattr(alert_type, "pk", alert_type)
-    row, _created = RiskScore.objects.get_or_create(
-        ward_id=ward_id, score_date=score_date, alert_type_id=alert_type_id, is_replay=is_replay,
-        defaults={"decision": RiskScore.ACT, "model_version": "backend-alert", **defaults},
+    replay = bool(is_replay)
+    supplied = defaults.pop("decision", RiskScore.ACT)
+    if supplied is None or (isinstance(supplied, str) and not supplied.strip()):
+        supplied = RiskScore.ACT
+    decision = normalize_decision(supplied)
+    row = RiskScore.matching(
+        ward_id=ward_id, score_date=score_date, alert_type_id=alert_type_id, is_replay=replay,
     )
-    return row
+    if row is not None:
+        if row.is_replay is None:
+            row.is_replay = False
+            row.save(update_fields=["is_replay"])
+        return row
+    return RiskScore.objects.create(
+        ward_id=ward_id, score_date=score_date, alert_type_id=alert_type_id, is_replay=replay,
+        decision=decision, model_version=defaults.pop("model_version", "backend-alert"), **defaults,
+    )
 
 
 def _slots(score, lang):
@@ -134,7 +149,7 @@ def draft_alerts(as_of=None, dry_run=False, county=None):
                 if not alert_type.overrides_cap and _routine_count_7d(subscriber) >= cap:
                     summary["suppressed_cap"] += 1
                     continue
-                lang = (subscriber.preferred_lang or "sw")[:2]
+                lang = subscriber.spoken_lang()
                 body, hazard, severity, source = render_alert(alert_type, lang, **_slots(score, lang))
                 body = fit_alert_body(body)
                 if dry_run:

@@ -4,6 +4,27 @@ import json
 from django.db import models
 
 
+class CharCodeField(models.CharField):
+    """Oracle CHAR column. Trailing pad spaces are stripped so 'en' matches 'en '.
+
+    SUBSCRIBERS.PREFERRED_LANG is CHAR(2). Python equality and template lookups
+    must see the two-letter code, not a padded value.
+    """
+
+    def from_db_value(self, value, expression, connection):
+        return self.to_python(value)
+
+    def to_python(self, value):
+        if value is None:
+            return None
+        if not isinstance(value, str):
+            value = super().to_python(value)
+        return value.strip().lower()
+
+    def get_prep_value(self, value):
+        return super().get_prep_value(self.to_python(value))
+
+
 class YesNoField(models.CharField):
     """CHAR(1) 'Y'/'N' in the database, bool in Python (is_replay, is_demo, is_placeholder ...)."""
 

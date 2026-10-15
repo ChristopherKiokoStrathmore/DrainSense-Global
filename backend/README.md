@@ -22,7 +22,7 @@ backend/
 ├── ussd_api/      §5 endpoints for the ussd/ service
 ├── routing/       greedy dryer router, bookings, operator stop lists
 ├── postman/       Postman collection + environments + openapi.yaml (generated: manage.py export_postman)
-├── tests/         148 tests (pass on SQLite)
+├── tests/         158 tests (pass on SQLite)
 ├── requirements.txt · .env.example · Dockerfile · docker-compose.yml
 ```
 
@@ -35,7 +35,7 @@ cp .env.example .env            # set DJANGO_DEBUG=true for local work
 venv/bin/python manage.py migrate          # SQLite only; never against ADB
 venv/bin/python manage.py seed_demo        # SYNTHETIC wards, forecasts, subscribers, dryers
 venv/bin/python manage.py runserver
-venv/bin/python manage.py test tests       # 148 tests
+venv/bin/python manage.py test tests       # 158 tests
 ```
 
 With `SMS_BACKEND=console` every SMS is logged instead of sent. Then walk through the demo script:
@@ -236,6 +236,18 @@ What the live tables require, and what the backend does:
   `NOT NULL` foreign keys. `draft_alerts` looks up the `RISK_SCORES` row for
   `(ward_id, score_date, alert_type, is_replay)` and creates it only when that key is missing.
   It does not overwrite a row another model already wrote.
+- **`RISK_SCORES.DECISION` is `NOT NULL VARCHAR2(7)`.** The values the views already use are
+  `ACT`, `WATCH` and `ABSTAIN` (`V_WARD_RISK_LATEST` colours those three). Every row this backend
+  inserts sets one of them. A score below the watch threshold is not stored. An alert that has to
+  create the missing score stores `ACT`.
+- **`RISK_SCORES.IS_REPLAY` is `CHAR(1)`, nullable, and part of the unique key.** Oracle does not
+  treat `NULL` as equal to `'N'`, and `V_WARD_RISK_LATEST` / `V_GARISSA_REPLAY` filter on `'N'` and
+  `'Y'`. Writes are always `Y` or `N`. A non-replay lookup also matches a `NULL` flag and stores
+  `N`, so a second row is not inserted beside it.
+- **Language is `SUBSCRIBERS.PREFERRED_LANG` (`CHAR(2) NOT NULL`).** USSD language, USSD
+  registration and SMS `LUGHA`/`LANG` set it (`sw` or `en`). `LANGUAGE` is the nullable legacy
+  column and is kept in sync, but SMS and USSD read `PREFERRED_LANG`. Trailing spaces from
+  `CHAR` padding are stripped on read.
 - **`V_ALERT_QUEUE` inner-joins `SUBSCRIBERS`, `WARDS` and `RISK_SCORES`.** A row missing any of
   those never shows on the Alert Approvals page. Status values the page already reads and writes
   are `PENDING_APPROVAL`, `APPROVED`, `REJECTED` and `SENT`.
@@ -250,6 +262,10 @@ What the live tables require, and what the backend does:
 - **SMS and the delivery/inbound callbacks stay on Africa's Talking** (`SMS_BACKEND=africastalking`
   for a real send). Wasiliana remains an optional fallback only. USSD session callbacks are still
   Louisa's service; the backend logs USSD reports as `MESSAGES.CHANNEL='USSD'`.
+- **`RISK_SCORES.RISK_LEVEL` (`VARCHAR2(10)`, nullable) and `SUBSCRIBERS.COOP_ID` (nullable) are
+  not written.** Inserts omit them. The ward map colours by `RISK_LEVEL` (`HIGH` / `MEDIUM` /
+  `UNCERTAIN` / `LOW`); the view's `COLOUR` column is the decision `CASE`. There is no mapping
+  from `ACT` / `WATCH` / `ABSTAIN` to `RISK_LEVEL` in this repo.
 
 `tests/test_alerts.py` runs the same joins as `V_ALERT_QUEUE` on SQLite, including a row whose
 subscriber id matches nobody, which the join drops.
