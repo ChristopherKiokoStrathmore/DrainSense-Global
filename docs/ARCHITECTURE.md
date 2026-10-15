@@ -336,6 +336,8 @@ erDiagram
   WARDS ||--o{ FORECASTS : has
   WARDS ||--o{ RISK_SCORES : scored
   WARDS ||--o{ SUBSCRIBERS : lives_in
+  WARDS ||--o{ COOPERATIVES : based_in
+  COOPERATIVES ||--o{ SUBSCRIBERS : member_of
   WARDS ||--o{ COLLECTION_POINTS : contains
   WARDS ||--o{ GRAZING_OPTIONS : contains
   SUBSCRIBERS ||--o{ FARMS : owns
@@ -417,10 +419,21 @@ erDiagram
     varchar abstain_reason
     varchar model_version
   }
+  COOPERATIVES {
+    number coop_id PK
+    varchar coop_name
+    varchar short_name
+    varchar county
+    number ward_id FK
+    char is_demo
+    varchar location_basis "STATED INFERRED CONFIRMED"
+  }
   SUBSCRIBERS {
     number subscriber_id PK
     varchar phone UK
     number ward_id FK
+    number coop_id FK
+    varchar membership_no
     varchar role "farmer herder both health_promoter"
     varchar language
     char preferred_lang "sw en"

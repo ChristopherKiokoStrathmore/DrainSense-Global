@@ -27,7 +27,7 @@ ussd/
 ├── advice.py         El Niño tips (plant, harvest, water, floods, livestock, health) in sw/en
 ├── wasiliana.py      request adapter (field names: assumption until confirmed, overridable by env)
 ├── backend.py        §5 client (BackendClient) + DevBackend stub for local runs
-├── store.py          USSD_SESSIONS upsert; read-only SUBSCRIBERS.preferred_lang and WARDS
+├── store.py          USSD_SESSIONS upsert; read-only SUBSCRIBERS.preferred_lang and COOPERATIVES
 ├── simulate.py       walk the menus in a terminal, or --web for a phone UI
 ├── simulator.html    phone UI served by simulate.py --web (dev only, not on the live callback)
 ├── tests/            pytest: adapter + every menu path
@@ -42,7 +42,8 @@ The callback must be a public HTTPS URL (ngrok for the demo, or the host from de
 ```text
 (new number) Chagua lugha / Choose language → 1 Kiswahili · 2 English      → POST /ussd/language
 MvuaSmart
-├── 1 Jiandikishe / Register → role → county → ward → consent              → POST /ussd/register
+├── 1 Jiandikishe / Register → role → cooperative → membership no. → consent → POST /ussd/register
+│      (cooperative = numbered list + "Other / not listed", which skips membership no.)
 ├── 2 Ripoti / Report → 1 wet bags (count) · 2 sick/dead animals (count)
 │                      · 3 flooding · 4 water point dry                    → POST /ussd/report
 │                      · 5 other → "send us an SMS" (no call)
@@ -60,6 +61,8 @@ MvuaSmart
     ├── slot CONFIRMED → show it
     └── no slot → bags → collection point → confirm                        → POST /ussd/report (wet_bags + point_id)
 ```
+
+**Registration by cooperative.** Farmers pick their cooperative from a numbered list (the USSD version of a dropdown, paged with `98`) and type their membership number, so there is no county or ward name to misspell. The list is the real societies in `COOPERATIVES` (`is_demo = 'N'`); the live demo rows are not shown. USSD sends the cooperative's `ward_id` with `coop_id` and `membership_no`. When the ward is unknown, or the farmer picks Other, `ward_id` is left out, and the backend must accept that (requested in API_CONTRACT §5; until then those farmers get the "try again" screen). Rows are seeded from `db/seed/cooperatives.csv` through `db/deploy/040_cooperatives_registry.sql`: 14 societies in Uasin Gishu and Garissa from county government and Kenya News Agency pages, each with its source URL. Most sources give only the sub-county, so `location_basis` says whether the location was **stated** or **inferred** from the name. Confirm wards with each county's cooperatives office.
 
 **Drying flow.** A request is a `wet_bags` report with the chosen collection point. The 18:00 dryer router (backend) turns it into an `OFFERED` booking and sends the A5 SMS. The farmer confirms in menu 7, so booking does not depend on inbound SMS forwarding. Times are shown the Swahili way (08:00 = *saa 2 asubuhi*). The drying endpoints are proposed in API_CONTRACT §5 and need the backend to implement them.
 
@@ -79,7 +82,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 In VS Code, open the phone UI with **Cmd+Shift+P → Simple Browser: Show** and paste the URL. Dial `*384*55#`, press Call, and reply with the keypad or keyboard. **New number** gives a fresh phone so you see the language prompt again.
 
-Without `BACKEND_BASE_URL` the service uses `DevBackend` (logs calls, writes nothing). Without `DB_DSN` it uses an in-memory store with a **dev ward list whose ids do not match `WARDS`**.
+Without `BACKEND_BASE_URL` the service uses `DevBackend` (logs calls, writes nothing). Without `DB_DSN` it uses an in-memory store that reads the cooperative list from `db/seed/cooperatives.csv` (no ward ids locally).
 
 For the live callback, set the env vars from `.env.example`, then:
 

@@ -30,9 +30,13 @@ def api():
 
 @pytest.fixture(scope="module")
 def store(api):
-    """The backend's real ward ids (production reads them from WARDS in the same database)."""
+    """One test cooperative in Kapseret, using the backend's real ward id.
+
+    Production reads cooperatives (and their ward_id) from COOPERATIVES in the same database.
+    """
     items = api.get(f"{BASE}/wards", timeout=10).json()["items"]
-    return MemoryStore(wards=[(w["ward_id"], w["county"], w["ward_name"]) for w in items])
+    kapseret = next(w["ward_id"] for w in items if w["county"] == "Uasin Gishu" and w["ward_name"] == "Kapseret")
+    return MemoryStore(coops=[(990, "E2E Kapseret Coop", kapseret)])
 
 
 @pytest.fixture(scope="module")
@@ -57,9 +61,8 @@ def test_farmer_journey(client, store, api):
     phone = f"+2547{uuid.uuid4().int % 10**8:08d}"
     assert walk(client, phone, "2")[-1].startswith("CON MvuaSmart")
 
-    county = store.counties().index("Uasin Gishu") + 1
-    ward = [name for _, name in store.wards("Uasin Gishu")].index("Kapseret") + 1
-    assert walk(client, phone, "1", "1", str(county), str(ward), "1")[-1] == "END Thank you! You are registered."
+    # Register, farmer, cooperative 1 (E2E Kapseret Coop), membership number, consent
+    assert walk(client, phone, "1", "1", "1", "E2E-001", "1")[-1] == "END Thank you! You are registered."
 
     assert walk(client, phone, "3")[-1].startswith("END Kapseret ward:")
     assert walk(client, phone, "2", "1", "25")[-1].startswith("END Thank you! Report received.")

@@ -17,6 +17,7 @@ Menu screen text lives in TEXT below; El Niño advice lives in advice.py. Swahil
 speaker before the demo.
 """
 
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -34,12 +35,15 @@ TEXT = {
         "invalid": "Chaguo si sahihi.",
         "error": "Samahani, jaribu tena.",
         "role": "Wewe ni:\n1. Mkulima\n2. Mfugaji\n3. Wote wawili",
-        "county": "Chagua kaunti:",
-        "ward": "Chagua kata:",
+        "coop": "Chagua chama chako cha ushirika:",
+        "coop_other": "Chama kingine",
+        "member_no": "Weka namba yako ya uanachama:",
+        "bad_member_no": "Namba si sahihi. Tumia herufi na namba tu.",
+        "member_summary": "{coop}, namba {no}.\n",
         "more": "Zaidi",
         "back": "Rudi",
         "main_menu": "Menyu kuu",
-        "no_wards": "Samahani, hakuna kata zilizopatikana. Jaribu baadaye.",
+        "no_coops": "Samahani, orodha ya vyama haipatikani. Jaribu baadaye.",
         "consent": "Ukubali kupokea tahadhari za mvua na ushauri wa shamba bure kwa SMS?\n1. Ndiyo\n2. Hapana",
         "registered": "Asante! Umesajiliwa.",
         "declined": "Sawa, hujasajiliwa. Piga tena wakati wowote.",
@@ -74,12 +78,15 @@ TEXT = {
         "invalid": "Invalid choice.",
         "error": "Sorry, please try again.",
         "role": "You are a:\n1. Farmer\n2. Herder\n3. Both",
-        "county": "Choose county:",
-        "ward": "Choose ward:",
+        "coop": "Choose your cooperative:",
+        "coop_other": "Other / not listed",
+        "member_no": "Enter your membership number:",
+        "bad_member_no": "Invalid number. Use letters and digits only.",
+        "member_summary": "{coop}, member no. {no}.\n",
         "more": "More",
         "back": "Back",
         "main_menu": "Main menu",
-        "no_wards": "Sorry, no wards are available. Please try later.",
+        "no_coops": "Sorry, the cooperative list is unavailable. Please try later.",
         "consent": "Agree to receive free rain alerts and farm advice by SMS?\n1. Yes\n2. No",
         "registered": "Thank you! You are registered.",
         "declined": "OK, you are not registered. Dial again any time.",
@@ -112,6 +119,7 @@ TEXT = {
 
 LANGS = {"1": "sw", "2": "en"}
 ROLES = {"1": "farmer", "2": "herder", "3": "both"}
+MEMBER_NO = re.compile(r"^[A-Z0-9/-]{1,20}$")
 # Menu 2 choice -> (report_type, unit). Animals pick sick/dead on the next screen.
 REPORTS = {"1": ("wet_bags", "bags"), "3": ("flooding", None), "4": ("water_point_dry", None)}
 ANIMALS = {"1": "sick_animals", "2": "dead_animals"}
@@ -263,20 +271,39 @@ def _register(path: Path, ctx: Ctx) -> str:
     t = TEXT[ctx.lang]
     role = ROLES[_choose(path, t["role"], ROLES, ctx.lang)]
 
-    counties = ctx.store.counties()
-    if not counties:
-        return end(t["no_wards"])
-    county = counties[_pick_from_list(path, t["county"], counties, ctx.lang)]
+    # Cooperatives are a fixed numbered list (the USSD "dropdown"), so there is
+    # nothing to misspell. The ward is the cooperative's ward (COOPERATIVES.ward_id).
+    coops = ctx.store.cooperatives()
+    if not coops:
+        return end(t["no_coops"])
+    labels = [_short(name) for _, name, _ in coops] + [t["coop_other"]]
+    picked = _pick_from_list(path, t["coop"], labels, ctx.lang)
 
-    wards = ctx.store.wards(county)
-    if not wards:
-        return end(t["no_wards"])
-    ward_id, _ = wards[_pick_from_list(path, t["ward"], [w for _, w in wards], ctx.lang)]
+    coop_id = member_no = ward_id = None
+    summary = ""
+    if picked < len(coops):
+        coop_id, _, ward_id = coops[picked]
+        member_no = _member_no(path, t["member_no"], ctx.lang)
+        summary = t["member_summary"].format(coop=labels[picked], no=member_no)
 
-    if _choose(path, t["consent"], {"1", "2"}, ctx.lang) == "2":
+    if _choose(path, summary + t["consent"], {"1", "2"}, ctx.lang) == "2":
         return end(t["declined"])
-    ctx.backend.register(ctx.phone, ward_id=ward_id, role=role, lang=ctx.lang, consent=True)
+    ctx.backend.register(ctx.phone, coop_id=coop_id, membership_no=member_no, ward_id=ward_id,
+                         role=role, lang=ctx.lang, consent=True)
     return end(t["registered"])
+
+
+def _member_no(path: Path, screen: str, lang: str) -> str:
+    invalid_last = False
+    while True:
+        token = path.next()
+        if token is None:
+            prefix = TEXT[lang]["bad_member_no"] + "\n" if invalid_last else ""
+            raise Reply(con(prefix + screen))
+        value = token.strip().upper()
+        if MEMBER_NO.match(value):
+            return value
+        invalid_last = path.at_newest
 
 
 def _report(path: Path, ctx: Ctx) -> str:
