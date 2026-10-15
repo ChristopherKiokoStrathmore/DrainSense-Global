@@ -14,8 +14,9 @@ class GradingTests(NgaoTestCase):
         self.day = today_eat() - dt.timedelta(days=45)  # before the synthetic feature rows
         self.score = RiskScore.objects.create(ward_id=13, score_date=self.day, alert_type_id="A2", probability=0.8,
                                               confidence_pct=80, decision="ACT")
-        Alert.objects.create(score=self.score, alert_type_id="A2", ward_id=13, lang="sw", body="x", status="SENT",
-                             sent_at=timezone.now())
+        subscriber = Subscriber.objects.get(phone="+254700000104")
+        Alert.objects.create(score=self.score, subscriber=subscriber, alert_type_id="A2", ward_id=13, lang="sw",
+                             body="x", status="SENT", sent_at=timezone.now())
 
     def observe(self, mm_by_offset):
         for offset, mm in mm_by_offset.items():

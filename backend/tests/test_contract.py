@@ -1,5 +1,6 @@
 """API_CONTRACT §2.0 auth, §2.1 error format, both URL prefixes, §2.2 job envelope, §2.3 reads."""
 import datetime as dt
+from unittest import mock
 
 from ngao.models import JobRun, RiskScore
 from ngao_core.timeutil import today_eat
@@ -88,6 +89,17 @@ class JobEnvelopeTests(NgaoTestCase):
         self.assertEqual(run.status, "FAILED")
         self.assertIn("Atlantis", run.error_text)
 
+    @mock.patch("api.jobs.job_runs_available", return_value=False)
+    def test_jobs_run_when_job_runs_table_is_absent(self, _available):
+        before = JobRun.objects.count()
+        body = self.job("send-alerts", {"dry_run": True})
+        self.assertEqual(body["status"], "DONE")
+        self.assertEqual(body["summary"]["dry_run"], True)
+        self.assertEqual(JobRun.objects.count(), before)
+        status = self.api.get(f"/ngao/v1/jobs/{body['job_id']}/status")
+        self.assertEqual(status.status_code, 200, status.content)
+        self.assertEqual(status.json()["summary"], body["summary"])
+
 
 class ReadEndpointTests(NgaoTestCase):
     def test_wards_shape(self):
@@ -128,7 +140,7 @@ class ColumnWidthTests(NgaoTestCase):
         from reply_reader.schema import REPORT_TYPES
 
         values = {
-            (Alert, "status"): ["PENDING_APPROVAL", "APPROVED", "REJECTED", "SENT", "SUPPRESSED"],
+            (Alert, "status"): ["PENDING_APPROVAL", "APPROVED", "REJECTED", "SENT"],
             (Message, "status"): ["QUEUED", "SENT", "DELIVERED", "FAILED", "RECEIVED"],
             (Message, "direction"): ["IN", "OUT"],
             (Message, "channel"): ["SMS", "USSD"],

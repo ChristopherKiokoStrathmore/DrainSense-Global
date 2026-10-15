@@ -1,12 +1,17 @@
-"""Django models for the shared ADB schema NGAO (db/schema.sql is the source of truth).
+"""Django models for the live NgaoDB schema (WKSP_NGAO).
 
-Table and column names match the DDL exactly; Django's Oracle backend upper-cases them, so
-db_table "risk_scores" is RISK_SCORES. In Oracle the tables are created by db/schema.sql and
-`manage.py migrate` is never run; the migrations in this app only build the SQLite schema used
-for development and tests. `manage.py check_schema` compares these models with a live database.
+Table and column names match the live columns; Django's Oracle backend upper-cases them, so
+db_table "risk_scores" is RISK_SCORES. In Oracle the tables already exist and `manage.py migrate`
+is never run; the migrations in this app only build the SQLite schema used for development and
+tests. `manage.py check_schema` compares these models with a connected database.
 
-Ownership (API_CONTRACT §1.1): the backend writes SUBSCRIBERS, FARMS, HERDS, MESSAGES, REPORTS,
-ALERTS, ROUTES, ROUTE_STOPS, BOOKINGS, OUTCOMES and JOB_RUNS. Trevor writes WARDS,
+The live ALERTS row is one subscriber, not one ward: SUBSCRIBER_ID, SCORE_ID, WARD_ID and
+ALERT_TYPE are NOT NULL, BODY is VARCHAR2(160), and the outbound SMS is ALERTS.MESSAGE_ID.
+MESSAGES has no alert_id column. JOB_RUNS is not on the live database; the model stays so local
+SQLite can record jobs, and the job runner skips it when the table is absent.
+
+Ownership: the backend writes SUBSCRIBERS, FARMS, HERDS, MESSAGES, REPORTS, ALERTS, ROUTES,
+ROUTE_STOPS, BOOKINGS, OUTCOMES, and JOB_RUNS when that table exists. Trevor writes WARDS,
 WARD_FEATURES_DAILY, FORECASTS and RISK_SCORES (the backend's fallback scorer writes RISK_SCORES
 too, but never over a row produced by another model_version). Louisa writes USSD_SESSIONS.
 """
@@ -230,11 +235,6 @@ class Message(models.Model):
     provider_msg_id = models.CharField(max_length=100, null=True, blank=True)
     status = models.CharField(max_length=12, default=QUEUED)
     created_at = models.DateTimeField(default=timezone.now)
-    # Which ward-level alert an OUT message delivers (db/migrations/001_backend_alignment.sql).
-    alert = models.ForeignKey(
-        "Alert", on_delete=models.DO_NOTHING, db_column="alert_id", null=True, blank=True,
-        related_name="messages",
-    )
 
     class Meta:
         db_table = "messages"
@@ -242,29 +242,30 @@ class Message(models.Model):
 
 
 class Alert(models.Model):
-    """One alert per (risk score, language): drafted by the engine, approved by an officer in APEX
-    (Alert Approvals page), then fanned out to the ward's subscribers as MESSAGES."""
+    """One live ALERTS row per subscriber.
 
-    PENDING_APPROVAL, APPROVED, REJECTED = "PENDING_APPROVAL", "APPROVED", "REJECTED"
-    SENT, SUPPRESSED = "SENT", "SUPPRESSED"
+    Drafted for each eligible subscriber of an ACT score, approved on the APEX Alert Approvals
+    page (V_ALERT_QUEUE), then sent as one SMS. V_ALERT_QUEUE inner-joins subscribers, wards and
+    risk_scores, so those foreign keys are required. The SMS link is message_id on this row.
+    Status values the approvals page already filters and writes: PENDING_APPROVAL, APPROVED,
+    REJECTED, SENT.
+    """
+
+    PENDING_APPROVAL, APPROVED, REJECTED, SENT = "PENDING_APPROVAL", "APPROVED", "REJECTED", "SENT"
 
     alert_id = models.AutoField(primary_key=True)
-    score = models.ForeignKey(
-        RiskScore, on_delete=models.DO_NOTHING, db_column="score_id", null=True, blank=True
-    )
-    subscriber = models.ForeignKey(  # legacy per-subscriber column; ward-level alerts leave it null
-        Subscriber, on_delete=models.DO_NOTHING, db_column="subscriber_id", null=True, blank=True
-    )
+    score = models.ForeignKey(RiskScore, on_delete=models.DO_NOTHING, db_column="score_id")
+    subscriber = models.ForeignKey(Subscriber, on_delete=models.DO_NOTHING, db_column="subscriber_id")
     alert_type = models.ForeignKey(AlertType, on_delete=models.DO_NOTHING, db_column="alert_type")
     ward = models.ForeignKey(Ward, on_delete=models.DO_NOTHING, db_column="ward_id")
-    message = models.ForeignKey(  # legacy; OUT messages point back via MESSAGES.alert_id
+    message = models.ForeignKey(  # live ALERTS.MESSAGE_ID -> MESSAGES; null until the SMS is queued
         Message, on_delete=models.DO_NOTHING, db_column="message_id", null=True, blank=True,
         related_name="+",
     )
     hazard = models.CharField(max_length=30, null=True, blank=True)
     severity = models.CharField(max_length=16, null=True, blank=True)
     lang = models.CharField(max_length=2, null=True, blank=True, choices=LANGS)
-    body = models.CharField(max_length=480, null=True, blank=True)
+    body = models.CharField(max_length=160, null=True, blank=True)  # live VARCHAR2(160)
     status = models.CharField(max_length=16, default=PENDING_APPROVAL)
     created_at = models.DateTimeField(default=timezone.now)
     approved_by = models.CharField(max_length=100, null=True, blank=True)
@@ -404,7 +405,11 @@ class Outcome(models.Model):
 
 
 class JobRun(models.Model):
-    """One row per §2.2 action call; job_id in the 202 response (db/migrations/001)."""
+    """One row per §2.2 action call when the table exists.
+
+    The live NgaoDB has no JOB_RUNS table. Local SQLite (and any database that has the table)
+    still records runs. api.jobs.run_job keeps the HTTP contract without this table.
+    """
 
     RUNNING, DONE, FAILED = "RUNNING", "DONE", "FAILED"
 

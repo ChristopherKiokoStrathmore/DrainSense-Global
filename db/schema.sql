@@ -1,7 +1,9 @@
 -- Ngao / MvuaSmart: shared schema DRAFT (Oracle Autonomous Database, schema NGAO)
 -- Matches docs/ARCHITECTURE.md §7. Oracle 19c+/23ai syntax. Run as NGAO in SQL Worksheet.
 -- Status: v1-draft.4 2026-10-14 (alert approval workflow, messages.alert_id, job_runs). Changes via PR to main only.
--- Existing databases: run db/migrations/001_backend_alignment.sql instead of re-creating tables.
+-- Do NOT run db/migrations/001_backend_alignment.sql against the live NgaoDB. That script would
+-- change the live ALERTS/MESSAGES tables. The backend writes the live columns as they are.
+-- This file remains the draft DDL for a from-scratch database; it is not the live ADB.
 
 -- ===== Reference =====
 CREATE TABLE wards (

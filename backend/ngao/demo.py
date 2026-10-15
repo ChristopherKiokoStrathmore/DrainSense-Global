@@ -28,11 +28,14 @@ def reset_demo(phones=None, alerts_today=True, routes=True):
     summary = {"phones": len(phones)}
     with transaction.atomic():
         subscribers = Subscriber.objects.filter(phone__in=phones)
-        alerts = Alert.objects.filter(subscriber__in=subscribers)  # legacy per-subscriber rows
+        alerts = Alert.objects.filter(subscriber__in=subscribers)
         if alerts_today:
             alerts = Alert.objects.filter(Q(pk__in=alerts) | Q(created_at__gte=start_of_day_eat(today)))
         alert_ids = list(alerts.values_list("pk", flat=True))
-        messages = Message.objects.filter(Q(phone__in=phones) | Q(subscriber__in=subscribers) | Q(alert_id__in=alert_ids))
+        linked_message_ids = list(alerts.exclude(message_id=None).values_list("message_id", flat=True))
+        messages = Message.objects.filter(
+            Q(phone__in=phones) | Q(subscriber__in=subscribers) | Q(pk__in=linked_message_ids)
+        )
         message_ids = list(messages.values_list("pk", flat=True))
         route_ids = list(Route.objects.filter(route_date__gte=today).values_list("pk", flat=True)) if routes else []
 
@@ -41,9 +44,10 @@ def reset_demo(phones=None, alerts_today=True, routes=True):
         summary["bookings"] = Booking.objects.filter(Q(subscriber__in=subscribers) | Q(stop__route_id__in=route_ids)).delete()[0]
         RouteStop.objects.filter(route_id__in=route_ids).delete()
         summary["routes"] = Route.objects.filter(pk__in=route_ids).delete()[0]
-        Alert.objects.filter(message_id__in=message_ids).exclude(pk__in=alert_ids).update(message=None)
-        summary["messages"] = Message.objects.filter(pk__in=message_ids).delete()[0]
+        # ALERTS.MESSAGE_ID references MESSAGES, so drop the alerts before the messages.
+        Alert.objects.filter(message_id__in=message_ids).update(message=None)
         summary["alerts"] = Alert.objects.filter(pk__in=alert_ids).delete()[0]
+        summary["messages"] = Message.objects.filter(pk__in=message_ids).delete()[0]
         Farm.objects.filter(subscriber__in=subscribers).delete()
         Herd.objects.filter(subscriber__in=subscribers).delete()
         UssdSession.objects.filter(Q(subscriber__in=subscribers) | Q(phone__in=phones)).delete()

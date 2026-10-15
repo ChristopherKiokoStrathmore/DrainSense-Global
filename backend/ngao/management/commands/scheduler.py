@@ -6,8 +6,9 @@
   Mon 07:00 grade-outcomes
   every --interval s      approved-alert fan-out and the SMS queue (same as sms_worker)
 
-A job runs at most once per day: on start-up the JOB_RUNS table tells the scheduler what already
-ran today, so a restart does not re-send.
+A job runs at most once per day when JOB_RUNS exists: on start-up that table tells the scheduler
+what already ran today, so a restart does not re-send. The live database has no JOB_RUNS table;
+the scheduler then cannot see earlier runs and may run the day's job again after a restart.
 """
 import datetime as dt
 import logging
@@ -18,7 +19,7 @@ from django.core.management.base import BaseCommand
 from django.db import close_old_connections
 
 from alerts.engine import dispatch_approved
-from api.jobs import run_job
+from api.jobs import job_runs_available, run_job
 from api.serializers import parse_job_params
 from ngao.models import JobRun
 from ngao_core.timeutil import now_eat, start_of_day_eat
@@ -44,6 +45,8 @@ class Command(BaseCommand):
         parser.add_argument("--interval", type=float, default=15.0)
 
     def _ran_today(self, job, today):
+        if not job_runs_available():
+            return False
         return JobRun.objects.filter(job_name=job, started_at__gte=start_of_day_eat(today)).exists()
 
     def handle(self, *args, **options):

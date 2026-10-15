@@ -116,6 +116,8 @@ class ReportPatchIn(serializers.Serializer):
 class AlertOut(serializers.ModelSerializer):
     ward_name = serializers.CharField(source="ward.ward_name")
     county = serializers.CharField(source="ward.county")
+    subscriber_id = serializers.IntegerField()
+    phone = serializers.CharField(source="subscriber.phone")
     probability = serializers.FloatField(source="score.probability", default=None)
     confidence_pct = serializers.IntegerField(source="score.confidence_pct", default=None)
     score_date = serializers.DateField(source="score.score_date", default=None)
@@ -123,17 +125,16 @@ class AlertOut(serializers.ModelSerializer):
 
     class Meta:
         model = Alert
-        fields = ["alert_id", "score_id", "alert_type_id", "ward_id", "ward_name", "county", "hazard", "severity",
-                  "lang", "body", "status", "probability", "confidence_pct", "score_date", "created_at",
-                  "approved_by", "approved_at", "sent_at", "messages"]
+        fields = ["alert_id", "score_id", "subscriber_id", "phone", "alert_type_id", "ward_id", "ward_name",
+                  "county", "hazard", "severity", "lang", "body", "status", "probability", "confidence_pct",
+                  "score_date", "created_at", "approved_by", "approved_at", "sent_at", "messages"]
 
     @extend_schema_field({"type": "object", "additionalProperties": {"type": "integer"},
-                          "description": "Subscriber SMS for this alert by status, e.g. {\"SENT\": 3}"})
+                          "description": "The SMS linked by ALERTS.MESSAGE_ID, e.g. {\"SENT\": 1}. Empty until queued."})
     def get_messages(self, alert):
-        counts = {}
-        for status in alert.messages.values_list("status", flat=True):
-            counts[status] = counts.get(status, 0) + 1
-        return counts
+        if not alert.message_id or alert.message is None:
+            return {}
+        return {alert.message.status: 1}
 
 
 class ApproveIn(serializers.Serializer):

@@ -1,3 +1,12 @@
+-- DO NOT RUN against the live NgaoDB (ADB, schema WKSP_NGAO).
+--
+-- This script was an attempt to change the live tables so an earlier backend could insert
+-- ward-level alerts (nullable subscriber_id / score_id, BODY 480, MESSAGES.ALERT_ID, JOB_RUNS).
+-- The live ALERTS row is the opposite, and V_ALERT_QUEUE inner-joins SUBSCRIBERS. The backend
+-- now writes that live shape. Running this file would change the live database; do not.
+--
+-- The statements below are kept for history and are not executed.
+/*
 -- Ngao / MvuaSmart: align an existing ADB schema with the backend (Dennis, backend-dennis).
 -- Safe to re-run: every step skips itself when the change is already there.
 -- Run as the schema owner (NGAO, or WKSP_NGAO for the APEX workspace) in SQL Worksheet / SQLcl.
@@ -105,3 +114,4 @@ BEGIN
   COMMIT;
 END;
 /
+*/

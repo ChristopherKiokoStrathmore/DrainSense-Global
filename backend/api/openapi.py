@@ -199,7 +199,7 @@ class DispatchResult(serializers.Serializer):
 
 class AlertApproved(serializers.Serializer):
     alert_id = serializers.IntegerField()
-    status = serializers.ChoiceField(choices=["APPROVED", "SENT", "SUPPRESSED"])
+    status = serializers.ChoiceField(choices=["APPROVED", "SENT"])
     dispatch = DispatchResult()
 
 

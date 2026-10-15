@@ -22,7 +22,7 @@ backend/
 ├── ussd_api/      §5 endpoints for the ussd/ service
 ├── routing/       greedy dryer router, bookings, operator stop lists
 ├── postman/       Postman collection + environments + openapi.yaml (generated: manage.py export_postman)
-├── tests/         143 tests (pass on SQLite; the original 129 also pass on Oracle 23ai)
+├── tests/         148 tests (pass on SQLite)
 ├── requirements.txt · .env.example · Dockerfile · docker-compose.yml
 ```
 
@@ -35,7 +35,7 @@ cp .env.example .env            # set DJANGO_DEBUG=true for local work
 venv/bin/python manage.py migrate          # SQLite only; never against ADB
 venv/bin/python manage.py seed_demo        # SYNTHETIC wards, forecasts, subscribers, dryers
 venv/bin/python manage.py runserver
-venv/bin/python manage.py test tests       # 143 tests
+venv/bin/python manage.py test tests       # 148 tests
 ```
 
 With `SMS_BACKEND=console` every SMS is logged instead of sent. Then walk through the demo script:
@@ -108,12 +108,12 @@ Errors always use the §2.1 body, with `request_id` matching the `X-Request-ID` 
 ## How the moving parts fit
 
 ```text
-RISK_SCORES (Trevor, or /jobs/score) ──ACT──► alert engine ──► ALERTS PENDING_APPROVAL (one per score × language)
+RISK_SCORES (Trevor, or /jobs/score) ──ACT──► alert engine ──► ALERTS PENDING_APPROVAL (one row per subscriber)
                                                                     │ officer approves (APEX page 3 or REST)
                                                                     ▼
-          per-subscriber fan-out (consent, ACTIVE, audience role, 48 h cooldown, 3/week cap)
+                         one SMS (consent, ACTIVE, audience role, 48 h cooldown, 3/week cap)
                                                                     ▼
-                         MESSAGES QUEUED ──dispatcher (SKIP LOCKED)──► Africa's Talking ──► SENT ──DLR──► DELIVERED/FAILED
+              ALERTS.MESSAGE_ID ──► MESSAGES QUEUED ──dispatcher──► Africa's Talking ──► SENT ──DLR──► DELIVERED/FAILED
 AT incoming SMS ──► MESSAGES IN ──► keywords (STOP, LUGHA/LANG, 1/NDIYO, RVF) ──► else reply reader ──► REPORTS
 REPORTS wet_bags ──► dryer router (wet bags × P(rain 48 h) × aflatoxin) ──► ROUTES/STOPS/BOOKINGS + A5 SMS
 ```
@@ -142,10 +142,12 @@ Safety rules built in:
 1. Download the ADB wallet, unzip it to `backend/wallet/` (git-ignored). Set `DB_ENGINE=oracle`,
    `DB_DSN=ngaodb_low`, `DB_USER`, `DB_PASSWORD`, `DB_WALLET_DIR`, `DB_WALLET_PASSWORD`. The APEX app
    parses schema **`WKSP_NGAO`**: if you log in as another user, set `DB_SCHEMA=WKSP_NGAO`.
-2. Bring the schema up to date (re-runnable, keeps data): run
-   [`db/migrations/001_backend_alignment.sql`](../db/migrations/001_backend_alignment.sql) in SQL Worksheet.
+2. Do **not** run [`db/migrations/001_backend_alignment.sql`](../db/migrations/001_backend_alignment.sql)
+   against this database. The backend already targets the live columns. See
+   [Live schema compatibility](#live-schema-compatibility).
 3. `python manage.py check_schema`: every table/column the backend uses, the CHECK constraints, and
-   timestamps the thin driver cannot read. **Fix anything it reports before the demo.**
+   timestamps the thin driver cannot read. `JOB_RUNS` missing is a warning, not a failure.
+   **Fix anything it reports as an error before the demo.**
 4. `python manage.py seed_reference` inserts missing `ALERT_TYPES` rows (never changes existing ones).
    Add `--templates` only if `ALERT_TEMPLATE` has no rows for our hazards (see below).
 5. Put HTTPS in front (Caddy: `ngao-api.example.org { reverse_proxy 127.0.0.1:8000 }`), open 443 in the
@@ -178,9 +180,10 @@ How the adapter behaves:
 - **Network:** the callbacks need a public HTTPS URL (the VM, or `ngrok http 8000` for a laptop demo).
 
 ### For Chris (APEX)
-- The **Alert Approvals** page works unchanged: when it sets `status='APPROVED'`, the scheduler (or
-  `POST /jobs/dispatch`) fans the alert out and sets `SENT`/`sent_at`. Alerts carry `hazard`,
-  `severity`, `lang`, `body`, so `v_alert_queue` can read them directly.
+- The **Alert Approvals** page works unchanged: it lists `V_ALERT_QUEUE` where `status='PENDING_APPROVAL'`.
+  When it sets one row to `APPROVED`, the scheduler (or `POST /jobs/dispatch`) sends that subscriber's
+  SMS, sets `ALERTS.MESSAGE_ID`, then `SENT` / `sent_at`. Each row already has `subscriber_id`,
+  `score_id`, `ward_id`, `alert_type` and a `body` of at most 160 characters, which is what the view joins.
 - Template lookup is `ALERT_TEMPLATE (hazard, severity, lang)`. We map alert types to hazards with
   `NGAO_TEMPLATE_HAZARDS` (default `A1→dry_window`, `A2→heavy_rain`, `B3→rvf`, see
   `alerts/catalogue.py`) and ACT → severity `warning`. **Set the env var to your 6 hazard names**
@@ -213,12 +216,43 @@ reads features with `available_date <= as_of`.
    because developers.africastalking.com blocked automated reads. Every raw callback body is logged, so
    check the first real delivery report in the log.
 2. **Wasiliana** remains only as a fallback; its field names were never confirmed.
-3. `check_schema` against the **live** ADB: the APEX export shows `ALERTS` with
-   `hazard/severity/lang/body/approved_*/sent_at`. Its exact DDL was not in git, so run the migration and the check.
+3. `check_schema` against the **live** ADB compares the models to the columns that are already there.
+   Do not apply `db/migrations/001_backend_alignment.sql` to make the check pass.
 4. OCI GenAI: set `REPLY_READER=genai`, `OCI_COMPARTMENT_ID`, and test the 10 Swahili replies
    (EXECUTION_PLAN). The keyword fallback handles the demo sentence on its own (confidence 0.8).
 5. The heuristic scorer and all synthetic data are labelled as such. Copy in `alerts/catalogue.py`
    needs a native-speaker check (API_CONTRACT §4).
+
+## Live schema compatibility
+
+The backend writes the **live** NgaoDB tables. It does not need `db/migrations/001_backend_alignment.sql`,
+and that script must not be run on the live database (schema `WKSP_NGAO`). The script would make
+`ALERTS.SUBSCRIBER_ID` and `SCORE_ID` nullable, widen `BODY`, add `MESSAGES.ALERT_ID` and create
+`JOB_RUNS`. None of that matches the dashboard.
+
+What the live tables require, and what the backend does:
+
+- **One `ALERTS` row per subscriber.** `SUBSCRIBER_ID`, `SCORE_ID`, `WARD_ID` and `ALERT_TYPE` are
+  `NOT NULL` foreign keys. `draft_alerts` looks up the `RISK_SCORES` row for
+  `(ward_id, score_date, alert_type, is_replay)` and creates it only when that key is missing.
+  It does not overwrite a row another model already wrote.
+- **`V_ALERT_QUEUE` inner-joins `SUBSCRIBERS`, `WARDS` and `RISK_SCORES`.** A row missing any of
+  those never shows on the Alert Approvals page. Status values the page already reads and writes
+  are `PENDING_APPROVAL`, `APPROVED`, `REJECTED` and `SENT`.
+- **`ALERTS.BODY` is `VARCHAR2(160)`.** Rendered copy is cut to 160 characters and 160 UTF-8 bytes
+  before insert. The SMS that goes out is that same body.
+- **The SMS link is `ALERTS.MESSAGE_ID`.** Live `MESSAGES` has no `alert_id` column. Outbound SMS
+  and USSD transcripts are still normal `MESSAGES` rows (`DIRECTION`, `CHANNEL`, `PHONE`, `BODY`,
+  `STATUS`).
+- **There is no `JOB_RUNS` table.** `/jobs/*` still runs and returns `job_id` / `status` / `summary`.
+  The row is stored when the table exists (local SQLite). Otherwise it is kept in the process, and
+  the scheduler cannot tell that today's job already ran after a restart.
+- **SMS and the delivery/inbound callbacks stay on Africa's Talking** (`SMS_BACKEND=africastalking`
+  for a real send). Wasiliana remains an optional fallback only. USSD session callbacks are still
+  Louisa's service; the backend logs USSD reports as `MESSAGES.CHANNEL='USSD'`.
+
+`tests/test_alerts.py` runs the same joins as `V_ALERT_QUEUE` on SQLite, including a row whose
+subscriber id matches nobody, which the join drops.
 
 ## Testing against a real Oracle database
 SQLite does not enforce `VARCHAR2` lengths or time-zone storage, and both have caught real bugs here.
