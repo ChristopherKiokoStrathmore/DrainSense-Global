@@ -42,7 +42,7 @@ Four layers:
 
 | Table | Written when | Required columns |
 |---|---|---|
-| `SUBSCRIBERS` | USSD registration via §5, language choice, STOP, SMS `LUGHA`/`LANG` | phone, preferred_lang; ward_id, role, consent_at, status once registered |
+| `SUBSCRIBERS` | USSD registration via §5, language choice, STOP, SMS `LUGHA`/`LANG` | phone, preferred_lang; coop_id, membership_no, ward_id (from the cooperative), role, consent_at, status once registered |
 | `FARMS` / `HERDS` | Registration (optional detail) | subscriber_id, ward_id, crop/species |
 | `MESSAGES` | Every inbound SMS (IN) and every send/DLR update (OUT) | direction, channel, phone, body, provider_msg_id, status |
 | `REPORTS` | Reply reader / USSD menu 2 via §6 | message_id, ward_id, report_type, report_count, payload, ai_confidence, review_status |
@@ -186,7 +186,7 @@ END Asante! Umesajiliwa.
 
 **Confirm exact request field names against Wasiliana docs ([docs.wasiliana.com](https://docs.wasiliana.com)).** The handler needs a session id, the subscriber phone number, and the text entered so far. Do not hard-code a guessed JSON or form body; isolate the parse in one adapter in `ussd/`.
 
-Screen text is in Swahili or English, chosen by the user. On a new number the first screen is the language prompt in §5; that choice is saved to `preferred_lang` before the menu below. Main menu: `1` Register / Jiandikishe → role (farmer / herder / both) → county → ward → consent; `2` Report / Ripoti → wet bags (count), sick or dead animals (type, count), flooding, water point dry, or other (ask them to send an SMS; Louisa does not send one); `3` Ward status / Hali ya kata yangu; `4` **Lugha / Language** (change `preferred_lang`, then continue in the new language); `5` Stop alerts / Acha ujumbe (confirm, then `/ussd/unsubscribe`); `6` El Niño advice / Ushauri wa El Niño (static tips, no backend call); `7` **Dry wet maize / Kausha mahindi** (request drying, or confirm a slot the dryer router offered; see §5).
+Screen text is in Swahili or English, chosen by the user. On a new number the first screen is the language prompt in §5; that choice is saved to `preferred_lang` before the menu below. Main menu: `1` Register / Jiandikishe → role (farmer / herder / both) → **cooperative** (numbered list from `COOPERATIVES`, plus Other / not listed) → **membership number** (skipped for Other) → consent. County and ward are not asked; the backend derives them from the cooperative; `2` Report / Ripoti → wet bags (count), sick or dead animals (type, count), flooding, water point dry, or other (ask them to send an SMS; Louisa does not send one); `3` Ward status / Hali ya kata yangu; `4` **Lugha / Language** (change `preferred_lang`, then continue in the new language); `5` Stop alerts / Acha ujumbe (confirm, then `/ussd/unsubscribe`); `6` El Niño advice / Ushauri wa El Niño (static tips, no backend call); `7` **Dry wet maize / Kausha mahindi** (request drying, or confirm a slot the dryer router offered; see §5).
 
 Registration, reports, ward status, and unsubscribe go through [§5](#5-ussd-to-backend-contract). Louisa writes only `USSD_SESSIONS`.
 
@@ -242,7 +242,7 @@ CON Chagua lugha / Choose language
 | Method | Path | Body | Effect |
 |---|---|---|---|
 | POST | `/ussd/language` | `{"phone":"+254712345678","preferred_lang":"sw"}` | Set `SUBSCRIBERS.preferred_lang` to `sw` or `en`. Create the subscriber row when the phone is new (phone + `preferred_lang` + `status`) so the choice is saved before registration finishes; registration fills role, ward, and consent. `200` `{"preferred_lang":"sw"}` |
-| POST | `/ussd/register` | `{"phone":"+254712345678","ward_id":12,"role":"farmer","preferred_lang":"sw","consent":true}` | MERGE `SUBSCRIBERS`, including `preferred_lang` (`sw` or `en`). `201` `{"subscriber_id":44,"status":"ACTIVE"}` |
+| POST | `/ussd/register` | `{"phone":"+254712345678","coop_id":4,"membership_no":"TF-0042","role":"farmer","preferred_lang":"sw","consent":true}` | MERGE `SUBSCRIBERS`, including `preferred_lang` (`sw` or `en`), `coop_id`, and `membership_no`. Set `ward_id` from `COOPERATIVES.ward_id` (null if the cooperative has no confirmed ward yet). `coop_id` and `membership_no` are both null when the farmer chose Other / not listed. Membership numbers are stored as given (uppercase, `A-Z 0-9 / -`, ≤ 20) and verified later with the cooperative. `201` `{"subscriber_id":44,"status":"ACTIVE"}`. **Changed:** replaces `ward_id` in the body |
 | POST | `/ussd/report` | `{"phone":"+254712345678","session_id":"s1","report_type":"wet_bags","count":20,"unit":"bags"}` | INSERT `REPORTS` with `source=USSD`, `review_status=AUTO_ACCEPTED` (a structured menu, not an AI parse). `201` `{"report_id":77}` |
 | GET | `/ussd/ward-status?phone=+254712345678` | — | Short line in Swahili or English, chosen by the user, for menu 3 (today's decision for the subscriber's ward, or a sentence that says we have no score). `200` `{"text":"Kata ya Moiben: siku za jua, uhakika 75%."}` when `preferred_lang` is `sw` |
 | POST | `/ussd/unsubscribe` | `{"phone":"+254712345678"}` | `SUBSCRIBERS.status=STOPPED`. `200` `{"status":"STOPPED"}` |
@@ -264,3 +264,4 @@ Session rows stay in `ussd/`: each hop upserts `USSD_SESSIONS` (`session_id`, `p
 | v1-draft.2 | 2026-10-14 | Wasiliana replaces Africa's Talking. USSD service is `ussd/` (Louisa); §5 is the USSD to backend contract. Inbound SMS forwarding and delivery-report field names left open pending docs.wasiliana.com |
 | v1-draft.3 | 2026-10-14 | Language choice: `preferred_lang`, first-session prompt, main-menu Lugha / Language, SMS `LUGHA`/`LANG`, alerts rendered from `ALERT_TEMPLATE` |
 | v1-draft.4 | 2026-10-14 | USSD main menu items 5–7 (Stop alerts, El Niño advice, Dry wet maize). Proposed §5 `GET /ussd/drying`, `POST /ussd/drying/confirm`, optional `point_id` on `/ussd/report` |
+| v1-draft.5 | 2026-10-15 | Registration asks for cooperative + membership number instead of county + ward. New `COOPERATIVES` table (seed `db/seed/cooperatives.csv`); `SUBSCRIBERS.coop_id`, `membership_no`; `/ussd/register` body takes `coop_id` + `membership_no`, and the backend derives `ward_id` |

@@ -5,6 +5,9 @@ from callback import create_app
 from store import MemoryStore
 
 PHONE = "+254712345678"
+# Fixed list so tests don't depend on edits to db/seed/cooperatives.csv.
+# Sorted on screen: 1 Ainabkoi FCS, 2 Moiben FCS, 3 Tuiyo FCS, 4 Other.
+TEST_COOPS = [(4, "Tuiyo FCS"), (3, "Moiben FCS"), (1, "Ainabkoi FCS")]
 
 
 class FailingBackend(DevBackend):
@@ -14,7 +17,7 @@ class FailingBackend(DevBackend):
 
 @pytest.fixture
 def env():
-    backend, store = DevBackend(), MemoryStore()
+    backend, store = DevBackend(), MemoryStore(coops=TEST_COOPS)
     client = create_app(backend=backend, store=store).test_client()
 
     def hop(text, session="s1", phone=PHONE):
@@ -52,13 +55,14 @@ def test_returning_number_skips_language_prompt(env):
 
 def test_full_registration_in_swahili(env):
     hop, backend, _ = env
-    # Kiswahili, Jiandikishe, Mkulima, county 2 (Uasin Gishu), ward 1 (Kapseret), Ndiyo
-    screen = walk(hop, "1", "1", "1", "2", "1", "1")
-    assert screen == "END Asante! Umesajiliwa."
-    name, body = backend.calls[-1]
-    assert name == "register"
-    assert body["role"] == "farmer" and body["preferred_lang"] == "sw" and body["consent"] is True
-    assert body["ward_id"] == 2
+    # Kiswahili, Jiandikishe, Mkulima, cooperative 3 (Tuiyo FCS), membership no., Ndiyo
+    assert walk(hop, "1", "1", "1") == ("CON Chagua chama chako cha ushirika:\n1. Ainabkoi FCS\n"
+                                       "2. Moiben FCS\n3. Tuiyo FCS\n4. Chama kingine")
+    assert hop("1*1*1*3") == "CON Weka namba yako ya uanachama:"
+    assert hop("1*1*1*3*tf-0042").startswith("CON Tuiyo FCS, namba TF-0042.\nUkubali kupokea")
+    assert hop("1*1*1*3*tf-0042*1") == "END Asante! Umesajiliwa."
+    assert backend.calls[-1] == ("register", {"phone": PHONE, "coop_id": 4, "membership_no": "TF-0042",
+                                              "role": "farmer", "preferred_lang": "sw", "consent": True})
 
 
 def test_declined_consent_does_not_register(env):
@@ -288,3 +292,55 @@ def test_reused_session_id_with_other_phone_does_not_share_cache(env):
     other = "+254799999999"
     store.note_language(other, "en")
     assert hop("7", session="same", phone=other) == "END Please register first to book a dryer: Main menu > 1."
+
+
+# --- Cooperative registration ---
+
+def test_registration_other_cooperative_skips_membership(env):
+    hop, backend, _ = env
+    assert walk(hop, "2", "1", "3", "4").startswith("CON Agree to receive")  # no member no. asked
+    assert hop("2*1*3*4*1") == "END Thank you! You are registered."
+    body = backend.calls[-1][1]
+    assert body["coop_id"] is None and body["membership_no"] is None and body["role"] == "both"
+
+
+def test_invalid_membership_number_reprompts(env):
+    hop, _, _ = env
+    assert walk(hop, "2", "1", "1", "1", "#12!") == ("CON Invalid number. Use letters and digits only.\n"
+                                                    "Enter your membership number:")
+    assert hop("2*1*1*1*#12!*5531").startswith("CON Ainabkoi FCS, member no. 5531.")
+
+
+def test_long_cooperative_list_pages_with_98():
+    store = MemoryStore()  # the real seed list
+    client = create_app(backend=DevBackend(), store=store).test_client()
+    post = lambda t: client.post("/ussd", data={"sessionId": "pg", "phoneNumber": PHONE,
+                                                "text": t}).get_data(as_text=True)
+    post(""); post("2")
+    first = post("2*1*1")
+    assert "98. More" in first
+    n = len(store.cooperatives())
+    text = "2*1*1"
+    while "98. More" in post(text):
+        text += "*98"
+    assert f"{n + 1}. Other / not listed" in post(text)
+    assert post(f"{text}*{n}") == "CON Enter your membership number:"  # last cooperative on last page
+
+
+def test_seed_cooperatives_csv_is_valid():
+    import csv
+    from store import COOP_CSV
+    rows = list(csv.DictReader(open(COOP_CSV, encoding="utf-8")))
+    assert rows and len({r["coop_id"] for r in rows}) == len(rows)
+    for r in rows:
+        assert r["county"] and r["source_url"].startswith("https://")
+        assert len(r["short_name"]) <= 24
+        assert r["location_basis"] in ("STATED", "INFERRED", "CONFIRMED")
+
+
+def test_consent_with_member_summary_fits():
+    import menus
+    for t in menus.TEXT.values():
+        screen = menus.con(t["invalid"] + "\n" + t["member_summary"].format(coop="X" * 24, no="9" * 20)
+                           + t["consent"])
+        assert len(screen) <= menus.MAX_SCREEN, len(screen)

@@ -92,7 +92,7 @@ Dry run at venue · test hotspot · phone charged · **9:30 AM pitch** · bring 
 ## Demo script (≈ 1:50 live + 0:40 replay)
 | Step | On screen | Narrator |
 |---|---|---|
-| 1 | USSD simulator: register as *Mkulima*, Uasin Gishu ward, Swahili | "Any phone, no app, no data bundle." |
+| 1 | USSD simulator: register as *Mkulima*, pick a Uasin Gishu cooperative + membership number, Swahili | "Any phone, no app, no data bundle." |
 | 2 | Demo controls → **Run morning scoring**; map shows dry window | "This week's real forecast for these wards." |
 | 3 | Phone buzzes with A1 alert | "One action, and how sure we are." |
 | 4 | Paste reply *Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu* | "She replies in Swahili; AI reads it into data." |

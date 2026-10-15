@@ -56,10 +56,12 @@ class BackendClient:
     def set_language(self, phone: str, lang: str) -> dict:
         return self._call("POST", "/ussd/language", json={"phone": phone, "preferred_lang": lang})
 
-    def register(self, phone: str, ward_id: int, role: str, lang: str, consent: bool) -> dict:
+    def register(self, phone: str, coop_id: int | None, membership_no: str | None,
+                 role: str, lang: str, consent: bool) -> dict:
+        # coop_id and membership_no are null when the farmer chose "Other / not listed".
         return self._call("POST", "/ussd/register", json={
-            "phone": phone, "ward_id": ward_id, "role": role,
-            "preferred_lang": lang, "consent": consent,
+            "phone": phone, "coop_id": coop_id, "membership_no": membership_no,
+            "role": role, "preferred_lang": lang, "consent": consent,
         })
 
     def report(self, phone: str, session_id: str, report_type: str,
@@ -109,10 +111,10 @@ class DevBackend:
         self._log("language", phone=phone, preferred_lang=lang)
         return {"preferred_lang": lang}
 
-    def register(self, phone, ward_id, role, lang, consent):
+    def register(self, phone, coop_id, membership_no, role, lang, consent):
         self.registered.add(phone)
-        self._log("register", phone=phone, ward_id=ward_id, role=role,
-                  preferred_lang=lang, consent=consent)
+        self._log("register", phone=phone, coop_id=coop_id, membership_no=membership_no,
+                  role=role, preferred_lang=lang, consent=consent)
         return {"subscriber_id": 1, "status": "ACTIVE"}
 
     def report(self, phone, session_id, report_type, count, unit, point_id=None):

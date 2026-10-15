@@ -1,0 +1,15 @@
+coop_id,coop_name,short_name,county,sub_county,ward_name,location_basis,coop_type,source_url,notes
+1,Ainabkoi Farmers Cooperative Society,Ainabkoi FCS,Uasin Gishu,Ainabkoi,,STATED,dairy,https://uasingishu.go.ke/index.php/department/ainabkoi-subcounty,Sub-county stated; ward not stated
+2,Kuona Mbele Cooperative Society,Kuona Mbele,Uasin Gishu,Ainabkoi,,STATED,grain,https://uasingishu.go.ke/index.php/county-to-boost-cooperative-societies-through-strategic-partnerships,Sub-county stated; ward not stated
+3,Moiben Farmers Cooperative Society,Moiben FCS,Uasin Gishu,Moiben,Moiben,INFERRED,dairy,https://uasingishu.go.ke/?p=4229,Source names Moiben only; ward inferred from name
+4,Tuiyo Farmers Cooperative Society,Tuiyo FCS,Uasin Gishu,Kapseret,,STATED,dairy,https://uasingishu.go.ke/index.php/cooperative-societies-a-pillar-of-economic-stability-cecm-cheruto,Sub-county stated; ward not stated
+5,Kesentany Marketing Cooperative Society,Kesentany Marketing,Uasin Gishu,Soy,Soy,STATED,dairy,https://uasingishu.go.ke/?p=4893,Chemamul; Soy Ward stated
+6,Kapsaos Farmers' Cooperative Society,Kapsaos FCS,Uasin Gishu,Turbo,Kapsaos,INFERRED,dairy,https://uasingishu.go.ke/index.php/category/kapsaos-farmers-cooperative-society,Location not stated; sub-county and ward inferred from name
+7,Simat Farmers Cooperative Society,Simat FCS,Uasin Gishu,Kapseret,Simat/Kapseret,INFERRED,dairy,https://uasingishu.go.ke/index.php/county-officials-meet-simat-fcs-leaders-over-revival-plan,Location not stated; inferred from name; society under revival (2026)
+8,Gumarey Honey Co-operative Society,Gumarey Honey,Garissa,Ijara,,STATED,honey,https://www.kenyanews.go.ke/?p=66528,Ijara stated; ward not stated
+9,Safi Women Milk Co-operative Society,Safi Women Milk,Garissa,Dadaab,Dadaab,INFERRED,milk,https://www.kenyanews.go.ke/?p=66528,Source says Dadaab; ward inferred
+10,Bura East Fodder Co-operative Society,Bura East Fodder,Garissa,Fafi,,INFERRED,fodder,https://www.kenyanews.go.ke/?p=66528,Location not stated; sub-county inferred (Bura is in Fafi); ward left blank because the name is ambiguous
+11,Fafi Farmers Marketing Co-operative Society,Fafi Farmers Mktg,Garissa,Fafi,Fafi,INFERRED,marketing,https://www.kenyanews.go.ke/?p=66528,Location not stated; inferred from name
+12,Modogashe Women Milk Co-operative Society,Modogashe Women Milk,Garissa,Lagdera,Modogashe,INFERRED,milk,https://www.kenyanews.go.ke/?p=66528,Location not stated; inferred from name
+13,Balambala Livestock Traders Co-operative Society,Balambala Livestock,Garissa,Balambala,Balambala,INFERRED,livestock,https://www.kenyanews.go.ke/?p=66528,Location not stated; inferred from name
+14,Garissa Camel Milk Co-operative Society,Garissa Camel Milk,Garissa,Garissa Township,,STATED,milk,https://www.kenyanews.go.ke/?p=66528,Garissa Sub County stated; ward not stated

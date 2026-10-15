@@ -86,11 +86,28 @@ CREATE TABLE risk_scores (
   CONSTRAINT uq_rs UNIQUE (ward_id, score_date, alert_type, is_replay)
 );
 
+-- Farmer cooperatives. USSD registration picks one; the backend derives the
+-- subscriber's ward from it. Seed: db/seed/cooperatives.sql (from cooperatives.csv).
+CREATE TABLE cooperatives (
+  coop_id        NUMBER PRIMARY KEY,
+  coop_name      VARCHAR2(120) NOT NULL,
+  short_name     VARCHAR2(24)  NOT NULL,            -- shown on the USSD list
+  county         VARCHAR2(60)  NOT NULL,
+  sub_county     VARCHAR2(60),
+  ward_id        NUMBER REFERENCES wards,           -- null until confirmed with the county
+  location_basis VARCHAR2(10) CHECK (location_basis IN ('STATED','INFERRED','CONFIRMED')),
+  coop_type      VARCHAR2(20),
+  source_url     VARCHAR2(400),
+  is_active      CHAR(1) DEFAULT 'Y' CHECK (is_active IN ('Y','N'))
+);
+
 -- ===== People & conversations =====
 CREATE TABLE subscribers (
   subscriber_id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   phone          VARCHAR2(16) UNIQUE NOT NULL,       -- E.164
   ward_id        NUMBER REFERENCES wards,
+  coop_id        NUMBER REFERENCES cooperatives,    -- null when "Other / not listed"
+  membership_no  VARCHAR2(20),                      -- as given by the farmer; verified by the coop
   role           VARCHAR2(16) CHECK (role IN ('farmer','herder','both','health_promoter','operator','committee')), -- null until registration; language choice may insert first
   language       VARCHAR2(2) DEFAULT 'sw' CHECK (language IN ('sw','en')),
   preferred_lang CHAR(2) DEFAULT 'sw' NOT NULL CHECK (preferred_lang IN ('sw','en')), -- sw or en, chosen by the user

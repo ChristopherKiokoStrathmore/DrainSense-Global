@@ -2,13 +2,14 @@
 
 Writes: USSD_SESSIONS only (one upsert per hop).
 Reads:  SUBSCRIBERS.preferred_lang (to know whether a number is new and which
-        language to use) and WARDS (county and ward lists for registration).
+        language to use) and COOPERATIVES (the list farmers pick from at registration).
         These reads are read-only; SUBSCRIBERS is written by the backend via §5.
 
 OracleStore is used when DB_DSN is set. MemoryStore is for local runs and
-tests; its ward list is a DEV FIXTURE whose ids do not match the real WARDS table.
+tests; it reads the same cooperative list from db/seed/cooperatives.csv.
 """
 
+import csv
 import logging
 import os
 import threading
@@ -17,21 +18,13 @@ from dataclasses import dataclass, field
 
 log = logging.getLogger(__name__)
 
-# DEV FIXTURE ONLY. Real ward ids come from WARDS (loaded by data/).
-DEV_WARDS = [
-    (1, "Uasin Gishu", "Moiben"),
-    (2, "Uasin Gishu", "Kapseret"),
-    (3, "Uasin Gishu", "Kimumu"),
-    (4, "Uasin Gishu", "Ngeria"),
-    (5, "Uasin Gishu", "Tapsagoi"),
-    (6, "Uasin Gishu", "Kiplombe"),
-    (7, "Uasin Gishu", "Simat/Kapseret"),
-    (8, "Uasin Gishu", "Kipkenyo"),
-    (9, "Garissa", "Township"),
-    (10, "Garissa", "Iftin"),
-    (11, "Garissa", "Balambala"),
-    (12, "Garissa", "Dadaab"),
-]
+COOP_CSV = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        "db", "seed", "cooperatives.csv")
+
+
+def load_coops_csv(path: str = COOP_CSV) -> list[tuple[int, str]]:
+    with open(path, newline="", encoding="utf-8") as f:
+        return [(int(r["coop_id"]), r["short_name"]) for r in csv.DictReader(f)]
 
 
 @dataclass
@@ -71,8 +64,8 @@ class SessionCache:
 
 
 class MemoryStore:
-    def __init__(self, wards=DEV_WARDS):
-        self._wards = list(wards)
+    def __init__(self, coops: list[tuple[int, str]] | None = None):
+        self._coops = coops if coops is not None else load_coops_csv()
         self._langs: dict[str, str] = {}
         self.sessions: dict[str, dict] = {}
 
@@ -89,17 +82,14 @@ class MemoryStore:
     def upsert_session(self, session_id: str, phone: str, text: str) -> None:
         self.sessions[session_id] = {"phone": phone, "last_text": text, "updated_at": time.time()}
 
-    def counties(self) -> list[str]:
-        return sorted({c for _, c, _ in self._wards})
-
-    def wards(self, county: str) -> list[tuple[int, str]]:
-        return sorted(((i, w) for i, c, w in self._wards if c == county), key=lambda x: x[1])
+    def cooperatives(self) -> list[tuple[int, str]]:
+        return sorted(self._coops, key=lambda c: c[1].lower())
 
 
 class OracleStore:
     def __init__(self, pool):
         self.pool = pool
-        self._ward_cache: tuple[float, list] | None = None
+        self._coop_cache: tuple[float, list] | None = None
 
     @classmethod
     def from_env(cls) -> "OracleStore":
@@ -150,25 +140,20 @@ class OracleStore:
             )
             conn.commit()
 
-    def _all_wards(self) -> list[tuple[int, str, str]]:
-        # WARDS changes rarely; cache it for 10 minutes to keep hops fast.
-        if self._ward_cache and time.time() - self._ward_cache[0] < 600:
-            return self._ward_cache[1]
+    def cooperatives(self) -> list[tuple[int, str]]:
+        # The list changes rarely; cache it for 10 minutes to keep hops fast.
+        if self._coop_cache and time.time() - self._coop_cache[0] < 600:
+            return self._coop_cache[1]
         with self.pool.acquire() as conn, conn.cursor() as cur:
-            cur.execute("SELECT ward_id, county, ward_name FROM wards ORDER BY county, ward_name")
-            rows = [(int(i), c, w) for i, c, w in cur]
-        self._ward_cache = (time.time(), rows)
+            cur.execute("SELECT coop_id, short_name FROM cooperatives "
+                        "WHERE is_active = 'Y' ORDER BY UPPER(short_name)")
+            rows = [(int(i), n) for i, n in cur]
+        self._coop_cache = (time.time(), rows)
         return rows
-
-    def counties(self) -> list[str]:
-        return sorted({c for _, c, _ in self._all_wards()})
-
-    def wards(self, county: str) -> list[tuple[int, str]]:
-        return [(i, w) for i, c, w in self._all_wards() if c == county]
 
 
 def store_from_env():
     if os.getenv("DB_DSN"):
         return OracleStore.from_env()
-    log.warning("DB_DSN not set: using MemoryStore with DEV ward fixture")
+    log.warning("DB_DSN not set: using MemoryStore (cooperatives from db/seed/cooperatives.csv)")
     return MemoryStore()
