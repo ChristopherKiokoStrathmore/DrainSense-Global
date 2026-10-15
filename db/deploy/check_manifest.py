@@ -242,6 +242,8 @@ def self_test() -> None:
         "db/deploy/020_backend_bridge.sql",
         "db/deploy/030_seasonal_alert.sql",
         "db/deploy/040_cooperatives_registry.sql",
+        "db/deploy/050_ussd_reports_to_coop.sql",
+        "db/deploy/060_vet_case_file.sql",
     ]:
         raise AssertionError(live)
     print("check_manifest self-test ok")
