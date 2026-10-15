@@ -223,3 +223,5 @@ NGAO_CDSAPI_KEY = env_str("CDSAPI_KEY")
 
 # Demo (§2.2 reset-demo). Presenter phones are wiped by reset-demo and flagged is_demo on register.
 NGAO_DEMO_PHONES = env_list("DEMO_PHONES")
+# Fake numbers (USSD phone simulator, demo data) register as is_demo, so their SMS are SIMULATED.
+NGAO_SYNTHETIC_PHONE_PREFIX = env_str("SYNTHETIC_PHONE_PREFIX", "+2547000")

@@ -8,6 +8,11 @@
 	handle @ussd {
 		reverse_proxy ussd:8080
 	}
+	# USSD phone simulator (demo, fake +2547000xxxxx numbers only): https://<host>/simulator/
+	@simulator path /simulator /simulator/*
+	handle @simulator {
+		reverse_proxy ussd:8080
+	}
 	handle /ussd-healthz {
 		rewrite * /healthz
 		reverse_proxy ussd:8080

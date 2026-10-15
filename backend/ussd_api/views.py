@@ -159,7 +159,8 @@ class RegisterView(APIView):
             subscriber.set_language(lang)
             subscriber.consent_at = subscriber.consent_at or timezone.now()
             subscriber.status = Subscriber.ACTIVE
-            if data["phone"] in settings.NGAO_DEMO_PHONES:
+            prefix = settings.NGAO_SYNTHETIC_PHONE_PREFIX
+            if data["phone"] in settings.NGAO_DEMO_PHONES or (prefix and data["phone"].startswith(prefix)):
                 subscriber.is_demo = True
             subscriber.save()
             if data["role"] in ("farmer", "both") and ("crop" in data or "est_bags" in data):

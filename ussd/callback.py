@@ -8,9 +8,11 @@ Run for real:  gunicorn -w 1 --threads 8 -b 0.0.0.0:8080 callback:app
 import hmac
 import logging
 import os
+import re
 import time
+from urllib.parse import parse_qs
 
-from flask import Flask, Response, request
+from flask import Flask, Response, redirect, request, send_file
 
 import menus
 import gateway
@@ -24,6 +26,11 @@ log = logging.getLogger("ussd")
 
 def mask(phone: str) -> str:
     return phone[:7] + "***" + phone[-2:] if len(phone) > 9 else "***"
+
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+# Browser phone simulator (demo): only fake +2547000xxxxx numbers, so it can never text a real phone.
+SIM_PHONE = re.compile(r"^\+2547000\d{5}$")
 
 
 def plain(body: str, status: int = 200) -> Response:
@@ -48,10 +55,30 @@ def create_app(backend=None, store=None, sessions=None) -> Flask:
 
     @app.post("/ussd")
     def ussd():
-        started = time.monotonic()
         if secret and not hmac.compare_digest(request.args.get("k", ""), secret):
             return plain("END Unauthorized", 403)
+        return hop()
 
+    if os.getenv("SIMULATOR_ENABLED", "1") == "1":
+        @app.get("/simulator")
+        def simulator_redirect():
+            return redirect("/simulator/", 301)
+
+        @app.get("/simulator/")
+        def simulator_page():
+            return send_file(os.path.join(HERE, "simulator.html"))
+
+        @app.post("/simulator/ussd")
+        def simulator_ussd():
+            # No webhook secret here, so the phone is restricted to the synthetic range instead.
+            # Read the raw body (not request.form) so gateway.parse still sees it.
+            phone = parse_qs(request.get_data(as_text=True)).get("phoneNumber", [""])[0].strip()
+            if not SIM_PHONE.match(phone):
+                return plain("END Simulator numbers must look like +2547000xxxxx", 400)
+            return hop()
+
+    def hop():
+        started = time.monotonic()
         try:
             req = gateway.parse(request.content_type, request.get_data(),
                                   request.args.to_dict())
