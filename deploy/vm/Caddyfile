@@ -13,6 +13,21 @@
 		reverse_proxy ussd:8080
 	}
 
+	# APEX (app 100 on NgaoATP) through this host, so the database access list can stay restricted.
+	# ORDS checks Host, Origin and Referer against its own name: rewrite them, and map redirects back.
+	# Without the Origin/Referer rewrite every APEX AJAX POST (wwv_flow.ajax) gets 403.
+	@apex path /ords /ords/* /i /i/*
+	handle @apex {
+		reverse_proxy https://{$NGAO_APEX_HOST} {
+			header_up Host {$NGAO_APEX_HOST}
+			header_up Origin https://{$NGAO_APEX_HOST}
+			header_up Referer https://{$NGAO_SITE_ADDRESS} https://{$NGAO_APEX_HOST}
+			header_up -X-Forwarded-Host
+			header_down Location https://{$NGAO_APEX_HOST} https://{$NGAO_SITE_ADDRESS}
+			header_down -Strict-Transport-Security
+		}
+	}
+
 	# Backend: /ngao/v1/*, /api/v1/*, Swagger UI at /ngao/v1/docs/
 	handle {
 		reverse_proxy api:8000

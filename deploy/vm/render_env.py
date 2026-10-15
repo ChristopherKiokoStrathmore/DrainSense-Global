@@ -31,8 +31,11 @@ REQUIRED = [
     "WEBHOOK_SECRET",          # ?k=<secret> on the Africa's Talking and Wasiliana callback URLs
     "NGAO_DB_USER",
     "NGAO_DB_PASSWORD",
-    "NGAO_DB_WALLET_PASSWORD",  # python-oracledb thin mode opens ewallet.pem with it
 ]
+# Optional: only for an mTLS (wallet) database. NgaoATP uses TLS without a wallet (mTLS not required),
+# so DB_WALLET_DIR stays empty and the backend connects with the full NGAO_DB_DSN descriptor.
+WALLET_NAMES = ("NGAO_DB_WALLET_B64", "NGAO_DB_WALLET_PASSWORD")
+DEFAULT_APEX_HOST = "g93fcef1cec31ea-ngaoatp.adb.eu-frankfurt-1.oraclecloudapps.com"
 # One of these names the database: a TNS alias from the wallet, or a full connect descriptor.
 DSN_NAMES = ("NGAO_DB_DSN", "NGAO_DB_SERVICE")
 
@@ -51,6 +54,9 @@ USSD_PASSTHROUGH = [
     "USSD_PROVIDER", "WASILIANA_TEXT_MODE", "WASILIANA_FIELD_SESSION", "WASILIANA_FIELD_PHONE", "WASILIANA_FIELD_TEXT",
     "WASILIANA_FIELD_SERVICE_CODE", "BACKEND_TIMEOUT_S", "LOG_LEVEL",
 ]
+
+
+OPTIONAL_EMPTY = {"DB_WALLET_DIR", "DB_WALLET_PASSWORD"}
 
 
 class ConfigError(Exception):
@@ -87,13 +93,16 @@ def render(env, backend_image, ussd_image):
     site = site_address(env)
     host = site.split(":")[0]
     dsn = get(env, "NGAO_DB_DSN") or get(env, "NGAO_DB_SERVICE")
+    wallet = bool(get(env, "NGAO_DB_WALLET_B64"))
+    if wallet and not get(env, "NGAO_DB_WALLET_PASSWORD"):
+        raise ConfigError(f"NGAO_DB_WALLET_B64 is set but NGAO_DB_WALLET_PASSWORD is not. See {DOC}.")
     schema = get(env, "NGAO_DB_SCHEMA", "WKSP_NGAO")
     database = {
         "DB_USER": get(env, "NGAO_DB_USER"),
         "DB_PASSWORD": get(env, "NGAO_DB_PASSWORD"),
         "DB_DSN": dsn,
-        "DB_WALLET_DIR": "/wallet",
-        "DB_WALLET_PASSWORD": get(env, "NGAO_DB_WALLET_PASSWORD"),
+        "DB_WALLET_DIR": "/wallet" if wallet else "",
+        "DB_WALLET_PASSWORD": get(env, "NGAO_DB_WALLET_PASSWORD", "") if wallet else "",
         "DB_SCHEMA": schema,
     }
 
@@ -121,11 +130,12 @@ def render(env, backend_image, ussd_image):
     }
     ussd.update({name: get(env, name) for name in USSD_PASSTHROUGH if get(env, name)})
 
-    compose = {"NGAO_BACKEND_IMAGE": backend_image, "NGAO_USSD_IMAGE": ussd_image, "NGAO_SITE_ADDRESS": site}
+    compose = {"NGAO_BACKEND_IMAGE": backend_image, "NGAO_USSD_IMAGE": ussd_image, "NGAO_SITE_ADDRESS": site,
+               "NGAO_APEX_HOST": get(env, "NGAO_APEX_HOST", DEFAULT_APEX_HOST)}
     files = {"backend.env": backend, "ussd.env": ussd, ".env": compose}
     for name, values in files.items():
         for key, value in values.items():
-            if value is None or "\n" in value or "\r" in value:
+            if value is None or "\n" in value or "\r" in value or (value == "" and key not in OPTIONAL_EMPTY):
                 raise ConfigError(f"{key} for {name} is empty or spans lines; secrets must be one line")
     return files, {"site": site, "base_url": f"https://{host}/ngao/v1", "ussd_url": f"https://{host}/ussd"}
 
@@ -163,6 +173,16 @@ def self_test():
     assert backend["DB_PASSWORD"] == 'p$ss"w\'rd' and backend["DB_SCHEMA"] == "WKSP_NGAO"
     assert backend["SMS_BACKEND"] == "console" and "AT_API_KEY" not in backend
     assert ussd["BACKEND_BASE_URL"] == "http://api:8000/ngao/v1" and ussd["DB_DSN"] == "ngaodb_low"
+    assert backend["DB_WALLET_DIR"] == "" and backend["DB_WALLET_PASSWORD"] == "", "no wallet: TLS DSN only"
+    assert files[".env"]["NGAO_APEX_HOST"] == DEFAULT_APEX_HOST
+
+    wfiles, _ = render({**base, "NGAO_DB_WALLET_B64": "eA==", "NGAO_DB_WALLET_PASSWORD": "w"}, "b", "u")
+    assert wfiles["backend.env"]["DB_WALLET_DIR"] == "/wallet" and wfiles["ussd.env"]["DB_WALLET_PASSWORD"] == "w"
+    try:
+        render({**base, "NGAO_DB_WALLET_B64": "eA=="}, "b", "u")
+        raise AssertionError("wallet without password was accepted")
+    except ConfigError:
+        pass
 
     files, urls = render({**base, "NGAO_DOMAIN": "ngao.example.org", "AT_API_KEY": "k", "AT_USERNAME": "ngao",
                           "NGAO_DB_DSN": "(description=(address=(host=x)))"}, "b", "u")

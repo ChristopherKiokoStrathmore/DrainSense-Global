@@ -57,6 +57,8 @@ services:
     ports: ["80:80", "443:443", "443:443/udp"]
     environment:
       NGAO_SITE_ADDRESS: ${NGAO_SITE_ADDRESS:?NGAO_SITE_ADDRESS is set by the deploy}
+      # ORDS host that /ords/* and /i/* are proxied to (APEX app 100).
+      NGAO_APEX_HOST: ${NGAO_APEX_HOST:-g93fcef1cec31ea-ngaoatp.adb.eu-frankfurt-1.oraclecloudapps.com}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data

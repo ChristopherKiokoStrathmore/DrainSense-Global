@@ -59,11 +59,9 @@ Add these under **Settings → Secrets and variables → Actions**. The NgaoDB w
 | `NGAO_VM_HOST` | The VM's public IP (or a DNS name that points to it) |
 | `NGAO_VM_USER` | `opc` or `ubuntu` |
 | `NGAO_VM_SSH_KEY` | Private key (OpenSSH format) whose public key is in the VM's `~/.ssh/authorized_keys` |
-| `NGAO_DB_WALLET_B64` | Base64 of the instance wallet zip (same as for `deploy-ngaodb.yml`) |
 | `NGAO_DB_USER` | `WKSP_NGAO` (or `ADMIN`; the services then work in `NGAO_DB_SCHEMA`) |
 | `NGAO_DB_PASSWORD` | That user's password |
-| `NGAO_DB_SERVICE` | TNS alias from the wallet, e.g. `ngaodb_low`. Or set `NGAO_DB_DSN` to a full connect descriptor instead. |
-| `NGAO_DB_WALLET_PASSWORD` | The wallet password set when the wallet was downloaded |
+| `NGAO_DB_DSN` | Full TLS connect descriptor of NgaoATP (`(description=...(service_name=g93fcef1cec31ea_ngaoatp_low.adb.oraclecloud.com)...)`). Or `NGAO_DB_SERVICE` alone when using a wallet TNS alias. |
 | `DJANGO_SECRET_KEY` | `python3 -c "import secrets; print(secrets.token_urlsafe(50))"` |
 | `NGAO_API_TOKENS` | Comma-separated bearer tokens for APEX and operators: `openssl rand -hex 24` each |
 | `USSD_SERVICE_TOKEN` | `openssl rand -hex 24`. Used between the two containers. |
@@ -73,6 +71,12 @@ Add these under **Settings → Secrets and variables → Actions**. The NgaoDB w
 
 | Secret / variable | Default |
 |---|---|
+| `NGAO_DB_WALLET_B64` + `NGAO_DB_WALLET_PASSWORD` | Unset: no wallet (NgaoATP has mTLS not required). Set both only for an mTLS database. |
+| `NGAO_DB_SCHEMA`, `NGAO_DB_SERVICE` | `WKSP_NGAO`; service is informational when `NGAO_DB_DSN` is set |
+| `NGAO_DOMAIN` | `<NGAO_VM_HOST>.sslip.io` |
+| `NGAO_VM_SSH_PORT`, `NGAO_VM_KNOWN_HOSTS` | `22`; host key from `ssh-keyscan` |
+| `SMS_BACKEND` | `console` (or `africastalking` when `AT_API_KEY` is set) |
+| variable `NGAO_APEX_HOST` | `g93fcef1cec31ea-ngaoatp.adb.eu-frankfurt-1.oraclecloudapps.com`: Caddy proxies `/ords/*` and `/i/*` there |
 | `NGAO_DOMAIN` | unset → `<vm-ip>.sslip.io` (a free DNS name that resolves to the IP, so Let's Encrypt works without buying a domain) |
 | `NGAO_VM_KNOWN_HOSTS` | unset → the host key is trusted on first sight (`ssh-keyscan`), with a warning. Set it to the output of `ssh-keyscan <vm-ip>` to pin it. |
 | `NGAO_VM_SSH_PORT` | `22` |
@@ -127,3 +131,11 @@ docker compose exec api python manage.py run_job send-alerts   # run a job by ha
 ## Local rehearsal
 
 `deploy/vm/` runs anywhere Docker does. Build the two images, render the env files with `deploy/vm/render_env.py` against a local Oracle (`gvenzl/oracle-free`), and run `remote-deploy.sh` from the bundle folder. The same steps the VM runs (schema check, start, health wait, `set_backend_config`) were rehearsed this way before the first deploy.
+
+## APEX through the VM
+
+APEX app 100 runs on NgaoATP and is served at `https://<site>/ords/r/ngao/ngao-mvuasmart/home` through Caddy, so
+NgaoATP's access list can stay restricted to the VM. Caddy rewrites `Host`, `Origin` and `Referer` to the ORDS host
+(without the Origin/Referer rewrite every APEX AJAX POST returns 403) and maps `Location` redirects back.
+`deploy-ngaodb.yml` no longer runs on push unless the repository variable `NGAO_DB_AUTO_DEPLOY` is `true`,
+so a push cannot re-import an older `f100.sql` over the live app.

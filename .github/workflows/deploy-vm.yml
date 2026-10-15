@@ -111,7 +111,7 @@ jobs:
           NGAO_BACKEND_IMAGE=b NGAO_USSD_IMAGE=u NGAO_SITE_ADDRESS=example.org \
             docker compose -f "$tmp/docker-compose.yml" config --quiet
           docker run --rm -v "$PWD/deploy/vm/Caddyfile:/etc/caddy/Caddyfile:ro" -e NGAO_SITE_ADDRESS=example.org \
-            caddy:2.10.2-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+            -e NGAO_APEX_HOST=apex.example.org caddy:2.10.2-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 
   build:
     name: Build and push images
@@ -210,6 +210,7 @@ jobs:
       NGAO_DB_DSN: ${{ secrets.NGAO_DB_DSN }}
       NGAO_DB_SCHEMA: ${{ secrets.NGAO_DB_SCHEMA }}
       NGAO_DB_WALLET_PASSWORD: ${{ secrets.NGAO_DB_WALLET_PASSWORD }}
+      NGAO_APEX_HOST: ${{ vars.NGAO_APEX_HOST }}
       SMS_BACKEND: ${{ secrets.SMS_BACKEND }}
       AT_USERNAME: ${{ secrets.AT_USERNAME }}
       AT_API_KEY: ${{ secrets.AT_API_KEY }}
@@ -240,20 +241,29 @@ jobs:
           missing=()
           [[ -n "$NGAO_VM_USER" ]] || missing+=(NGAO_VM_USER)
           [[ "$HAS_SSH_KEY" == "true" ]] || missing+=(NGAO_VM_SSH_KEY)
-          [[ "$HAS_WALLET" == "true" ]] || missing+=(NGAO_DB_WALLET_B64)
           if (( ${#missing[@]} )); then
             echo "::error::Missing GitHub Actions secrets: ${missing[*]}. See docs/DEPLOY_VM.md."; exit 1
           fi
           bundle="$RUNNER_TEMP/bundle"
+          # The wallet is optional: NgaoATP takes TLS without mTLS, so a full NGAO_DB_DSN is enough.
+          if [[ "$HAS_WALLET" == "true" ]]; then
+            export NGAO_DB_WALLET_B64=set
+          else
+            echo "No NGAO_DB_WALLET_B64: connecting with the TLS descriptor in NGAO_DB_DSN (no wallet)."
+          fi
           python3 deploy/vm/render_env.py --out "$bundle" --backend-image "$BACKEND_IMAGE" \
             --ussd-image "$USSD_IMAGE" --github-output "$GITHUB_OUTPUT"
           cp deploy/vm/docker-compose.yml deploy/vm/Caddyfile deploy/vm/remote-deploy.sh "$bundle/"
+          install -d -m 755 "$bundle/wallet"  # mounted read-only by the containers; empty without a wallet
 
       - name: Unpack the database wallet
         env:
           NGAO_DB_WALLET_B64: ${{ secrets.NGAO_DB_WALLET_B64 }}
         run: |
           set -euo pipefail
+          if [[ -z "${NGAO_DB_WALLET_B64//[[:space:]]/}" ]]; then
+            echo "No wallet secret: skipping (TLS connection, mTLS not required)."; exit 0
+          fi
           python3 db/deploy/decode-wallet.py --out "$RUNNER_TEMP/wallet.zip"
           wallet="$RUNNER_TEMP/bundle/wallet"
           mkdir -p "$wallet"
@@ -335,12 +345,20 @@ jobs:
           curl -fsS -m 10 "${USSD_URL%/ussd}/ussd-healthz" >/dev/null
           code="$(curl -s -o /dev/null -w '%{http_code}' -m 10 "$BASE_URL/wards")"
           [[ "$code" == "401" ]] || { echo "::error::/wards answered $code without a token (expected 401)"; exit 1; }
+          # APEX through the Caddy proxy: page GET, then the AJAX POST path ORDS rejects without the Origin rewrite.
+          site="${BASE_URL%/ngao/v1}"
+          code="$(curl -s -o /dev/null -L -w '%{http_code}' -m 30 -c "$RUNNER_TEMP/apex.jar" "$site/ords/r/ngao/ngao-mvuasmart/home")"
+          [[ "$code" == "200" ]] || { echo "::error::APEX home via $site/ords answered $code (expected 200)"; exit 1; }
+          code="$(curl -s -o /dev/null -w '%{http_code}' -m 30 -b "$RUNNER_TEMP/apex.jar" -H "Origin: $site" -X POST "$site/ords/wwv_flow.ajax")"
+          [[ "$code" != "403" ]] || { echo "::error::APEX AJAX POST via the proxy got 403 (Origin/Referer rewrite missing)"; exit 1; }
+          rm -f "$RUNNER_TEMP/apex.jar"
           {
             echo "### Ngao backend deployed"
             echo "| What | URL |"
             echo "|---|---|"
             echo "| API docs | ${BASE_URL}/docs/ |"
             echo "| Health | ${BASE_URL}/health |"
+            echo "| APEX app (proxied) | ${BASE_URL%/ngao/v1}/ords/r/ngao/ngao-mvuasmart/home |"
             echo "| Africa's Talking USSD callback | ${USSD_URL}?k=&lt;WEBHOOK_SECRET&gt; |"
             echo "| Africa's Talking delivery reports | ${BASE_URL}/sms/delivery?k=&lt;WEBHOOK_SECRET&gt; |"
             echo "| Africa's Talking incoming SMS | ${BASE_URL}/sms/inbound?k=&lt;WEBHOOK_SECRET&gt; |"
