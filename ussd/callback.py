@@ -1,4 +1,4 @@
-"""Wasiliana USSD callback: POST /ussd -> text/plain "CON ..." or "END ...".
+"""USSD callback (Africa's Talking by default, Wasiliana optional): POST /ussd -> text/plain "CON ..." or "END ...".
 
 Run locally:   flask --app callback run --port 8080
 Run for real:  gunicorn -w 1 --threads 8 -b 0.0.0.0:8080 callback:app
@@ -13,7 +13,7 @@ import time
 from flask import Flask, Response, request
 
 import menus
-import wasiliana
+import gateway
 from backend import BackendClient, DevBackend
 from store import SessionCache, SessionMeta, store_from_env
 
@@ -44,7 +44,7 @@ def create_app(backend=None, store=None, sessions=None) -> Flask:
 
     @app.get("/healthz")
     def healthz():
-        return plain("ok")
+        return plain(f"ok {gateway.provider()}")
 
     @app.post("/ussd")
     def ussd():
@@ -53,16 +53,16 @@ def create_app(backend=None, store=None, sessions=None) -> Flask:
             return plain("END Unauthorized", 403)
 
         try:
-            req = wasiliana.parse(request.content_type, request.get_data(),
+            req = gateway.parse(request.content_type, request.get_data(),
                                   request.args.to_dict())
-        except wasiliana.BadRequest as exc:
+        except gateway.BadRequest as exc:
             log.warning("bad USSD request: %s body=%r", exc, request.get_data()[:500])
             return plain(menus.end(menus.TEXT["sw"]["error"]), 400)
 
         lang = "sw"
         try:
             text = req.text
-            if wasiliana.text_mode() == "latest":
+            if gateway.text_mode() == "latest":
                 # Gateway sends only the newest input; rebuild the full path.
                 prev = store.last_text(req.session_id)
                 text = f"{prev}*{text}" if prev and text else (text or prev)

@@ -16,7 +16,7 @@ NgaoDB itself (schema scripts and the APEX app) is deployed by the other workflo
 ```mermaid
 flowchart LR
   AT["Africa's Talking"] -- "SMS callbacks" --> C
-  WA["Wasiliana"] -- "USSD POST /ussd" --> C
+  WA["Africa's Talking USSD"] -- "POST /ussd" --> C
   APEX["APEX app 100 (NgaoDB)"] -- "NGAO_BACKEND package\n(HTTPS)" --> C
   C["caddy :443\nLet's Encrypt"] --> API["api\nDjango + gunicorn"]
   C --> U["ussd\nFlask + gunicorn"]
@@ -32,7 +32,7 @@ flowchart LR
 | `caddy` | HTTPS on 443 (HTTP 80 redirects). Certificates come from Let's Encrypt for `NGAO_DOMAIN`, or for `<vm-ip>.sslip.io` when no domain is set. |
 | `api` | Django REST API (`/ngao/v1`, `/api/v1`, Swagger UI at `/ngao/v1/docs/`), SMS webhooks, the USSD contract. |
 | `scheduler` | The daily cycle and the outbound SMS queue. Alerts an officer approves in APEX are sent within about 15 seconds. |
-| `ussd` | Wasiliana USSD callback at `/ussd`. Reads wards and languages from NgaoDB and writes through the backend. |
+| `ussd` | Africa's Talking USSD callback at `/ussd` (`USSD_PROVIDER=wasiliana` switches gateway). Reads wards and languages from NgaoDB and writes through the backend. |
 
 ## One-time setup
 
@@ -94,7 +94,7 @@ The job summary lists the URLs. Configure them once:
 |---|---|
 | Africa's Talking → SMS → Delivery reports callback | `https://<host>/ngao/v1/sms/delivery?k=<WEBHOOK_SECRET>` |
 | Africa's Talking → SMS → Incoming messages callback | `https://<host>/ngao/v1/sms/inbound?k=<WEBHOOK_SECRET>` |
-| Wasiliana → USSD service callback | `https://<host>/ussd?k=<WEBHOOK_SECRET>` |
+| Africa's Talking → USSD → your service code → Callback URL | `https://<host>/ussd?k=<WEBHOOK_SECRET>` |
 | APEX → Workspace Utilities → Web Credentials → **Create** | Static ID `NGAO_BACKEND`, type *HTTP Header*, name `Authorization`, secret `Bearer <one of NGAO_API_TOKENS>`, valid for `https://<host>/` |
 
 The deploy writes `https://<host>/ngao/v1` into `NGAO_BACKEND_CONFIG.BASE_URL` in NgaoDB, so the `NGAO_BACKEND` PL/SQL package (`db/deploy/020_backend_bridge.sql`) knows where to call. APEX page processes can then run, for example:

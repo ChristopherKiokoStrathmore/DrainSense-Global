@@ -1,9 +1,9 @@
 # NGAO_SITE_ADDRESS is a domain (automatic Let's Encrypt certificate) or ":80" for plain HTTP.
-# Africa's Talking, Wasiliana and APEX (APEX_WEB_SERVICE) all need the HTTPS form.
+# Africa's Talking (SMS + USSD) and APEX (APEX_WEB_SERVICE) need the HTTPS form.
 {$NGAO_SITE_ADDRESS} {
 	encode zstd gzip
 
-	# Wasiliana USSD callback: https://<host>/ussd?k=<WEBHOOK_SECRET>
+	# Africa's Talking USSD callback: https://<host>/ussd?k=<WEBHOOK_SECRET>
 	@ussd path /ussd /ussd/*
 	handle @ussd {
 		reverse_proxy ussd:8080

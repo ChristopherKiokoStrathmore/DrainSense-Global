@@ -341,7 +341,7 @@ jobs:
             echo "|---|---|"
             echo "| API docs | ${BASE_URL}/docs/ |"
             echo "| Health | ${BASE_URL}/health |"
-            echo "| Wasiliana USSD callback | ${USSD_URL}?k=&lt;WEBHOOK_SECRET&gt; |"
+            echo "| Africa's Talking USSD callback | ${USSD_URL}?k=&lt;WEBHOOK_SECRET&gt; |"
             echo "| Africa's Talking delivery reports | ${BASE_URL}/sms/delivery?k=&lt;WEBHOOK_SECRET&gt; |"
             echo "| Africa's Talking incoming SMS | ${BASE_URL}/sms/inbound?k=&lt;WEBHOOK_SECRET&gt; |"
           } >> "$GITHUB_STEP_SUMMARY"
