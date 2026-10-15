@@ -80,7 +80,7 @@ class RouterTests(NgaoTestCase):
 
     def test_reply_1_confirms(self):
         self.plan()
-        self.anon.post("/ngao/v1/sms/inbound", {"phone": "254700000104", "message": "1"}, format="json")
+        self.anon.post("/ngao/v1/sms/inbound", {"from": "+254700000104", "text": "1"}, format="json")
         self.assertEqual(Booking.objects.get(subscriber__phone="+254700000104").status, "CONFIRMED")
         self.assertTrue(Report.objects.filter(report_type="booking_confirm").exists())
 
@@ -99,7 +99,7 @@ class DryingOutcomeTests(NgaoTestCase):
     def test_operator_report_closes_route(self):
         dryer = Dryer.objects.get(operator_phone="+254700000901")
         route = Route.objects.create(dryer=dryer, route_date=today_eat(), status="NOTIFIED")
-        self.anon.post("/ngao/v1/sms/inbound", {"phone": "254700000901", "message": "Dried 120 bags, 13%"}, format="json")
+        self.anon.post("/ngao/v1/sms/inbound", {"from": "+254700000901", "text": "Dried 120 bags, 13%"}, format="json")
         outcome = Outcome.objects.get()
         self.assertEqual((outcome.outcome_type, outcome.tonnes_dried), ("bags_dried", 10.8))
         route.refresh_from_db()

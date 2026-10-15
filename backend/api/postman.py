@@ -19,7 +19,7 @@ VARIABLES = [
     ("base_url", "http://127.0.0.1:8000/ngao/v1", "Base URL incl. /ngao/v1 (or /api/v1)"),
     ("api_token", "change-me-apex", "NGAO_API_TOKENS value (APEX / scheduler)"),
     ("ussd_token", "change-me-ussd", "USSD_SERVICE_TOKEN value (Louisa's service)"),
-    ("webhook_secret", "", "WEBHOOK_SECRET, appended to Wasiliana callbacks as ?k="),
+    ("webhook_secret", "", "WEBHOOK_SECRET, appended to Africa's Talking callbacks as ?k="),
     ("demo_phone", "+254711000001", "Presenter phone: wiped by reset-demo, sent for real"),
     ("ward_id", "12", "Ward used in the walkthrough (12 = Moiben in the synthetic seed)"),
     ("alert_id", "", "Set by 'Find the Moiben Kiswahili alert'"),
@@ -82,9 +82,9 @@ WALKTHROUGH = [
      ("booking_id", lambda b: [k for r in b["routes"] for s in r["stops"] for k in s["bookings"]][0]["booking_id"])),
     ("booking_confirm", "7c. Farmer confirms the booking", {},
      "pm.test('confirmed', () => pm.expect(pm.response.json().status).to.eql('CONFIRMED'));", None),
-    ("sms_inbound", "8. Wasiliana inbound SMS: LANG EN", {"body": {"phone": "{{demo_phone}}", "message": "LANG EN"}},
-     "", None),
-    ("sms_delivery_report", "9. Wasiliana delivery report", {}, "", None),
+    ("sms_inbound", "8. Africa's Talking incoming SMS: LANG EN",
+     {"body": {"from": "{{demo_phone}}", "to": "12345", "text": "LANG EN", "id": "postman-1"}}, "", None),
+    ("sms_delivery_report", "9. Africa's Talking delivery report", {}, "", None),
     ("job_replay", "10. Garissa 2006 RVF replay",
      {"body": {"scenario": "garissa_rvf_2006", "from": "2006-09-01", "to": "2007-01-15"}}, JOB_ID, None),
     ("job_status", "11. Look up the last job", {}, "", None),
@@ -118,9 +118,14 @@ def _resolve(schema, node):
     return node
 
 
+def _form_encoded(op):
+    content = (op.get("requestBody") or {}).get("content", {})
+    return next(iter(content), None) == "application/x-www-form-urlencoded"
+
+
 def _request_example(op):
     content = (op.get("requestBody") or {}).get("content", {})
-    media = content.get("application/json") or next(iter(content.values()), None)
+    media = next(iter(content.values()), None)
     if not media:
         return None
     examples = media.get("examples") or {}
@@ -228,7 +233,11 @@ def build_item(schema, path, method, op, name=None, overrides=None, extra_test="
         "description": _description(op, schema),
     }
     body = overrides.get("body", _request_example(op))
-    if body is not None and method in ("post", "patch", "put"):
+    if body is not None and method in ("post", "patch", "put") and _form_encoded(op):
+        # Africa's Talking callbacks are application/x-www-form-urlencoded
+        request["body"] = {"mode": "urlencoded",
+                           "urlencoded": [{"key": k, "value": str(v), "type": "text"} for k, v in body.items()]}
+    elif body is not None and method in ("post", "patch", "put"):
         request["header"].append({"key": "Content-Type", "value": "application/json"})
         request["body"] = {"mode": "raw", "raw": json.dumps(body, indent=2, ensure_ascii=False),
                            "options": {"raw": {"language": "json"}}}
@@ -338,7 +347,11 @@ def capture_live(collection, base_url, variables):
         auth = request["auth"]
         if auth["type"] == "bearer":
             headers["Authorization"] = "Bearer " + fill(auth["bearer"][0]["value"])
-        body = fill(request["body"]["raw"]) if "body" in request else None
+        body = None
+        if request.get("body", {}).get("mode") == "urlencoded":
+            body = {f["key"]: fill(f["value"]) for f in request["body"]["urlencoded"]}
+        elif "body" in request:
+            body = fill(request["body"]["raw"])
         response = requests.request(request["method"], url, data=body, headers=headers, timeout=60)
         try:
             payload = response.json()

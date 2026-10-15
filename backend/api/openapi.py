@@ -184,7 +184,7 @@ class CalibrationList(serializers.Serializer):
 class Health(serializers.Serializer):
     status = serializers.ChoiceField(choices=["ok", "degraded"])
     database = serializers.CharField(help_text="oracle | sqlite | unreachable")
-    sms_backend = serializers.ChoiceField(choices=["console", "wasiliana"])
+    sms_backend = serializers.ChoiceField(choices=["console", "africastalking", "wasiliana"])
     sms_dispatch = serializers.ChoiceField(choices=["inline", "worker"])
     reply_reader = serializers.ChoiceField(choices=["rules", "genai"])
     alerts_require_approval = serializers.BooleanField()
@@ -372,20 +372,32 @@ class Unsubscribed(serializers.Serializer):
 
 
 class DeliveryReportBody(serializers.Serializer):
-    """Reference shape (pytek-wasiliana). Aliases are accepted; see WASILIANA_DLR_FIELDS."""
+    """Africa's Talking delivery report (form-encoded)."""
 
-    phone = serializers.CharField(required=False, help_text="also: msisdn, recipient, mobile")
-    correlator = serializers.CharField(help_text="provider message id; also: messageId, message_id, msgId, id")
-    deliveryStatus = serializers.CharField(help_text="also: delivery_status, status. Delivered: 0, delivered, DeliveredToTerminal")
-    failure_reason = serializers.CharField(required=False, allow_blank=True, help_text="non-empty means FAILED")
+    id = serializers.CharField(help_text="messageId returned when the SMS was sent (MESSAGES.provider_msg_id)")
+    status = serializers.ChoiceField(choices=["Sent", "Submitted", "Buffered", "Rejected", "Success", "Failed"],
+                                     help_text="Success = delivered to the handset; Failed/Rejected = FAILED")
+    phoneNumber = serializers.CharField(required=False)
+    networkCode = serializers.CharField(required=False, help_text="e.g. 63902 Safaricom")
+    failureReason = serializers.CharField(required=False, allow_blank=True,
+                                          help_text="e.g. InsufficientCredit, UserIsInactive, DeliveryFailure")
+    retryCount = serializers.CharField(required=False)
 
 
 class InboundSmsBody(serializers.Serializer):
-    """Candidate shape until Wasiliana confirms inbound forwarding; see WASILIANA_INBOUND_FIELDS."""
+    """Africa's Talking incoming message (form-encoded)."""
 
-    phone = serializers.CharField(help_text="also: msisdn, from, sender, mobile, phoneNumber")
-    message = serializers.CharField(help_text="also: text, body, sms, content")
-    linkid = serializers.CharField(required=False, help_text="provider id; also: linkId, messageId, id")
+    to = serializers.CharField(required=False, help_text="Your shortcode")
+    text = serializers.CharField(help_text="Message text")
+    date = serializers.CharField(required=False)
+    id = serializers.CharField(required=False, help_text="Provider message id")
+    linkId = serializers.CharField(required=False, help_text="Only for premium / on-demand shortcodes")
+    networkCode = serializers.CharField(required=False)
+
+
+# "from" is a Python keyword: add the sender field after the class is built.
+InboundSmsBody._declared_fields = {"from": serializers.CharField(help_text="Sender phone, +2547XXXXXXXX"),
+                                   **InboundSmsBody._declared_fields}
 
 
 class SimulatedReport(serializers.Serializer):

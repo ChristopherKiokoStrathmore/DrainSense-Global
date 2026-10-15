@@ -11,24 +11,24 @@ info:
     \ (without the word `Bearer`).\n\n| Scheme | Header | Caller | May call |\n|---|---|---|---|\n| `ApiToken` | `Authorization:\
     \ Bearer <NGAO_API_TOKENS>` | APEX demo controls, scheduler, tests | everything except the public endpoints |\n| `UssdToken`\
     \ | `Authorization: Bearer <USSD_SERVICE_TOKEN>` | Louisa's USSD service | `/ussd/*` only |\n| `WebhookSecret` | `?k=<WEBHOOK_SECRET>`\
-    \ | Wasiliana callbacks | `/sms/delivery`, `/sms/inbound` |\n| none | | anyone | `/health`, `/public/*`, these docs |\n\
-    \n## Errors (§2.1)\nEvery error has the same body. `request_id` equals the `X-Request-ID` response header (send your\n\
-    own `X-Request-ID` to correlate logs).\n```json\n{\"error\": {\"code\": \"VALIDATION_ERROR\", \"message\": \"ward_id is\
-    \ required\",\n           \"details\": {\"field\": \"ward_id\"}, \"request_id\": \"8f2c...\"}}\n```\n| code | HTTP |\n\
-    |---|---|\n| `VALIDATION_ERROR` | 400 |\n| `UNAUTHORIZED` | 401 |\n| `FORBIDDEN` | 403 |\n| `NOT_FOUND` | 404 |\n| `CONFLICT`\
-    \ | 409 |\n| `UPSTREAM_ERROR` | 502 |\n| `INTERNAL` | 500 |\n\nWasiliana webhooks are the exception: they **always** answer\
-    \ `200` with an empty body.\n\n## Conventions\n- Phones are E.164 (`+2547XXXXXXXX`); inputs may also be `07…` or `2547…`.\n\
-    - Times are ISO-8601 with the Nairobi offset (`2026-10-16T08:00:00+03:00`); dates are `YYYY-MM-DD` (EAT).\n- `probability`\
-    \ is 0–1 and `confidence_pct` is 0–100. Decisions are `ACT` / `WATCH` / `ABSTAIN`.\n- Languages: `sw` (Kiswahili, the\
-    \ default) or `en`.\n\n## The demo in seven calls\n1. `POST /ussd/language` + `POST /ussd/register`: the farmer registers\
+    \ | Africa's Talking callbacks | `/sms/delivery`, `/sms/inbound` |\n| none | | anyone | `/health`, `/public/*`, these\
+    \ docs |\n\n## Errors (§2.1)\nEvery error has the same body. `request_id` equals the `X-Request-ID` response header (send\
+    \ your\nown `X-Request-ID` to correlate logs).\n```json\n{\"error\": {\"code\": \"VALIDATION_ERROR\", \"message\": \"\
+    ward_id is required\",\n           \"details\": {\"field\": \"ward_id\"}, \"request_id\": \"8f2c...\"}}\n```\n| code |\
+    \ HTTP |\n|---|---|\n| `VALIDATION_ERROR` | 400 |\n| `UNAUTHORIZED` | 401 |\n| `FORBIDDEN` | 403 |\n| `NOT_FOUND` | 404\
+    \ |\n| `CONFLICT` | 409 |\n| `UPSTREAM_ERROR` | 502 |\n| `INTERNAL` | 500 |\n\nSMS webhooks are the exception: they **always**\
+    \ answer `200` with an empty body.\n\n## Conventions\n- Phones are E.164 (`+2547XXXXXXXX`); inputs may also be `07…` or\
+    \ `2547…`.\n- Times are ISO-8601 with the Nairobi offset (`2026-10-16T08:00:00+03:00`); dates are `YYYY-MM-DD` (EAT).\n\
+    - `probability` is 0–1 and `confidence_pct` is 0–100. Decisions are `ACT` / `WATCH` / `ABSTAIN`.\n- Languages: `sw` (Kiswahili,\
+    \ the default) or `en`.\n\n## The demo in seven calls\n1. `POST /ussd/language` + `POST /ussd/register`: the farmer registers\
     \ by USSD\n2. `POST /jobs/score`: score wards → `RISK_SCORES`\n3. `POST /jobs/send-alerts` → `GET /alerts?status=PENDING_APPROVAL`\
-    \ → `POST /alerts/{id}/approve`: the SMS goes out\n4. `POST /demo/inbound-sms` (or the Wasiliana `POST /sms/inbound`):\
+    \ → `POST /alerts/{id}/approve`: the SMS goes out\n4. `POST /demo/inbound-sms` (or Africa's Talking's `POST /sms/inbound`):\
     \ the farmer replies, *\"Nimevuna magunia 20…\"*\n5. `POST /jobs/plan-routes` → `GET /routes`: a dryer is routed to her\
     \ collection point\n6. `POST /bookings/{id}/confirm` (or an SMS reply of `1`): booking confirmed\n7. `POST /jobs/replay`:\
     \ the Garissa 2006 Rift Valley fever replay\n\nThe Postman collection in `backend/postman/` runs exactly this sequence.\n\
     \n## Safety rules the API enforces\n- Only `ACT` scores produce SMS, and only after approval (`ALERTS_REQUIRE_APPROVAL=true`).\n\
-    - Replay alerts and approvals older than 48 h are never sent.\n- Synthetic subscribers (`is_demo='Y'`) never reach Wasiliana.\n\
-    - Generative AI only *reads* replies. Unsure parses go to the officers' review queue.\n"
+    - Replay alerts and approvals older than 48 h are never sent.\n- Synthetic subscribers (`is_demo='Y'`) never reach the\
+    \ SMS provider.\n- Generative AI only *reads* replies. Unsure parses go to the officers' review queue.\n"
   contact:
     name: Dennis (backend-dennis)
   license:
@@ -142,8 +142,8 @@ paths:
       operationId: alert_approve
       description: '`PENDING_APPROVAL` → `APPROVED`, then queues one SMS per eligible subscriber in that language (per-subscriber
         48 h cooldown and 3/week routine cap; floods and disease skip the cap). The alert becomes `SENT` once the first SMS
-        is handed to Wasiliana, or `SUPPRESSED` when nobody is eligible. Replay alerts and alerts older than 48 h are approved
-        but **not** sent (`dispatch.skipped`).'
+        is handed to Africa''s Talking, or `SUPPRESSED` when nobody is eligible. Replay alerts and alerts older than 48 h
+        are approved but **not** sent (`dispatch.skipped`).'
       summary: Approve an alert (sends it)
       parameters:
       - in: path
@@ -420,7 +420,7 @@ paths:
     post:
       operationId: demo_inbound_sms
       description: Runs exactly the `/sms/inbound` path (keywords, then the reply reader) **synchronously** and returns the
-        resulting report. For the demo, and for testing before Wasiliana forwards replies.
+        resulting report. For the demo, and for testing without an Africa's Talking shortcode.
       summary: Simulate an inbound SMS
       tags:
       - Demo
@@ -528,7 +528,7 @@ paths:
                   value:
                     status: ok
                     database: oracle
-                    sms_backend: wasiliana
+                    sms_backend: africastalking
                     sms_dispatch: inline
                     reply_reader: genai
                     alerts_require_approval: true
@@ -595,8 +595,8 @@ paths:
     post:
       operationId: job_dispatch
       description: 'Fans out every `APPROVED` alert that has no messages yet (e.g. approved on the APEX page), then sends
-        the `MESSAGES` queue through Wasiliana. The scheduler does this every 15 s anyway. Synthetic subscribers are marked
-        `SENT` with `provider_msg_id=''SIMULATED''`.
+        the `MESSAGES` queue through Africa''s Talking. The scheduler does this every 15 s anyway. Synthetic subscribers are
+        marked `SENT` with `provider_msg_id=''SIMULATED''`.
 
 
         Answers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).'
@@ -1741,38 +1741,42 @@ paths:
   /sms/delivery:
     post:
       operationId: sms_delivery_report
-      description: 'Maps the report onto `MESSAGES.status` (`SENT` → `DELIVERED` / `FAILED`) by `provider_msg_id`. JSON or
-        form-encoded. **Always `200`, empty body**: unknown statuses change nothing and every raw body is logged. Field names
-        are the pytek-wasiliana reference shape; remap them with `WASILIANA_DLR_FIELDS` once confirmed at docs.wasiliana.com.'
-      summary: Delivery report callback
+      description: 'Set as the **SMS delivery reports** callback in the Africa''s Talking dashboard: `https://<host>/ngao/v1/sms/delivery?k=<WEBHOOK_SECRET>`.
+        Maps the report onto `MESSAGES.status` by `provider_msg_id` (the `messageId` returned at send): `Success` → `DELIVERED`,
+        `Failed` / `Rejected` → `FAILED`; `Sent`, `Submitted`, `Buffered` are not final and change nothing.
+
+
+        Form-encoded (JSON also accepted). **Always `200`, empty body**; every raw body is logged. Extra field names can be
+        mapped with `SMS_DLR_FIELDS`.'
+      summary: Delivery report callback (Africa's Talking)
       tags:
-      - Wasiliana webhooks
+      - SMS webhooks
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeliveryReportBodyRequest'
           application/json:
             schema:
               $ref: '#/components/schemas/DeliveryReportBodyRequest'
             examples:
               Delivered:
                 value:
-                  phone: '254712345678'
-                  correlator: message_15883801465eacc1f2643a9
-                  deliveryStatus: '0'
-                  failure_reason: ''
+                  id: ATXid_7b2f0e8f1c2d4a6b9e3f
+                  status: Success
+                  phoneNumber: '+254712345678'
+                  networkCode: '63902'
+                  retryCount: '0'
                 summary: delivered
               Failed:
                 value:
-                  phone: '254712345678'
-                  correlator: message_15883801465eacc1f2643a9
-                  deliveryStatus: '1'
-                  failure_reason: AbsentSubscriber
+                  id: ATXid_7b2f0e8f1c2d4a6b9e3f
+                  status: Failed
+                  phoneNumber: '+254712345678'
+                  networkCode: '63902'
+                  failureReason: UserIsInactive
+                  retryCount: '0'
                 summary: failed
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/DeliveryReportBodyRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/DeliveryReportBodyRequest'
         required: true
       security:
       - WebhookSecret: []
@@ -1783,7 +1787,9 @@ paths:
   /sms/inbound:
     post:
       operationId: sms_inbound
-      description: 'Stores `MESSAGES(direction=IN)` and answers `200` at once; processing runs in the background:
+      description: 'Set as the **incoming messages** callback of your Africa''s Talking shortcode (sandbox shortcodes are
+        free): `https://<host>/ngao/v1/sms/inbound?k=<WEBHOOK_SECRET>`. Stores `MESSAGES(direction=IN)` and answers `200`
+        at once; processing runs in the background:
 
 
         1. **Keywords first** (no AI): `STOP`; `LUGHA SW|EN` / `LANG SW|EN`; `1` / `NDIYO` (confirm the open dryer booking,
@@ -1793,44 +1799,50 @@ paths:
         `AUTO_ACCEPTED` when confident (≥ 0.7), else `NEEDS_REVIEW`.
 
 
-        Inbound forwarding is still to be confirmed with Wasiliana; remap fields with `WASILIANA_INBOUND_FIELDS`. **Always
-        `200`, empty body.**'
-      summary: Inbound SMS callback
+        Form-encoded (JSON also accepted). **Always `200`, empty body.**'
+      summary: Incoming SMS callback (Africa's Talking)
       tags:
-      - Wasiliana webhooks
+      - SMS webhooks
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InboundSmsBodyRequest'
           application/json:
             schema:
               $ref: '#/components/schemas/InboundSmsBodyRequest'
             examples:
               FarmerReply(Kiswahili):
                 value:
-                  phone: '254712345678'
-                  linkid: L-88412
-                  message: Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu
+                  from: '+254712345678'
+                  to: '12345'
+                  text: Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu
+                  date: '2026-10-15 09:12:01'
+                  id: 6f3c1a2b-9d84-4e1f
+                  linkId: SampleLinkId123
+                  networkCode: '63902'
                 summary: farmer reply (Kiswahili)
               ChangeLanguage:
                 value:
-                  phone: '254712345678'
-                  message: LANG EN
+                  from: '+254712345678'
+                  to: '12345'
+                  text: LANG EN
+                  id: a1b2c3
                 summary: change language
               ConfirmBooking:
                 value:
-                  phone: '254712345678'
-                  message: '1'
+                  from: '+254712345678'
+                  to: '12345'
+                  text: '1'
+                  id: a1b2c4
                 summary: confirm booking
               OperatorDryingReport:
                 value:
-                  phone: '254700000901'
-                  message: Dried 120 bags, 13%
+                  from: '+254700000901'
+                  to: '12345'
+                  text: Dried 120 bags, 13%
+                  id: a1b2c5
                 summary: operator drying report
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/InboundSmsBodyRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/InboundSmsBodyRequest'
         required: true
       security:
       - WebhookSecret: []
@@ -2805,26 +2817,65 @@ components:
         * `ABSTAIN` - ABSTAIN'
     DeliveryReportBodyRequest:
       type: object
-      description: Reference shape (pytek-wasiliana). Aliases are accepted; see WASILIANA_DLR_FIELDS.
+      description: Africa's Talking delivery report (form-encoded).
       properties:
-        phone:
+        id:
           type: string
           minLength: 1
-          description: 'also: msisdn, recipient, mobile'
-        correlator:
+          description: messageId returned when the SMS was sent (MESSAGES.provider_msg_id)
+        status:
+          allOf:
+          - $ref: '#/components/schemas/DeliveryReportBodyStatusEnum'
+          description: 'Success = delivered to the handset; Failed/Rejected = FAILED
+
+
+            * `Sent` - Sent
+
+            * `Submitted` - Submitted
+
+            * `Buffered` - Buffered
+
+            * `Rejected` - Rejected
+
+            * `Success` - Success
+
+            * `Failed` - Failed'
+        phoneNumber:
           type: string
           minLength: 1
-          description: 'provider message id; also: messageId, message_id, msgId, id'
-        deliveryStatus:
+        networkCode:
           type: string
           minLength: 1
-          description: 'also: delivery_status, status. Delivered: 0, delivered, DeliveredToTerminal'
-        failure_reason:
+          description: e.g. 63902 Safaricom
+        failureReason:
           type: string
-          description: non-empty means FAILED
+          description: e.g. InsufficientCredit, UserIsInactive, DeliveryFailure
+        retryCount:
+          type: string
+          minLength: 1
       required:
-      - correlator
-      - deliveryStatus
+      - id
+      - status
+    DeliveryReportBodyStatusEnum:
+      enum:
+      - Sent
+      - Submitted
+      - Buffered
+      - Rejected
+      - Success
+      - Failed
+      type: string
+      description: '* `Sent` - Sent
+
+        * `Submitted` - Submitted
+
+        * `Buffered` - Buffered
+
+        * `Rejected` - Rejected
+
+        * `Success` - Success
+
+        * `Failed` - Failed'
     DispatchJobAccepted:
       type: object
       properties:
@@ -2983,23 +3034,37 @@ components:
         * `degraded` - degraded'
     InboundSmsBodyRequest:
       type: object
-      description: Candidate shape until Wasiliana confirms inbound forwarding; see WASILIANA_INBOUND_FIELDS.
+      description: Africa's Talking incoming message (form-encoded).
       properties:
-        phone:
+        from:
           type: string
           minLength: 1
-          description: 'also: msisdn, from, sender, mobile, phoneNumber'
-        message:
+          description: Sender phone, +2547XXXXXXXX
+        to:
           type: string
           minLength: 1
-          description: 'also: text, body, sms, content'
-        linkid:
+          description: Your shortcode
+        text:
           type: string
           minLength: 1
-          description: 'provider id; also: linkId, messageId, id'
+          description: Message text
+        date:
+          type: string
+          minLength: 1
+        id:
+          type: string
+          minLength: 1
+          description: Provider message id
+        linkId:
+          type: string
+          minLength: 1
+          description: Only for premium / on-demand shortcodes
+        networkCode:
+          type: string
+          minLength: 1
       required:
-      - message
-      - phone
+      - from
+      - text
     JobRunStatusEnum:
       enum:
       - RUNNING
@@ -3977,9 +4042,12 @@ components:
     SmsBackendEnum:
       enum:
       - console
+      - africastalking
       - wasiliana
       type: string
       description: '* `console` - console
+
+        * `africastalking` - africastalking
 
         * `wasiliana` - wasiliana'
     SmsDispatchEnum:
@@ -4138,7 +4206,8 @@ components:
       type: apiKey
       in: query
       name: k
-      description: WEBHOOK_SECRET appended to the Wasiliana callback URL. A wrong secret is ignored silently (still 200).
+      description: WEBHOOK_SECRET appended to the Africa's Talking callback URLs. A wrong secret is ignored silently (still
+        200).
 servers:
 - url: /ngao/v1
   description: Contract path (ORDS-style); what ussd/ calls
@@ -4161,9 +4230,9 @@ tags:
   description: §2.3 tomorrow's dryer plan and booking confirmation.
 - name: USSD contract
   description: §5 endpoints called by Louisa's `ussd/` service. Database only, no AI; well under 2 s.
-- name: Wasiliana webhooks
-  description: §3.3–3.4 callbacks from Wasiliana. They always answer `200` with an empty body. Field names are read by one
-    adapter and can be remapped in `.env`.
+- name: SMS webhooks
+  description: §3 callbacks from Africa's Talking (form-encoded). They always answer `200` with an empty body. The parser
+    lives in `sms/providers/africastalking.py`.
 - name: Demo
   description: Helpers for the Friday demo.
 - name: Public scorecard

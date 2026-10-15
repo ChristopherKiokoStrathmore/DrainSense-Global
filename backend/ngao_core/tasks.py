@@ -1,4 +1,4 @@
-"""Run slow work (Wasiliana sends, GenAI parses) after the HTTP response.
+"""Run slow work (SMS sends, GenAI parses) after the HTTP response.
 
 With NGAO_ASYNC_TASKS on, work runs on a daemon thread after the current transaction commits,
 so webhooks return 200 at once and USSD endpoints stay well under two seconds. Tests turn it off

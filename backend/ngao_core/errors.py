@@ -50,7 +50,7 @@ class ConflictError(ApiError):
 
 
 class UpstreamError(ApiError):
-    """Wasiliana or OCI Generative AI failed."""
+    """The SMS provider or OCI Generative AI failed."""
 
     status_code = status.HTTP_502_BAD_GATEWAY
     error_code = "UPSTREAM_ERROR"

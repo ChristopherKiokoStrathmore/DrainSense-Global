@@ -1,7 +1,7 @@
-"""Wasiliana callbacks (API_CONTRACT §3.3, §3.4) and the demo inbound fixture.
+"""SMS provider callbacks (Africa's Talking, API_CONTRACT §3) and the demo inbound fixture.
 
 Webhooks always answer 200 with an empty body, whatever happens: errors are logged, never
-returned to Wasiliana. When WEBHOOK_SECRET is set, the callback URL must carry ?k=<secret>
+returned to the provider. When WEBHOOK_SECRET is set, the callback URL must carry ?k=<secret>
 (or the X-Webhook-Secret header); mismatches are logged and ignored.
 """
 import hmac
@@ -18,7 +18,7 @@ from api import openapi as doc
 from ngao_core.auth import IsApiClient
 from sms import inbound
 from sms.dispatcher import apply_delivery_report
-from sms.wasiliana import parse_delivery_report, parse_inbound
+from sms.providers import parse_delivery_report, parse_inbound
 
 logger = logging.getLogger("sms.webhooks")
 
@@ -72,18 +72,23 @@ class DeliveryReportView(_Webhook):
     """POST /sms/delivery: SENT -> DELIVERED / FAILED by provider_msg_id."""
 
     @extend_schema(
-        tags=["Wasiliana webhooks"], auth=doc.WEBHOOK_AUTH, operation_id="sms_delivery_report",
-        summary="Delivery report callback",
-        description="Maps the report onto `MESSAGES.status` (`SENT` → `DELIVERED` / `FAILED`) by `provider_msg_id`. "
-                    "JSON or form-encoded. **Always `200`, empty body**: unknown statuses change nothing and every "
-                    "raw body is logged. Field names are the pytek-wasiliana reference shape; remap them with "
-                    "`WASILIANA_DLR_FIELDS` once confirmed at docs.wasiliana.com.",
-        request=doc.DeliveryReportBody, responses={200: OpenApiResponse(description="Empty body, always")},
+        tags=["SMS webhooks"], auth=doc.WEBHOOK_AUTH, operation_id="sms_delivery_report",
+        summary="Delivery report callback (Africa's Talking)",
+        description="Set as the **SMS delivery reports** callback in the Africa's Talking dashboard: "
+                    "`https://<host>/ngao/v1/sms/delivery?k=<WEBHOOK_SECRET>`. Maps the report onto `MESSAGES.status` "
+                    "by `provider_msg_id` (the `messageId` returned at send): `Success` → `DELIVERED`, "
+                    "`Failed` / `Rejected` → `FAILED`; `Sent`, `Submitted`, `Buffered` are not final and change nothing.\n\n"
+                    "Form-encoded (JSON also accepted). **Always `200`, empty body**; every raw body is logged. "
+                    "Extra field names can be mapped with `SMS_DLR_FIELDS`.",
+        request={"application/x-www-form-urlencoded": doc.DeliveryReportBody, "application/json": doc.DeliveryReportBody},
+        responses={200: OpenApiResponse(description="Empty body, always")},
         examples=[
-            doc.example("delivered", {"phone": "254712345678", "correlator": "message_15883801465eacc1f2643a9",
-                                      "deliveryStatus": "0", "failure_reason": ""}, request=True),
-            doc.example("failed", {"phone": "254712345678", "correlator": "message_15883801465eacc1f2643a9",
-                                   "deliveryStatus": "1", "failure_reason": "AbsentSubscriber"}, request=True),
+            doc.example("delivered", {"id": "ATXid_7b2f0e8f1c2d4a6b9e3f", "status": "Success",
+                                      "phoneNumber": "+254712345678", "networkCode": "63902", "retryCount": "0"},
+                        request=True),
+            doc.example("failed", {"id": "ATXid_7b2f0e8f1c2d4a6b9e3f", "status": "Failed",
+                                   "phoneNumber": "+254712345678", "networkCode": "63902",
+                                   "failureReason": "UserIsInactive", "retryCount": "0"}, request=True),
         ],
     )
     def post(self, request):
@@ -100,22 +105,29 @@ class InboundSmsView(_Webhook):
     """POST /sms/inbound: insert MESSAGES(IN), then keywords / reply reader in the background."""
 
     @extend_schema(
-        tags=["Wasiliana webhooks"], auth=doc.WEBHOOK_AUTH, operation_id="sms_inbound", summary="Inbound SMS callback",
-        description="Stores `MESSAGES(direction=IN)` and answers `200` at once; processing runs in the background:\n\n"
+        tags=["SMS webhooks"], auth=doc.WEBHOOK_AUTH, operation_id="sms_inbound",
+        summary="Incoming SMS callback (Africa's Talking)",
+        description="Set as the **incoming messages** callback of your Africa's Talking shortcode "
+                    "(sandbox shortcodes are free): `https://<host>/ngao/v1/sms/inbound?k=<WEBHOOK_SECRET>`. "
+                    "Stores `MESSAGES(direction=IN)` and answers `200` at once; processing runs in the background:\n\n"
                     "1. **Keywords first** (no AI): `STOP`; `LUGHA SW|EN` / `LANG SW|EN`; `1` / `NDIYO` "
                     "(confirm the open dryer booking, else NDIYO = harvested); `RVF [n] [species]`.\n"
                     "2. Otherwise the **reply reader** (OCI GenAI with the §2.4 JSON schema, or the keyword + number "
                     "fallback) writes `REPORTS`: `AUTO_ACCEPTED` when confident (≥ 0.7), else `NEEDS_REVIEW`.\n\n"
-                    "Inbound forwarding is still to be confirmed with Wasiliana; remap fields with "
-                    "`WASILIANA_INBOUND_FIELDS`. **Always `200`, empty body.**",
-        request=doc.InboundSmsBody, responses={200: OpenApiResponse(description="Empty body, always")},
+                    "Form-encoded (JSON also accepted). **Always `200`, empty body.**",
+        request={"application/x-www-form-urlencoded": doc.InboundSmsBody, "application/json": doc.InboundSmsBody},
+        responses={200: OpenApiResponse(description="Empty body, always")},
         examples=[
-            doc.example("farmer reply (Kiswahili)", {"phone": "254712345678", "linkid": "L-88412",
-                        "message": "Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu"}, request=True),
-            doc.example("change language", {"phone": "254712345678", "message": "LANG EN"}, request=True),
-            doc.example("confirm booking", {"phone": "254712345678", "message": "1"}, request=True),
-            doc.example("operator drying report", {"phone": "254700000901", "message": "Dried 120 bags, 13%"},
+            doc.example("farmer reply (Kiswahili)", {"from": "+254712345678", "to": "12345",
+                        "text": "Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu",
+                        "date": "2026-10-15 09:12:01", "id": "6f3c1a2b-9d84-4e1f", "linkId": "SampleLinkId123",
+                        "networkCode": "63902"}, request=True),
+            doc.example("change language", {"from": "+254712345678", "to": "12345", "text": "LANG EN",
+                                            "id": "a1b2c3"}, request=True),
+            doc.example("confirm booking", {"from": "+254712345678", "to": "12345", "text": "1", "id": "a1b2c4"},
                         request=True),
+            doc.example("operator drying report", {"from": "+254700000901", "to": "12345",
+                                                   "text": "Dried 120 bags, 13%", "id": "a1b2c5"}, request=True),
         ],
     )
     def post(self, request):
@@ -135,7 +147,7 @@ class SimulatedInboundSerializer(serializers.Serializer):
 
 
 class SimulateInboundView(APIView):
-    """POST /demo/inbound-sms {"phone","text"}: the reply path without Wasiliana forwarding
+    """POST /demo/inbound-sms {"phone","text"}: the reply path without a provider callback
     (EXECUTION_PLAN: "demo the reply with a fixture if the callback is late")."""
 
     permission_classes = [IsApiClient]
@@ -143,7 +155,7 @@ class SimulateInboundView(APIView):
     @extend_schema(
         tags=["Demo"], auth=doc.API_AUTH, operation_id="demo_inbound_sms", summary="Simulate an inbound SMS",
         description="Runs exactly the `/sms/inbound` path (keywords, then the reply reader) **synchronously** and "
-                    "returns the resulting report. For the demo, and for testing before Wasiliana forwards replies.",
+                    "returns the resulting report. For the demo, and for testing without an Africa's Talking shortcode.",
         request=SimulatedInboundSerializer,
         responses={201: doc.SimulatedInbound, **doc.errors(400, 401, 403)},
         examples=[

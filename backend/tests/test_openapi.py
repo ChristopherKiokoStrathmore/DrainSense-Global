@@ -172,12 +172,13 @@ class PostmanCollectionTests(NgaoTestCase):
             request = item["request"]
             self.assertTrue(request["url"]["raw"].startswith("{{base_url}}/"), item["name"])
             self.assertNotIn(":", "/".join(request["url"]["path"]), f"unbound path variable in {item['name']}")
-            if "body" in request:
+            if request.get("body", {}).get("mode") == "raw":
                 import json
                 json.loads(request["body"]["raw"].replace("{{ward_id}}", "12"))  # valid JSON once filled
         ussd = next(i for i in folders["USSD contract"])
         self.assertEqual(ussd["request"]["auth"]["bearer"][0]["value"], "{{ussd_token}}")
         public = next(i for i in folders["Public scorecard"])
         self.assertEqual(public["request"]["auth"]["type"], "noauth")
-        webhook = folders["Wasiliana webhooks"][0]["request"]["url"]
-        self.assertIn("k", [q["key"] for q in webhook["query"]])
+        webhook = folders["SMS webhooks"][0]["request"]
+        self.assertIn("k", [q["key"] for q in webhook["url"]["query"]])
+        self.assertEqual(webhook["body"]["mode"], "urlencoded")  # Africa's Talking posts forms

@@ -27,7 +27,7 @@
 | M1 | Ingestion pipeline | Python, Earth Engine API, Copernicus EWDS, OCI Object Storage | **Trevor** | GEE, GloFAS, files | `WARD_FEATURES_DAILY`, `FORECASTS`, `WARDS` |
 | M2 | Models & calibration | pandas, scikit-learn, XGBoost, OML4Py, SQL rules | **Trevor** (+ Chris for loading) | features | `RISK_SCORES` |
 | M3 | Alert engine | PL/SQL (+ Python) | **Dennis** (wiring), Chris (tables) | `RISK_SCORES`, `ALERT_TYPES`, `ALERT_TEMPLATE`, `SUBSCRIBERS` | `ALERTS`, `MESSAGES` (queued) |
-| M4 | SMS gateway | Wasiliana REST (API key + sender ID) + Django/DRF **or** ORDS. Optional client: `pytek-wasiliana` | **Dennis** | Wasiliana SMS API, delivery reports | `MESSAGES`, `SUBSCRIBERS` (STOP) |
+| M4 | SMS gateway | **Africa's Talking** SMS API (username + API key, optional sender ID/shortcode) via Django/DRF; Wasiliana kept as fallback | **Dennis** | Africa's Talking SMS API, delivery reports | `MESSAGES`, `SUBSCRIBERS` (STOP) |
 | M4b | USSD menus | Wasiliana callback → `ussd/` | **Louisa** | Wasiliana session POST; backend `/ngao/v1/ussd/*` | `USSD_SESSIONS`; registration and reports via Dennis |
 | M5 | Reply reader | OCI Generative AI (Cohere Command A) | **Dennis** | inbound `MESSAGES` | `REPORTS` (or review queue) |
 | M6 | Dryer router | Python greedy plan (OR-Tools later) | **Dennis** (+ Trevor for simulation) | `REPORTS`, `RISK_SCORES`, `DRYERS`, `COLLECTION_POINTS` | `ROUTES`, `ROUTE_STOPS`, `BOOKINGS`, `MESSAGES` |
@@ -50,12 +50,15 @@ flowchart TB
   gee["Google Earth Engine"]
   glofas["Copernicus EWDS / GloFAS"]
   ndma["NDMA drought bulletins<br/>census · HDX · OSM"]
-  wa["Wasiliana<br/>SMS + USSD"]
+  wa["Wasiliana<br/>USSD"]
+  at["Africa's Talking<br/>SMS"]
 
-  farmer -- "USSD register/report · SMS reply" --> wa
-  wa -- "SMS alerts · booking SMS" --> farmer
-  promoter <--> wa
-  wa <-- "USSD callback · SMS API" --> ngao
+  farmer -- "USSD register/report" --> wa
+  farmer -- "SMS reply" --> at
+  at -- "SMS alerts · booking SMS" --> farmer
+  promoter <--> at
+  wa <-- "USSD callback" --> ngao
+  at <-- "SMS API · delivery reports · incoming SMS" --> ngao
   officer <-- "APEX dashboard / PWA" --> ngao
   coop <-- "PWA + SMS stop list" --> ngao
   judge -- "APEX app URL" --> ngao
@@ -120,7 +123,7 @@ flowchart LR
 `VM` hosts the Django service **if** we keep Django (Dennis: SMS, alert engine, router, reply reader).
 USSD callbacks always land on `ussd/` (Louisa), which calls the backend contract and writes
 `USSD_SESSIONS`. SMS send and delivery reports stay on the backend (or ORDS, if that is the
-[open decision](#open-decisions)). `pytek-wasiliana` is an optional Python client for the SMS API.
+[open decision](#open-decisions)). SMS uses Africa's Talking (`sms/providers/africastalking.py`); USSD stays on Wasiliana.
 
 ## 5. Data pipeline: GEE → ADB → OML scoring → alerts
 
@@ -145,7 +148,7 @@ flowchart LR
   CAL["Isotonic calibration<br/>+ split-conformal abstain"]
   R[("RISK_SCORES<br/>prob · decision")]
   ENG["Alert engine<br/>threshold · cooldown 48h<br/>3 routine SMS/week cap"]
-  OUT["ALERTS + MESSAGES (queued)<br/>→ Wasiliana SMS"]
+  OUT["ALERTS + MESSAGES (queued)<br/>→ Africa's Talking SMS"]
   W["Watch / Abstain<br/>→ dashboard only"]
 
   C & G & E & M & S & J --> EXP
@@ -196,10 +199,11 @@ USSD changes the same column from the main-menu item **Lugha / Language**.
 sequenceDiagram
   autonumber
   actor F as Farmer (feature phone)
-  participant WA as Wasiliana
+  participant WA as Wasiliana (USSD)
   participant US as USSD service (Louisa)
   participant BE as Backend (Dennis)
   participant DB as Autonomous DB
+  participant AT as Africa's Talking (SMS)
   participant SCH as DBMS_SCHEDULER / Demo controls
   participant ENG as PKG_ALERT_ENGINE
 
@@ -224,9 +228,9 @@ sequenceDiagram
   ENG->>DB: render ALERT_TEMPLATE.body where lang = preferred_lang
   ENG->>DB: INSERT ALERTS + MESSAGES(direction=OUT, status=QUEUED)
   BE->>DB: poll / dequeue QUEUED messages
-  BE->>WA: Wasiliana SMS REST (API key, sender ID, to, message)
-  WA-->>F: SMS in Swahili or English, chosen by the user
-  WA->>BE: delivery report (confirm field names)
+  BE->>AT: POST /version1/messaging (apiKey, username, to, message, from)
+  AT-->>F: SMS in Swahili or English, chosen by the user
+  AT->>BE: POST /sms/delivery (id, status=Success)
   BE->>DB: UPDATE MESSAGES status=DELIVERED
 ```
 
@@ -236,7 +240,7 @@ sequenceDiagram
 sequenceDiagram
   autonumber
   actor F as Farmer
-  participant WA as Wasiliana
+  participant WA as Africa's Talking (SMS)
   participant BE as Backend reply reader
   participant AI as OCI Generative AI
   participant DB as Autonomous DB
@@ -244,8 +248,8 @@ sequenceDiagram
   actor O as County officer
 
   F->>WA: "Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu"
-  Note over WA,BE: Inbound SMS forwarding is an open item. Confirm the callback and field names against docs.wasiliana.com
-  WA->>BE: POST /sms/inbound (normalized after the adapter)
+  Note over WA,BE: Shortcode incoming-messages callback (form-encoded: from, to, text, id, linkId)
+  WA->>BE: POST /sms/inbound
   BE->>DB: INSERT MESSAGES(direction=IN)
   BE->>AI: fixed prompt "extract, don't advise" + text
   AI-->>BE: {"report_type":"wet_bags","count":20,"unit":"bags","crop":"maize","rain_reported":true,"language":"sw","confidence":0.92}
@@ -273,7 +277,7 @@ sequenceDiagram
   participant RT as Dryer router (Python)
   participant DB as Autonomous DB
   participant BE as Backend SMS sender (Dennis)
-  participant WA as Wasiliana
+  participant WA as Africa's Talking (SMS)
   actor OP as Dryer operator
   actor F as Farmers near point
 
@@ -284,14 +288,14 @@ sequenceDiagram
   RT->>RT: greedy fill each dryer (bags/day = t/h × hours ÷ 0.09)
   RT->>DB: INSERT ROUTES, ROUTE_STOPS, BOOKINGS(status=OFFERED)
   RT->>DB: queue MESSAGES: A5 booking SMS + operator stop list
-  BE->>WA: Wasiliana SMS REST (API key + sender ID)
+  BE->>WA: POST /version1/messaging (apiKey, username, to, message)
   WA-->>F: "Mashine ya kukausha itafika soko la Moiben Jumanne saa 2 asubuhi. Jibu 1"
   WA-->>OP: stop list
   F->>WA: "1"
-  WA->>BE: inbound SMS callback (confirm forwarding + field names)
+  WA->>BE: POST /sms/inbound (shortcode callback)
   BE->>DB: UPDATE BOOKINGS status=CONFIRMED
   OP->>WA: "Dried 120 bags, 13%"
-  WA->>BE: inbound SMS callback (confirm forwarding + field names)
+  WA->>BE: POST /sms/inbound (shortcode callback)
   BE->>DB: INSERT REPORTS(type=bags_dried) → OUTCOMES (tonnes dried before rain)
 ```
 
@@ -568,6 +572,6 @@ COLLECTION_POINTS, ROUTES, OUTCOMES). The brief's `REPLIES` = inbound rows in `M
 | D2 | Django hosting (if D1=b), and the public URL for the USSD callback | OCI Always Free VM + HTTPS, or ngrok tunnel for demo | VM on OCI (Oracle adoption), tunnel as backup | Dennis (API host), Louisa (USSD callback URL) |
 | D3 | OML4Py on Always Free | in-DB XGBoost vs Python-trained scores loaded to table | Check day one; fallback is fine | Trevor + Chris |
 | D4 | Map rendering in APEX | Native Map region (GeoJSON/SDO) vs static choropleth | Native Map region | Chris |
-| D5 | Who sends SMS | backend dequeues `MESSAGES` and calls the Wasiliana REST API (API key + sender ID) vs PL/SQL calls Wasiliana via `APEX_WEB_SERVICE` | Backend dequeues (one sender). Louisa does not send SMS. Optional client: `pytek-wasiliana` | Dennis |
+| D5 | Who sends SMS | backend dequeues `MESSAGES` and calls the Africa's Talking SMS API vs PL/SQL via `APEX_WEB_SERVICE` | **Decided:** backend dequeues (one sender), Africa's Talking (Wasiliana as fallback). Louisa does not send SMS | Dennis |
 | D6 | OCI region / services availability (GenAI, Select AI) | n/a | Check home region on first sign-in | Chris |
-| — | **Inbound SMS forwarding** | Confirm with Wasiliana whether inbound SMS is POSTed to our callback, and the exact field names, at [docs.wasiliana.com](https://docs.wasiliana.com). Delivery-report field names are the same check | Do not code the reply reader against guessed fields. One adapter normalizes the body | Dennis |
+| — | **Incoming SMS** | Africa's Talking posts incoming SMS for a shortcode to `/sms/inbound` (form-encoded `from`, `to`, `text`, `id`, `linkId`). Needs a shortcode: free in the sandbox; dedicated or shared + keyword live | Until the shortcode exists, `/demo/inbound-sms` and USSD menu 2 | Dennis |

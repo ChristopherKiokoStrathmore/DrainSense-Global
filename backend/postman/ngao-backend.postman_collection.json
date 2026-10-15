@@ -34,7 +34,7 @@
     {
       "key": "webhook_secret",
       "value": "",
-      "description": "WEBHOOK_SECRET, appended to Wasiliana callbacks as ?k="
+      "description": "WEBHOOK_SECRET, appended to Africa's Talking callbacks as ?k="
     },
     {
       "key": "demo_phone",
@@ -159,7 +159,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"status\": \"ok\",\n  \"database\": \"oracle\",\n  \"sms_backend\": \"wasiliana\",\n  \"sms_dispatch\": \"inline\",\n  \"reply_reader\": \"genai\",\n  \"alerts_require_approval\": true\n}"
+              "body": "{\n  \"status\": \"ok\",\n  \"database\": \"oracle\",\n  \"sms_backend\": \"africastalking\",\n  \"sms_dispatch\": \"inline\",\n  \"reply_reader\": \"genai\",\n  \"alerts_require_approval\": true\n}"
             }
           ]
         },
@@ -1852,7 +1852,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"items\": [\n    {\n      \"alert_id\": 4,\n      \"score_id\": 3,\n      \"alert_type_id\": \"A1\",\n      \"ward_id\": 12,\n      \"ward_name\": \"Moiben\",\n      \"county\": \"Uasin Gishu\",\n      \"hazard\": \"dry_window\",\n      \"severity\": \"warning\",\n      \"lang\": \"sw\",\n      \"body\": \"MvuaSmart: Siku 3 za jua zinatarajiwa kuanzia Alhamisi katika kata yako (uhakika 99%). Vuna mahindi sasa na uyakaushe. Jibu NDIYO ukivuna.\",\n      \"status\": \"PENDING_APPROVAL\",\n      \"probability\": 0.99,\n      \"confidence_pct\": 99,\n      \"score_date\": \"2026-10-14\",\n      \"created_at\": \"2026-10-14T20:10:56.509737+03:00\",\n      \"approved_by\": null,\n      \"approved_at\": null,\n      \"sent_at\": null,\n      \"messages\": {}\n    }\n  ]\n}"
+              "body": "{\n  \"items\": [\n    {\n      \"alert_id\": 4,\n      \"score_id\": 3,\n      \"alert_type_id\": \"A1\",\n      \"ward_id\": 12,\n      \"ward_name\": \"Moiben\",\n      \"county\": \"Uasin Gishu\",\n      \"hazard\": \"dry_window\",\n      \"severity\": \"warning\",\n      \"lang\": \"sw\",\n      \"body\": \"MvuaSmart: Siku 3 za jua zinatarajiwa kuanzia Alhamisi katika kata yako (uhakika 99%). Vuna mahindi sasa na uyakaushe. Jibu NDIYO ukivuna.\",\n      \"status\": \"PENDING_APPROVAL\",\n      \"probability\": 0.99,\n      \"confidence_pct\": 99,\n      \"score_date\": \"2026-10-14\",\n      \"created_at\": \"2026-10-14T23:03:08.521507+03:00\",\n      \"approved_by\": null,\n      \"approved_at\": null,\n      \"sent_at\": null,\n      \"messages\": {}\n    }\n  ]\n}"
             },
             {
               "name": "200 pending",
@@ -2082,7 +2082,7 @@
                 }
               ]
             },
-            "description": "`PENDING_APPROVAL` → `APPROVED`, then queues one SMS per eligible subscriber in that language (per-subscriber 48 h cooldown and 3/week routine cap; floods and disease skip the cap). The alert becomes `SENT` once the first SMS is handed to Wasiliana, or `SUPPRESSED` when nobody is eligible. Replay alerts and alerts older than 48 h are approved but **not** sent (`dispatch.skipped`).\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token, `404` Not found, `409` Conflict with the current state",
+            "description": "`PENDING_APPROVAL` → `APPROVED`, then queues one SMS per eligible subscriber in that language (per-subscriber 48 h cooldown and 3/week routine cap; floods and disease skip the cap). The alert becomes `SENT` once the first SMS is handed to Africa's Talking, or `SUPPRESSED` when nobody is eligible. Replay alerts and alerts older than 48 h are approved but **not** sent (`dispatch.skipped`).\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token, `404` Not found, `409` Conflict with the current state",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"approved_by\": \"postman.officer\"\n}",
@@ -2807,7 +2807,7 @@
                 }
               ]
             },
-            "description": "Runs exactly the `/sms/inbound` path (keywords, then the reply reader) **synchronously** and returns the resulting report. For the demo, and for testing before Wasiliana forwards replies.\n\n**Responses:** `201`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
+            "description": "Runs exactly the `/sms/inbound` path (keywords, then the reply reader) **synchronously** and returns the resulting report. For the demo, and for testing without an Africa's Talking shortcode.\n\n**Responses:** `201`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"phone\": \"{{demo_phone}}\",\n  \"text\": \"Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu\"\n}",
@@ -3210,7 +3210,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"items\": [\n    {\n      \"report_id\": 1,\n      \"ward_id\": 12,\n      \"report_type\": \"wet_bags\",\n      \"report_count\": 20.0,\n      \"unit\": \"bags\",\n      \"ai_confidence\": 0.8,\n      \"review_status\": \"AUTO_ACCEPTED\",\n      \"raw_text\": \"Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu\",\n      \"source\": \"SMS_KEYWORD\",\n      \"payload\": {\n        \"report_type\": \"wet_bags\",\n        \"count\": 20,\n        \"unit\": \"bags\",\n        \"crop\": \"maize\",\n        \"species\": null,\n        \"rain_reported\": true,\n        \"moisture_pct\": null,\n        \"language\": \"sw\",\n        \"confidence\": 0.8\n      },\n      \"received_at\": \"2026-10-14T20:10:56.549408+03:00\",\n      \"reviewed_by_id\": null\n    }\n  ]\n}"
+              "body": "{\n  \"items\": [\n    {\n      \"report_id\": 1,\n      \"ward_id\": 12,\n      \"report_type\": \"wet_bags\",\n      \"report_count\": 20.0,\n      \"unit\": \"bags\",\n      \"ai_confidence\": 0.8,\n      \"review_status\": \"AUTO_ACCEPTED\",\n      \"raw_text\": \"Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu\",\n      \"source\": \"SMS_KEYWORD\",\n      \"payload\": {\n        \"report_type\": \"wet_bags\",\n        \"count\": 20,\n        \"unit\": \"bags\",\n        \"crop\": \"maize\",\n        \"species\": null,\n        \"rain_reported\": true,\n        \"moisture_pct\": null,\n        \"language\": \"sw\",\n        \"confidence\": 0.8\n      },\n      \"received_at\": \"2026-10-14T23:03:08.589210+03:00\",\n      \"reviewed_by_id\": null\n    }\n  ]\n}"
             },
             {
               "name": "200 contract",
@@ -3497,7 +3497,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"report_id\": 1,\n  \"ward_id\": 12,\n  \"report_type\": \"wet_bags\",\n  \"report_count\": 25.0,\n  \"unit\": \"bags\",\n  \"ai_confidence\": 0.8,\n  \"review_status\": \"CORRECTED\",\n  \"raw_text\": \"Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu\",\n  \"source\": \"SMS_KEYWORD\",\n  \"payload\": {\n    \"report_type\": \"wet_bags\",\n    \"count\": 25,\n    \"unit\": \"bags\",\n    \"crop\": \"maize\",\n    \"species\": null,\n    \"rain_reported\": true,\n    \"moisture_pct\": null,\n    \"language\": \"sw\",\n    \"confidence\": 0.8\n  },\n  \"received_at\": \"2026-10-14T20:10:56.549408+03:00\",\n  \"reviewed_by_id\": null\n}"
+              "body": "{\n  \"report_id\": 1,\n  \"ward_id\": 12,\n  \"report_type\": \"wet_bags\",\n  \"report_count\": 25.0,\n  \"unit\": \"bags\",\n  \"ai_confidence\": 0.8,\n  \"review_status\": \"CORRECTED\",\n  \"raw_text\": \"Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu\",\n  \"source\": \"SMS_KEYWORD\",\n  \"payload\": {\n    \"report_type\": \"wet_bags\",\n    \"count\": 25,\n    \"unit\": \"bags\",\n    \"crop\": \"maize\",\n    \"species\": null,\n    \"rain_reported\": true,\n    \"moisture_pct\": null,\n    \"language\": \"sw\",\n    \"confidence\": 0.8\n  },\n  \"received_at\": \"2026-10-14T23:03:08.589210+03:00\",\n  \"reviewed_by_id\": null\n}"
             },
             {
               "name": "400 VALIDATION_ERROR",
@@ -4479,15 +4479,10 @@
           ]
         },
         {
-          "name": "8. Wasiliana inbound SMS: LANG EN",
+          "name": "8. Africa's Talking incoming SMS: LANG EN",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/sms/inbound?k={{webhook_secret}}",
               "host": [
@@ -4508,15 +4503,31 @@
             "auth": {
               "type": "noauth"
             },
-            "description": "Stores `MESSAGES(direction=IN)` and answers `200` at once; processing runs in the background:\n\n1. **Keywords first** (no AI): `STOP`; `LUGHA SW|EN` / `LANG SW|EN`; `1` / `NDIYO` (confirm the open dryer booking, else NDIYO = harvested); `RVF [n] [species]`.\n2. Otherwise the **reply reader** (OCI GenAI with the §2.4 JSON schema, or the keyword + number fallback) writes `REPORTS`: `AUTO_ACCEPTED` when confident (≥ 0.7), else `NEEDS_REVIEW`.\n\nInbound forwarding is still to be confirmed with Wasiliana; remap fields with `WASILIANA_INBOUND_FIELDS`. **Always `200`, empty body.**\n\n**Responses:** `200` Empty body, always",
+            "description": "Set as the **incoming messages** callback of your Africa's Talking shortcode (sandbox shortcodes are free): `https://<host>/ngao/v1/sms/inbound?k=<WEBHOOK_SECRET>`. Stores `MESSAGES(direction=IN)` and answers `200` at once; processing runs in the background:\n\n1. **Keywords first** (no AI): `STOP`; `LUGHA SW|EN` / `LANG SW|EN`; `1` / `NDIYO` (confirm the open dryer booking, else NDIYO = harvested); `RVF [n] [species]`.\n2. Otherwise the **reply reader** (OCI GenAI with the §2.4 JSON schema, or the keyword + number fallback) writes `REPORTS`: `AUTO_ACCEPTED` when confident (≥ 0.7), else `NEEDS_REVIEW`.\n\nForm-encoded (JSON also accepted). **Always `200`, empty body.**\n\n**Responses:** `200` Empty body, always",
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone\": \"{{demo_phone}}\",\n  \"message\": \"LANG EN\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "from",
+                  "value": "{{demo_phone}}",
+                  "type": "text"
+                },
+                {
+                  "key": "to",
+                  "value": "12345",
+                  "type": "text"
+                },
+                {
+                  "key": "text",
+                  "value": "LANG EN",
+                  "type": "text"
+                },
+                {
+                  "key": "id",
+                  "value": "postman-1",
+                  "type": "text"
                 }
-              }
+              ]
             }
           },
           "event": [
@@ -4535,12 +4546,7 @@
               "name": "200 live response",
               "originalRequest": {
                 "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
+                "header": [],
                 "url": {
                   "raw": "{{base_url}}/sms/inbound?k={{webhook_secret}}",
                   "host": [
@@ -4562,13 +4568,29 @@
                   "type": "noauth"
                 },
                 "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"phone\": \"{{demo_phone}}\",\n  \"message\": \"LANG EN\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "from",
+                      "value": "{{demo_phone}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "to",
+                      "value": "12345",
+                      "type": "text"
+                    },
+                    {
+                      "key": "text",
+                      "value": "LANG EN",
+                      "type": "text"
+                    },
+                    {
+                      "key": "id",
+                      "value": "postman-1",
+                      "type": "text"
                     }
-                  }
+                  ]
                 }
               },
               "status": "OK",
@@ -4585,15 +4607,10 @@
           ]
         },
         {
-          "name": "9. Wasiliana delivery report",
+          "name": "9. Africa's Talking delivery report",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/sms/delivery?k={{webhook_secret}}",
               "host": [
@@ -4614,15 +4631,10 @@
             "auth": {
               "type": "noauth"
             },
-            "description": "Maps the report onto `MESSAGES.status` (`SENT` → `DELIVERED` / `FAILED`) by `provider_msg_id`. JSON or form-encoded. **Always `200`, empty body**: unknown statuses change nothing and every raw body is logged. Field names are the pytek-wasiliana reference shape; remap them with `WASILIANA_DLR_FIELDS` once confirmed at docs.wasiliana.com.\n\n**Responses:** `200` Empty body, always",
+            "description": "Set as the **SMS delivery reports** callback in the Africa's Talking dashboard: `https://<host>/ngao/v1/sms/delivery?k=<WEBHOOK_SECRET>`. Maps the report onto `MESSAGES.status` by `provider_msg_id` (the `messageId` returned at send): `Success` → `DELIVERED`, `Failed` / `Rejected` → `FAILED`; `Sent`, `Submitted`, `Buffered` are not final and change nothing.\n\nForm-encoded (JSON also accepted). **Always `200`, empty body**; every raw body is logged. Extra field names can be mapped with `SMS_DLR_FIELDS`.\n\n**Responses:** `200` Empty body, always",
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone\": \"254712345678\",\n  \"correlator\": \"message_15883801465eacc1f2643a9\",\n  \"deliveryStatus\": \"0\",\n  \"failure_reason\": \"\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "mode": "urlencoded",
+              "urlencoded": []
             }
           },
           "event": [
@@ -4641,12 +4653,7 @@
               "name": "200 live response",
               "originalRequest": {
                 "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
+                "header": [],
                 "url": {
                   "raw": "{{base_url}}/sms/delivery?k={{webhook_secret}}",
                   "host": [
@@ -4668,13 +4675,8 @@
                   "type": "noauth"
                 },
                 "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"phone\": \"254712345678\",\n  \"correlator\": \"message_15883801465eacc1f2643a9\",\n  \"deliveryStatus\": \"0\",\n  \"failure_reason\": \"\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
+                  "mode": "urlencoded",
+                  "urlencoded": []
                 }
               },
               "status": "OK",
@@ -5077,7 +5079,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"job_id\": 5,\n  \"job\": \"replay\",\n  \"status\": \"DONE\",\n  \"params\": {\n    \"scenario\": \"garissa_rvf_2006\",\n    \"from\": \"2006-09-01\",\n    \"to\": \"2007-01-15\",\n    \"overwrite\": false\n  },\n  \"summary\": {\n    \"scenario\": \"garissa_rvf_2006\",\n    \"county\": \"Garissa\",\n    \"from\": \"2006-09-01\",\n    \"to\": \"2007-01-15\",\n    \"weeks\": 20,\n    \"scores_written\": 90,\n    \"kept_existing\": 0,\n    \"first_act_date\": \"2006-11-03\",\n    \"index_case_date\": \"2006-11-30\",\n    \"lead_days_before_index_case\": 27\n  },\n  \"error\": null,\n  \"started_at\": \"2026-10-14T20:10:56.609048+03:00\",\n  \"finished_at\": \"2026-10-14T20:10:56.849986+03:00\"\n}"
+              "body": "{\n  \"job_id\": 5,\n  \"job\": \"replay\",\n  \"status\": \"DONE\",\n  \"params\": {\n    \"scenario\": \"garissa_rvf_2006\",\n    \"from\": \"2006-09-01\",\n    \"to\": \"2007-01-15\",\n    \"overwrite\": false\n  },\n  \"summary\": {\n    \"scenario\": \"garissa_rvf_2006\",\n    \"county\": \"Garissa\",\n    \"from\": \"2006-09-01\",\n    \"to\": \"2007-01-15\",\n    \"weeks\": 20,\n    \"scores_written\": 90,\n    \"kept_existing\": 0,\n    \"first_act_date\": \"2006-11-03\",\n    \"index_case_date\": \"2006-11-30\",\n    \"lead_days_before_index_case\": 27\n  },\n  \"error\": null,\n  \"started_at\": \"2026-10-14T23:03:08.688417+03:00\",\n  \"finished_at\": \"2026-10-14T23:03:09.078048+03:00\"\n}"
             },
             {
               "name": "401 UNAUTHORIZED",
@@ -6299,7 +6301,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"status\": \"ok\",\n  \"database\": \"oracle\",\n  \"sms_backend\": \"wasiliana\",\n  \"sms_dispatch\": \"inline\",\n  \"reply_reader\": \"genai\",\n  \"alerts_require_approval\": true\n}"
+              "body": "{\n  \"status\": \"ok\",\n  \"database\": \"oracle\",\n  \"sms_backend\": \"africastalking\",\n  \"sms_dispatch\": \"inline\",\n  \"reply_reader\": \"genai\",\n  \"alerts_require_approval\": true\n}"
             }
           ]
         }
@@ -6458,7 +6460,7 @@
                 }
               ]
             },
-            "description": "Fans out every `APPROVED` alert that has no messages yet (e.g. approved on the APEX page), then sends the `MESSAGES` queue through Wasiliana. The scheduler does this every 15 s anyway. Synthetic subscribers are marked `SENT` with `provider_msg_id='SIMULATED'`.\n\nAnswers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
+            "description": "Fans out every `APPROVED` alert that has no messages yet (e.g. approved on the APEX page), then sends the `MESSAGES` queue through Africa's Talking. The scheduler does this every 15 s anyway. Synthetic subscribers are marked `SENT` with `provider_msg_id='SIMULATED'`.\n\nAnswers `202` once the job has **finished** (`status: DONE`); the row stays in `JOB_RUNS` (see `GET /jobs/{job_id}/status`).\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -8613,7 +8615,7 @@
                 }
               ]
             },
-            "description": "`PENDING_APPROVAL` → `APPROVED`, then queues one SMS per eligible subscriber in that language (per-subscriber 48 h cooldown and 3/week routine cap; floods and disease skip the cap). The alert becomes `SENT` once the first SMS is handed to Wasiliana, or `SUPPRESSED` when nobody is eligible. Replay alerts and alerts older than 48 h are approved but **not** sent (`dispatch.skipped`).\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token, `404` Not found, `409` Conflict with the current state",
+            "description": "`PENDING_APPROVAL` → `APPROVED`, then queues one SMS per eligible subscriber in that language (per-subscriber 48 h cooldown and 3/week routine cap; floods and disease skip the cap). The alert becomes `SENT` once the first SMS is handed to Africa's Talking, or `SUPPRESSED` when nobody is eligible. Replay alerts and alerts older than 48 h are approved but **not** sent (`dispatch.skipped`).\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token, `404` Not found, `409` Conflict with the current state",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"approved_by\": \"agri.officer.uasingishu\"\n}",
@@ -11951,19 +11953,14 @@
       ]
     },
     {
-      "name": "Wasiliana webhooks",
-      "description": "§3.3–3.4 callbacks from Wasiliana. They always answer `200` with an empty body. Field names are read by one adapter and can be remapped in `.env`.",
+      "name": "SMS webhooks",
+      "description": "§3 callbacks from Africa's Talking (form-encoded). They always answer `200` with an empty body. The parser lives in `sms/providers/africastalking.py`.",
       "item": [
         {
-          "name": "Delivery report callback",
+          "name": "Delivery report callback (Africa's Talking)",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/sms/delivery?k={{webhook_secret}}",
               "host": [
@@ -11984,15 +11981,10 @@
             "auth": {
               "type": "noauth"
             },
-            "description": "Maps the report onto `MESSAGES.status` (`SENT` → `DELIVERED` / `FAILED`) by `provider_msg_id`. JSON or form-encoded. **Always `200`, empty body**: unknown statuses change nothing and every raw body is logged. Field names are the pytek-wasiliana reference shape; remap them with `WASILIANA_DLR_FIELDS` once confirmed at docs.wasiliana.com.\n\n**Responses:** `200` Empty body, always",
+            "description": "Set as the **SMS delivery reports** callback in the Africa's Talking dashboard: `https://<host>/ngao/v1/sms/delivery?k=<WEBHOOK_SECRET>`. Maps the report onto `MESSAGES.status` by `provider_msg_id` (the `messageId` returned at send): `Success` → `DELIVERED`, `Failed` / `Rejected` → `FAILED`; `Sent`, `Submitted`, `Buffered` are not final and change nothing.\n\nForm-encoded (JSON also accepted). **Always `200`, empty body**; every raw body is logged. Extra field names can be mapped with `SMS_DLR_FIELDS`.\n\n**Responses:** `200` Empty body, always",
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone\": \"254712345678\",\n  \"correlator\": \"message_15883801465eacc1f2643a9\",\n  \"deliveryStatus\": \"0\",\n  \"failure_reason\": \"\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "mode": "urlencoded",
+              "urlencoded": []
             }
           },
           "event": [
@@ -12010,15 +12002,10 @@
           "response": []
         },
         {
-          "name": "Inbound SMS callback",
+          "name": "Incoming SMS callback (Africa's Talking)",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/sms/inbound?k={{webhook_secret}}",
               "host": [
@@ -12039,15 +12026,10 @@
             "auth": {
               "type": "noauth"
             },
-            "description": "Stores `MESSAGES(direction=IN)` and answers `200` at once; processing runs in the background:\n\n1. **Keywords first** (no AI): `STOP`; `LUGHA SW|EN` / `LANG SW|EN`; `1` / `NDIYO` (confirm the open dryer booking, else NDIYO = harvested); `RVF [n] [species]`.\n2. Otherwise the **reply reader** (OCI GenAI with the §2.4 JSON schema, or the keyword + number fallback) writes `REPORTS`: `AUTO_ACCEPTED` when confident (≥ 0.7), else `NEEDS_REVIEW`.\n\nInbound forwarding is still to be confirmed with Wasiliana; remap fields with `WASILIANA_INBOUND_FIELDS`. **Always `200`, empty body.**\n\n**Responses:** `200` Empty body, always",
+            "description": "Set as the **incoming messages** callback of your Africa's Talking shortcode (sandbox shortcodes are free): `https://<host>/ngao/v1/sms/inbound?k=<WEBHOOK_SECRET>`. Stores `MESSAGES(direction=IN)` and answers `200` at once; processing runs in the background:\n\n1. **Keywords first** (no AI): `STOP`; `LUGHA SW|EN` / `LANG SW|EN`; `1` / `NDIYO` (confirm the open dryer booking, else NDIYO = harvested); `RVF [n] [species]`.\n2. Otherwise the **reply reader** (OCI GenAI with the §2.4 JSON schema, or the keyword + number fallback) writes `REPORTS`: `AUTO_ACCEPTED` when confident (≥ 0.7), else `NEEDS_REVIEW`.\n\nForm-encoded (JSON also accepted). **Always `200`, empty body.**\n\n**Responses:** `200` Empty body, always",
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone\": \"254712345678\",\n  \"linkid\": \"L-88412\",\n  \"message\": \"Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "mode": "urlencoded",
+              "urlencoded": []
             }
           },
           "event": [
@@ -12100,7 +12082,7 @@
                 }
               ]
             },
-            "description": "Runs exactly the `/sms/inbound` path (keywords, then the reply reader) **synchronously** and returns the resulting report. For the demo, and for testing before Wasiliana forwards replies.\n\n**Responses:** `201`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
+            "description": "Runs exactly the `/sms/inbound` path (keywords, then the reply reader) **synchronously** and returns the resulting report. For the demo, and for testing without an Africa's Talking shortcode.\n\n**Responses:** `201`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"phone\": \"+254711000001\",\n  \"text\": \"Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu\"\n}",
@@ -13373,7 +13355,7 @@
                 }
               ]
             },
-            "description": "`PENDING_APPROVAL` → `APPROVED`, then queues one SMS per eligible subscriber in that language (per-subscriber 48 h cooldown and 3/week routine cap; floods and disease skip the cap). The alert becomes `SENT` once the first SMS is handed to Wasiliana, or `SUPPRESSED` when nobody is eligible. Replay alerts and alerts older than 48 h are approved but **not** sent (`dispatch.skipped`).\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token, `404` Not found, `409` Conflict with the current state",
+            "description": "`PENDING_APPROVAL` → `APPROVED`, then queues one SMS per eligible subscriber in that language (per-subscriber 48 h cooldown and 3/week routine cap; floods and disease skip the cap). The alert becomes `SENT` once the first SMS is handed to Africa's Talking, or `SUPPRESSED` when nobody is eligible. Replay alerts and alerts older than 48 h are approved but **not** sent (`dispatch.skipped`).\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token, `404` Not found, `409` Conflict with the current state",
             "body": {
               "mode": "raw",
               "raw": "{}",

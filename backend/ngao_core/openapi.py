@@ -24,7 +24,7 @@ Click **Authorize** and paste a token (without the word `Bearer`).
 |---|---|---|---|
 | `ApiToken` | `Authorization: Bearer <NGAO_API_TOKENS>` | APEX demo controls, scheduler, tests | everything except the public endpoints |
 | `UssdToken` | `Authorization: Bearer <USSD_SERVICE_TOKEN>` | Louisa's USSD service | `/ussd/*` only |
-| `WebhookSecret` | `?k=<WEBHOOK_SECRET>` | Wasiliana callbacks | `/sms/delivery`, `/sms/inbound` |
+| `WebhookSecret` | `?k=<WEBHOOK_SECRET>` | Africa's Talking callbacks | `/sms/delivery`, `/sms/inbound` |
 | none | | anyone | `/health`, `/public/*`, these docs |
 
 ## Errors (§2.1)
@@ -44,7 +44,7 @@ own `X-Request-ID` to correlate logs).
 | `UPSTREAM_ERROR` | 502 |
 | `INTERNAL` | 500 |
 
-Wasiliana webhooks are the exception: they **always** answer `200` with an empty body.
+SMS webhooks are the exception: they **always** answer `200` with an empty body.
 
 ## Conventions
 - Phones are E.164 (`+2547XXXXXXXX`); inputs may also be `07…` or `2547…`.
@@ -56,7 +56,7 @@ Wasiliana webhooks are the exception: they **always** answer `200` with an empty
 1. `POST /ussd/language` + `POST /ussd/register`: the farmer registers by USSD
 2. `POST /jobs/score`: score wards → `RISK_SCORES`
 3. `POST /jobs/send-alerts` → `GET /alerts?status=PENDING_APPROVAL` → `POST /alerts/{id}/approve`: the SMS goes out
-4. `POST /demo/inbound-sms` (or the Wasiliana `POST /sms/inbound`): the farmer replies, *"Nimevuna magunia 20…"*
+4. `POST /demo/inbound-sms` (or Africa's Talking's `POST /sms/inbound`): the farmer replies, *"Nimevuna magunia 20…"*
 5. `POST /jobs/plan-routes` → `GET /routes`: a dryer is routed to her collection point
 6. `POST /bookings/{id}/confirm` (or an SMS reply of `1`): booking confirmed
 7. `POST /jobs/replay`: the Garissa 2006 Rift Valley fever replay
@@ -66,7 +66,7 @@ The Postman collection in `backend/postman/` runs exactly this sequence.
 ## Safety rules the API enforces
 - Only `ACT` scores produce SMS, and only after approval (`ALERTS_REQUIRE_APPROVAL=true`).
 - Replay alerts and approvals older than 48 h are never sent.
-- Synthetic subscribers (`is_demo='Y'`) never reach Wasiliana.
+- Synthetic subscribers (`is_demo='Y'`) never reach the SMS provider.
 - Generative AI only *reads* replies. Unsure parses go to the officers' review queue.
 """
 
@@ -80,8 +80,8 @@ TAGS = [
     {"name": "Reports", "description": "§2.3 reads and officer review of farmer/herder reports (SMS replies and USSD menu 2)."},
     {"name": "Dryer routes", "description": "§2.3 tomorrow's dryer plan and booking confirmation."},
     {"name": "USSD contract", "description": "§5 endpoints called by Louisa's `ussd/` service. Database only, no AI; well under 2 s."},
-    {"name": "Wasiliana webhooks", "description": "§3.3–3.4 callbacks from Wasiliana. They always answer `200` with an empty body. "
-                                                  "Field names are read by one adapter and can be remapped in `.env`."},
+    {"name": "SMS webhooks", "description": "§3 callbacks from Africa's Talking (form-encoded). They always answer "
+                                            "`200` with an empty body. The parser lives in `sms/providers/africastalking.py`."},
     {"name": "Demo", "description": "Helpers for the Friday demo."},
     {"name": "Public scorecard", "description": "Unauthenticated: every alert graded in public."},
 ]
@@ -129,7 +129,7 @@ SPECTACULAR_SETTINGS = {
             },
             "WebhookSecret": {
                 "type": "apiKey", "in": "query", "name": "k",
-                "description": "WEBHOOK_SECRET appended to the Wasiliana callback URL. "
+                "description": "WEBHOOK_SECRET appended to the Africa's Talking callback URLs. "
                                "A wrong secret is ignored silently (still 200).",
             },
         }

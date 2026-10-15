@@ -9,7 +9,7 @@ flowchart LR
   WA["Wasiliana"] -- "USSD session POST" --> US["ussd/ (Louisa)"]
   US -- "plain text CON/END" --> WA
   US -- "§5 /ngao/v1/ussd" --> BE["Backend (Dennis)"]
-  WA -- "SMS REST + callbacks" --> BE
+  AT["Africa's Talking"] -- "SMS send + delivery reports + incoming SMS" --> BE
   BE -- "§2 REST /ngao/v1" --> X["Demo controls · tests · router"]
   BE -- "writes §1.1 tables" --> DB[("ADB schema NGAO")]
   US -- "writes USSD_SESSIONS" --> DB
@@ -20,7 +20,7 @@ flowchart LR
 Four layers:
 1. **Database contract** (primary): tables the backend writes, views APEX reads, sessions Louisa writes.
 2. **REST API** `/ngao/v1`: actions (run scoring, send alerts, plan routes) and read endpoints for tests and the PWA.
-3. **Wasiliana**: USSD callback to `ussd/`, outbound SMS from the backend, delivery reports and inbound SMS once the field names are confirmed.
+3. **Providers**: Wasiliana carries the USSD callback to `ussd/`. **Africa's Talking** carries SMS: outbound from the backend, delivery reports and incoming SMS.
 4. **USSD to backend** (§5): Louisa calls Dennis for registration, reports, ward status, and unsubscribe. She does not send SMS.
 
 ## 0. Conventions
@@ -88,7 +88,8 @@ Base URL (Django, if chosen): `https://<vm-host>/api/v1` with the **same paths a
 
 | Caller | Mechanism |
 |---|---|
-| Wasiliana callbacks (USSD, and SMS once confirmed) | Public callback URL. If Wasiliana supports a shared secret, require `?k=<WEBHOOK_SECRET>` or the header they document. Confirm the exact check against [docs.wasiliana.com](https://docs.wasiliana.com) **[Assumption until confirmed]** |
+| Africa's Talking SMS callbacks | Public URL with `?k=<WEBHOOK_SECRET>` (AT does not sign callbacks); a wrong secret is ignored silently |
+| Wasiliana USSD callback (to `ussd/`) | Public callback URL; check per [ussd/README.md](../ussd/README.md) |
 | Louisa's USSD service calling §6 | `Authorization: Bearer <USSD_SERVICE_TOKEN>` |
 | APEX / demo controls / router | OAuth2 client-credentials (ORDS `OAUTH` client) or `Authorization: Bearer <token>` (DRF token) |
 | Public scorecard | Unauthenticated `GET /public/scorecard` |
@@ -99,8 +100,8 @@ Base URL (Django, if chosen): `https://<vm-host>/api/v1` with the **same paths a
 { "error": { "code": "VALIDATION_ERROR", "message": "ward_id is required", "details": {"field": "ward_id"}, "request_id": "8f2c..." } }
 ```
 Codes → HTTP: `VALIDATION_ERROR` 400 · `UNAUTHORIZED` 401 · `FORBIDDEN` 403 · `NOT_FOUND` 404 ·
-`CONFLICT` 409 · `UPSTREAM_ERROR` 502 (Wasiliana/GenAI) · `INTERNAL` 500.
-SMS webhook endpoints **always return 200** to Wasiliana (log errors). The USSD callback is the exception: it must return plain text within ~10 seconds.
+`CONFLICT` 409 · `UPSTREAM_ERROR` 502 (SMS provider/GenAI) · `INTERNAL` 500.
+SMS webhook endpoints **always return 200** to Africa's Talking (log errors). The USSD callback is the exception: it must return plain text within ~10 seconds.
 
 ### 2.2 Action endpoints (demo controls + scheduler)
 
@@ -163,16 +164,17 @@ The model must return **only** this JSON (validated server-side; anything else �
 Rules: `confidence < 0.7` or `report_type = other` → `review_status = NEEDS_REVIEW`. Exact keywords
 (`STOP`, `1`, `NDIYO`, `RVF`, and `LUGHA` or `LANG` followed by `SW` or `EN`) are handled **before** the AI call. `language` in the JSON is `sw` or `en` (Swahili or English, chosen by the user).
 
-## 3. Wasiliana (SMS and USSD)
+## 3. Providers: Wasiliana (USSD) and Africa's Talking (SMS)
 
-Wasiliana is the Kenyan SMS, USSD, and airtime provider. Dennis has used it before.
+USSD runs on **Wasiliana** (Louisa's `ussd/`). SMS runs on **Africa's Talking** (the backend); Wasiliana SMS
+stays in the backend as a fallback (`SMS_BACKEND=wasiliana`).
 
 Two callback surfaces, two owners:
 
-| Surface | Who receives it | Owner |
-|---|---|---|
-| USSD session callback | `ussd/` public URL | Louisa |
-| Outbound SMS, delivery reports, inbound SMS | `backend/` | Dennis |
+| Surface | Provider | Who receives it | Owner |
+|---|---|---|---|
+| USSD session callback | Wasiliana | `ussd/` public URL | Louisa |
+| Outbound SMS, delivery reports, incoming SMS | Africa's Talking | `backend/` | Dennis |
 
 ### 3.1 USSD callback mode
 
@@ -196,23 +198,32 @@ Screen text is in Swahili or English, chosen by the user. On a new number the fi
 
 Registration, reports, ward status, and unsubscribe go through [§5](#5-ussd-to-backend-contract). Louisa writes only `USSD_SESSIONS`.
 
-### 3.2 Outbound SMS (Dennis → Wasiliana REST)
+### 3.2 Outbound SMS (Dennis → Africa's Talking)
 
-Dennis is the only sender. The alert engine and dryer router queue rows in `MESSAGES` (`direction=OUT`, `status=QUEUED`). A worker dequeues them and calls the **Wasiliana SMS REST API** with the **API key** and the registered **sender ID**.
+Dennis is the only sender. The alert engine and dryer router queue rows in `MESSAGES` (`direction=OUT`, `status=QUEUED`). A worker dequeues them and calls Africa's Talking (shape from the official `africastalking` Python SDK):
 
-Store the provider message id returned by Wasiliana in `MESSAGES.provider_msg_id`. Reference shape from the `pytek-wasiliana` client (still to confirm): `POST https://api.wasiliana.com/api/v1/developer/send/sms`, header `apiKey`, body `{"recipients":["2547..."],"from":"<sender id>","message":"..."}`; delivery reports `{"phone","correlator","deliveryStatus","failure_reason"}`. The backend reads these names from one adapter and `.env` overrides (`WASILIANA_SMS_URL`, `WASILIANA_DLR_FIELDS`, `WASILIANA_INBOUND_FIELDS`). **Confirm the exact URL, headers, and JSON against [docs.wasiliana.com](https://docs.wasiliana.com).** The Python package **`pytek-wasiliana`** is an optional client for this call; a thin `requests` wrapper is also fine. Either way the env vars are `WASILIANA_API_KEY` and `WASILIANA_SENDER_ID`.
+```
+POST https://api.africastalking.com/version1/messaging          (sandbox: https://api.sandbox.africastalking.com/...)
+apiKey: <AT_API_KEY>       Accept: application/json       Content-Type: application/x-www-form-urlencoded
+username=<AT_USERNAME>&to=+254712345678&message=...&bulkSMSMode=1[&from=<AT_SENDER_ID>]
+```
+Response: `{"SMSMessageData": {"Message": "Sent to 1/1 ...", "Recipients": [{"statusCode": 101, "number": "+2547...", "status": "Success", "cost": "KES 0.8000", "messageId": "ATXid_..."}]}}`. Store `messageId` in `MESSAGES.provider_msg_id`. `statusCode` 100/101/102 = accepted; 500/501/502 = retry; anything else (e.g. 403 InvalidPhoneNumber, 405 InsufficientBalance, 406 UserInBlacklist) = `FAILED`. `AT_USERNAME=sandbox` sends to the AT simulator only.
 
 ### 3.3 Delivery reports
 
-Wasiliana can POST a delivery report to a backend callback (`POST /sms/delivery`). **Confirm exact field names against Wasiliana docs ([docs.wasiliana.com](https://docs.wasiliana.com)).** The adapter maps the confirmed payload onto `MESSAGES.status` (`SENT` → `DELIVERED` / `FAILED`) using `provider_msg_id`. Until the field names are confirmed, log the raw body and do not guess the keys in the rest of the code.
+Africa's Talking POSTs (form-encoded) to `POST /sms/delivery?k=<WEBHOOK_SECRET>`:
+```
+id=ATXid_...&status=Success&phoneNumber=+254712345678&networkCode=63902&failureReason=&retryCount=0
+```
+`id` matches `MESSAGES.provider_msg_id`. `Success` → `DELIVERED`; `Failed` / `Rejected` → `FAILED`; `Sent`, `Submitted`, `Buffered` are not final and change nothing. Response: `200` empty, always; raw bodies are logged.
 
-Response: `200` empty. Failures are logged; do not return 4xx/5xx to Wasiliana for a payload we have not finished mapping.
+### 3.4 Incoming SMS
 
-### 3.4 Inbound SMS — open item
-
-**Inbound SMS forwarding is an open item.** Confirm with Wasiliana whether they POST inbound SMS to our callback, and **confirm exact field names against Wasiliana docs ([docs.wasiliana.com](https://docs.wasiliana.com))** before the reply reader depends on them.
-
-Intended backend path once that is confirmed: `POST /sms/inbound` → insert `MESSAGES` (`direction=IN`) → reply reader (§2.4). Processing may be async. The HTTP handler returns `200` immediately. Keywords `STOP`, `1`, `NDIYO`, `RVF`, and `LUGHA` or `LANG` followed by `SW` or `EN` (§5) are handled before any GenAI call. Until forwarding is confirmed, structured USSD menu 2 (via §5) is the path that does not depend on inbound SMS.
+Needs a shortcode (sandbox shortcodes are free; live: dedicated, or shared + keyword) whose incoming-messages callback is `POST /sms/inbound?k=<WEBHOOK_SECRET>` (form-encoded):
+```
+from=+254712345678&to=12345&text=Nimevuna magunia 20...&date=2026-10-15 09:12:01&id=...&linkId=...&networkCode=63902
+```
+→ insert `MESSAGES` (`direction=IN`) → keywords `STOP`, `1`, `NDIYO`, `RVF`, and `LUGHA` or `LANG` followed by `SW` or `EN` (§5) before any GenAI call → reply reader (§2.4). The handler returns `200` immediately; processing is async. Until a shortcode is set up, `POST /demo/inbound-sms` and USSD menu 2 (§5) cover the reply path.
 
 ## 4. Message templates
 Alerts are rendered from `ALERT_TEMPLATE` using the subscriber's `preferred_lang` (Swahili or English, chosen by the user). The unique key is `(hazard, severity, lang)` with `lang` in (`sw`, `en`) and `body` `VARCHAR2(160)`. Slots: `{ward}`, `{day}`, `{confidence}`, `{point}`, `{time}`, `{fee}`.
@@ -266,3 +277,4 @@ Session rows stay in `ussd/`: each hop upserts `USSD_SESSIONS` (`session_id`, `p
 | v1-draft.2 | 2026-10-14 | Wasiliana replaces Africa's Talking. USSD service is `ussd/` (Louisa); §5 is the USSD to backend contract. Inbound SMS forwarding and delivery-report field names left open pending docs.wasiliana.com |
 | v1-draft.3 | 2026-10-14 | Language choice: `preferred_lang`, first-session prompt, main-menu Lugha / Language, SMS `LUGHA`/`LANG`, alerts rendered from `ALERT_TEMPLATE` |
 | v1-draft.4 | 2026-10-14 | Alert approval workflow as built in APEX (`ALERTS` per score × language, `PENDING_APPROVAL`/`APPROVED`/`REJECTED`/`SENT`), `MESSAGES.alert_id`, `JOB_RUNS`; additive endpoints (`/jobs/dispatch`, `/jobs/grade-outcomes`, `/alerts/*`, `/jobs/{id}/status`, `/public/calibration`, `/health`, `/demo/inbound-sms`). Existing ADB: `db/migrations/001_backend_alignment.sql` |
+| v1-draft.5 | 2026-10-14 | SMS moves to **Africa's Talking** (send, delivery reports, incoming SMS; §3.2–3.4, form-encoded callbacks). USSD stays on Wasiliana (`ussd/`, unchanged). Wasiliana SMS kept as a backend fallback |

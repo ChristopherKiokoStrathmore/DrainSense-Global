@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = "Poll for approved alerts and queued SMS, and send them through Wasiliana."
+    help = "Poll for approved alerts and queued SMS, and send them through the SMS provider."
 
     def add_arguments(self, parser):
         parser.add_argument("--interval", type=float, default=5.0, help="seconds between polls")

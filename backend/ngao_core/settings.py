@@ -1,4 +1,4 @@
-"""Django settings for the Ngao backend (APIs, alert engine, Wasiliana SMS, reply reader, dryer router).
+"""Django settings for the Ngao backend (APIs, alert engine, Africa's Talking SMS, reply reader, dryer router).
 
 Everything that differs between a laptop and the OCI VM comes from environment variables
 (see .env.example). Defaults are safe for local development: SQLite, console SMS, rule-based
@@ -89,6 +89,10 @@ else:
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": env_str("SQLITE_PATH", str(BASE_DIR / "ngao_dev.sqlite3")),
+            # The background SMS sender writes while requests do: WAL + IMMEDIATE transactions and a
+            # longer busy timeout stop "database is locked" on a laptop demo.
+            "OPTIONS": {"timeout": 20, "transaction_mode": "IMMEDIATE",
+                        "init_command": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;"},
         }
     }
 
@@ -144,32 +148,32 @@ NGAO_USSD_SERVICE_TOKEN = env_str("USSD_SERVICE_TOKEN")
 NGAO_API_TOKENS = env_list("NGAO_API_TOKENS")
 NGAO_WEBHOOK_SECRET = env_str("WEBHOOK_SECRET")
 
-# Wasiliana SMS (§3.2–3.4). Reference shape from pytek-wasiliana; confirm at docs.wasiliana.com.
-NGAO_SMS_BACKEND = env_str("SMS_BACKEND", "console")  # console | wasiliana
+# SMS provider (§3). console logs only; africastalking is the live provider; wasiliana is a fallback.
+NGAO_SMS_BACKEND = env_str("SMS_BACKEND", "console")  # console | africastalking | wasiliana
+
+# Africa's Talking. AT_USERNAME "sandbox" uses the sandbox API (messages show in the AT simulator).
+NGAO_AT_USERNAME = env_str("AT_USERNAME", "sandbox")
+NGAO_AT_API_KEY = env_str("AT_API_KEY")
+NGAO_AT_SENDER_ID = env_str("AT_SENDER_ID")  # registered alphanumeric sender ID or shortcode; empty = AT default
+NGAO_AT_SMS_URL = env_str("AT_SMS_URL")  # override; default chosen from AT_USERNAME
+NGAO_AT_TIMEOUT = env_float("AT_TIMEOUT_SECONDS", 10.0)
+
+# Wasiliana (fallback). Reference shape from pytek-wasiliana; not confirmed at docs.wasiliana.com.
 NGAO_WASILIANA_API_KEY = env_str("WASILIANA_API_KEY")
 NGAO_WASILIANA_SENDER_ID = env_str("WASILIANA_SENDER_ID")
-NGAO_WASILIANA_SMS_URL = env_str(
-    "WASILIANA_SMS_URL", "https://api.wasiliana.com/api/v1/developer/send/sms"
-)
-NGAO_WASILIANA_API_KEY_HEADER = env_str("WASILIANA_API_KEY_HEADER", "apiKey")
+NGAO_WASILIANA_SMS_URL = env_str("WASILIANA_SMS_URL", "https://api.wasiliana.com/api/v1/developer/send/sms")
 NGAO_WASILIANA_TIMEOUT = env_float("WASILIANA_TIMEOUT_SECONDS", 10.0)
-# Field names the adapter reads from Wasiliana callbacks. Override with JSON once confirmed.
-NGAO_WASILIANA_DLR_FIELDS = env_json("WASILIANA_DLR_FIELDS", None)
-NGAO_WASILIANA_INBOUND_FIELDS = env_json("WASILIANA_INBOUND_FIELDS", None)
-NGAO_WASILIANA_DLR_DELIVERED = env_list(
-    "WASILIANA_DLR_DELIVERED_VALUES", ["0", "delivered", "deliveredtoterminal", "success"]
-)
-NGAO_WASILIANA_DLR_FAILED = env_list(
-    "WASILIANA_DLR_FAILED_VALUES",
-    ["failed", "rejected", "undelivered", "expired", "deliveryimpossible", "deliveredtonetworkfailed"],
-)
+
+# Extra callback field names for the active provider (JSON: our name -> list of their keys).
+NGAO_SMS_DLR_FIELDS = env_json("SMS_DLR_FIELDS", None)
+NGAO_SMS_INBOUND_FIELDS = env_json("SMS_INBOUND_FIELDS", None)
 
 # inline: a background thread sends right after a message is queued (good for the demo).
 # worker: only `manage.py sms_worker` sends.
 NGAO_SMS_DISPATCH = env_str("SMS_DISPATCH", "inline")
 NGAO_SMS_BATCH_SIZE = env_int("SMS_BATCH_SIZE", 50)
 NGAO_SMS_RETRY_HOURS = env_int("SMS_RETRY_HOURS", 6)  # give up on transient send errors after this
-# Synthetic subscribers (is_demo = 'Y', fake +2547000... numbers) never reach Wasiliana: their
+# Synthetic subscribers (is_demo = 'Y', fake +2547000... numbers) never reach the provider: their
 # messages are marked SENT with provider_msg_id SIMULATED. Phones in DEMO_PHONES are always real.
 NGAO_SMS_SIMULATE_SYNTHETIC = env_bool("SMS_SIMULATE_SYNTHETIC", True)
 NGAO_ASYNC_TASKS = env_bool("NGAO_ASYNC_TASKS", True)

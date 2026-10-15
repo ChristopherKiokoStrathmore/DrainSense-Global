@@ -1,5 +1,6 @@
-"""Wasiliana adapter, dispatcher, webhooks, keywords and the reply reader."""
+"""SMS providers (Africa's Talking, Wasiliana fallback), dispatcher, webhooks, keywords, reply reader."""
 from unittest import mock
+from urllib.parse import urlencode
 
 import requests
 from django.test import SimpleTestCase, override_settings
@@ -7,96 +8,178 @@ from django.test import SimpleTestCase, override_settings
 from ngao.models import Message, Report, Subscriber
 from reply_reader import rules
 from reply_reader.schema import SchemaError, validate
-from sms import wasiliana
 from sms.dispatcher import queue_sms, send_queued
+from sms.providers import africastalking, wasiliana
 from tests.base import NgaoTestCase
 
 REAL = "+254711000001"  # in NGAO_DEMO_PHONES: always really sent
 
 
-def fake_response(status=200, body=None):
+def fake_response(status=200, body=None, text=None):
     response = mock.Mock(status_code=status)
-    response.json.return_value = body if body is not None else {}
-    response.text = str(body)
+    if text is not None:
+        response.json.side_effect = ValueError("not json")
+        response.text = text
+    else:
+        response.json.return_value = body if body is not None else {}
+        response.text = str(body)
     return response
 
 
-@override_settings(NGAO_SMS_BACKEND="wasiliana", NGAO_WASILIANA_API_KEY="k-123", NGAO_WASILIANA_SENDER_ID="NGAO",
-                   NGAO_SMS_DISPATCH="worker")
-class WasilianaSendTests(NgaoTestCase):
-    @mock.patch("sms.wasiliana.requests.post")
-    def test_send_shape_and_provider_id(self, post):
-        post.return_value = fake_response(200, {"status": "success", "data": [{"correlator": "msg_15883801465"}]})
-        message = queue_sms(REAL, "Habari")
-        summary = send_queued()
-        self.assertEqual(summary["sent"], 1)
-        args, kwargs = post.call_args
-        self.assertEqual(args[0], "https://api.wasiliana.com/api/v1/developer/send/sms")
-        self.assertEqual(kwargs["headers"]["apiKey"], "k-123")
-        self.assertEqual(kwargs["json"], {"recipients": ["254711000001"], "from": "NGAO", "message": "Habari"})
-        message.refresh_from_db()
-        self.assertEqual((message.status, message.provider_msg_id), ("SENT", "msg_15883801465"))
+def at_reply(code=101, status="Success", message_id="ATXid_9f2c4e0b"):
+    return {"SMSMessageData": {"Message": "Sent to 1/1 Total Cost: KES 0.8000", "Recipients": [
+        {"statusCode": code, "number": REAL, "status": status, "cost": "KES 0.8000", "messageId": message_id}]}}
 
-    @mock.patch("sms.wasiliana.requests.post", side_effect=requests.ConnectionError("down"))
+
+def form(client, url, data):
+    """Africa's Talking posts application/x-www-form-urlencoded."""
+    return client.post(url, urlencode(data), content_type="application/x-www-form-urlencoded")
+
+
+AT_SETTINGS = dict(NGAO_SMS_BACKEND="africastalking", NGAO_AT_USERNAME="sandbox", NGAO_AT_API_KEY="atsk_test",
+                   NGAO_AT_SENDER_ID=None, NGAO_AT_SMS_URL=None, NGAO_SMS_DISPATCH="worker")
+
+
+@override_settings(**AT_SETTINGS)
+class AfricasTalkingSendTests(NgaoTestCase):
+    @mock.patch("sms.providers.africastalking.requests.post")
+    def test_sandbox_send_shape_and_message_id(self, post):
+        post.return_value = fake_response(201, at_reply())
+        message = queue_sms(REAL, "Habari")
+        self.assertEqual(send_queued()["sent"], 1)
+        args, kwargs = post.call_args
+        self.assertEqual(args[0], "https://api.sandbox.africastalking.com/version1/messaging")
+        self.assertEqual(kwargs["headers"], {"apiKey": "atsk_test", "Accept": "application/json"})
+        self.assertEqual(kwargs["data"], {"username": "sandbox", "to": REAL, "message": "Habari", "bulkSMSMode": 1})
+        message.refresh_from_db()
+        self.assertEqual((message.status, message.provider_msg_id), ("SENT", "ATXid_9f2c4e0b"))
+
+    @override_settings(NGAO_AT_USERNAME="ngao", NGAO_AT_SENDER_ID="NGAO")
+    @mock.patch("sms.providers.africastalking.requests.post")
+    def test_live_app_uses_live_url_and_sender_id(self, post):
+        post.return_value = fake_response(201, at_reply())
+        queue_sms(REAL, "Habari")
+        send_queued()
+        args, kwargs = post.call_args
+        self.assertEqual(args[0], "https://api.africastalking.com/version1/messaging")
+        self.assertEqual((kwargs["data"]["username"], kwargs["data"]["from"]), ("ngao", "NGAO"))
+
+    @mock.patch("sms.providers.africastalking.requests.post")
+    def test_rejected_recipient_fails(self, post):
+        post.return_value = fake_response(201, at_reply(403, "InvalidPhoneNumber", "None"))
+        message = queue_sms(REAL, "Habari")
+        self.assertEqual(send_queued()["failed"], 1)
+        message.refresh_from_db()
+        self.assertEqual(message.status, "FAILED")
+
+    @mock.patch("sms.providers.africastalking.requests.post")
+    def test_gateway_error_retries_later(self, post):
+        post.return_value = fake_response(201, at_reply(501, "GatewayError", "None"))
+        message = queue_sms(REAL, "Habari")
+        self.assertEqual(send_queued()["retry_later"], 1)
+        message.refresh_from_db()
+        self.assertEqual(message.status, "QUEUED")
+
+    @mock.patch("sms.providers.africastalking.requests.post")
+    def test_invalid_sender_id_has_no_recipients(self, post):
+        post.return_value = fake_response(201, {"SMSMessageData": {"Message": "InvalidSenderId", "Recipients": []}})
+        message = queue_sms(REAL, "Habari")
+        send_queued()
+        message.refresh_from_db()
+        self.assertEqual(message.status, "FAILED")
+
+    @mock.patch("sms.providers.africastalking.requests.post")
+    def test_bad_api_key_fails(self, post):
+        post.return_value = fake_response(401, text="The supplied authentication is invalid")
+        message = queue_sms(REAL, "Habari")
+        self.assertEqual(send_queued()["failed"], 1)
+        message.refresh_from_db()
+        self.assertEqual(message.status, "FAILED")
+
+    @mock.patch("sms.providers.africastalking.requests.post", side_effect=requests.ConnectionError("down"))
     def test_network_error_retries_later(self, post):
         message = queue_sms(REAL, "Habari")
         self.assertEqual(send_queued()["retry_later"], 1)
         message.refresh_from_db()
         self.assertEqual(message.status, "QUEUED")
 
-    @mock.patch("sms.wasiliana.requests.post")
-    def test_client_error_fails(self, post):
-        post.return_value = fake_response(401, {"message": "invalid api key"})
-        message = queue_sms(REAL, "Habari")
-        self.assertEqual(send_queued()["failed"], 1)
-        message.refresh_from_db()
-        self.assertEqual(message.status, "FAILED")
-
-    @mock.patch("sms.wasiliana.requests.post")
-    def test_synthetic_numbers_never_reach_wasiliana(self, post):
+    @mock.patch("sms.providers.africastalking.requests.post")
+    def test_synthetic_numbers_never_reach_the_provider(self, post):
         subscriber = Subscriber.objects.get(phone="+254700000101")
         queue_sms(subscriber.phone, "x", subscriber=subscriber)
         self.assertEqual(send_queued()["simulated"], 1)
         post.assert_not_called()
+
+    @override_settings(NGAO_AT_API_KEY=None)
+    def test_missing_key_is_a_clear_error(self):
+        with self.assertRaisesMessage(RuntimeError, "AT_API_KEY"):
+            africastalking.AfricasTalkingBackend()
+
+
+@override_settings(NGAO_SMS_BACKEND="wasiliana", NGAO_WASILIANA_API_KEY="k-123", NGAO_WASILIANA_SENDER_ID="NGAO",
+                   NGAO_SMS_DISPATCH="worker")
+class WasilianaFallbackTests(NgaoTestCase):
+    @mock.patch("sms.providers.wasiliana.requests.post")
+    def test_send_shape_and_provider_id(self, post):
+        post.return_value = fake_response(200, {"status": "success", "data": [{"correlator": "msg_15883801465"}]})
+        message = queue_sms(REAL, "Habari")
+        self.assertEqual(send_queued()["sent"], 1)
+        args, kwargs = post.call_args
+        self.assertEqual(args[0], "https://api.wasiliana.com/api/v1/developer/send/sms")
+        self.assertEqual(kwargs["json"], {"recipients": ["254711000001"], "from": "NGAO", "message": "Habari"})
+        message.refresh_from_db()
+        self.assertEqual(message.provider_msg_id, "msg_15883801465")
+
+    def test_callbacks_use_wasiliana_format(self):
+        message = Message.objects.create(direction="OUT", phone=REAL, body="x", status="SENT", provider_msg_id="c1")
+        self.anon.post("/ngao/v1/sms/delivery", {"correlator": "c1", "deliveryStatus": "0"}, format="json")
+        message.refresh_from_db()
+        self.assertEqual(message.status, "DELIVERED")
 
 
 class DeliveryReportTests(NgaoTestCase):
     def setUp(self):
         super().setUp()
         self.message = Message.objects.create(direction="OUT", phone=REAL, body="x", status="SENT",
-                                              provider_msg_id="message_1588")
+                                              provider_msg_id="ATXid_1588")
 
-    def test_delivered(self):
-        response = self.anon.post("/ngao/v1/sms/delivery", {"phone": "254711000001", "correlator": "message_1588",
-                                                            "deliveryStatus": "0", "failure_reason": ""}, format="json")
-        self.assertEqual(response.status_code, 200)
+    def report(self, status, **extra):
+        return form(self.anon, "/ngao/v1/sms/delivery", {"id": "ATXid_1588", "status": status,
+                                                         "phoneNumber": REAL, "networkCode": "63902", **extra})
+
+    def test_success_is_delivered(self):
+        response = self.report("Success", retryCount="0")
+        self.assertEqual((response.status_code, response.content), (200, b""))
         self.message.refresh_from_db()
         self.assertEqual(self.message.status, "DELIVERED")
 
-    def test_failed_with_reason(self):
-        self.anon.post("/ngao/v1/sms/delivery", {"correlator": "message_1588", "deliveryStatus": "1",
-                                                 "failure_reason": "AbsentSubscriber"}, format="json")
+    def test_failed_and_rejected(self):
+        self.report("Failed", failureReason="UserIsInactive")
         self.message.refresh_from_db()
         self.assertEqual(self.message.status, "FAILED")
 
+    def test_intermediate_statuses_change_nothing(self):
+        for status in ("Sent", "Submitted", "Buffered"):
+            self.report(status)
+        self.message.refresh_from_db()
+        self.assertEqual(self.message.status, "SENT")
+
     def test_garbage_still_gets_200(self):
         response = self.anon.post("/ngao/v1/sms/delivery", "not json", content_type="application/json")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, b"")
+        self.assertEqual((response.status_code, response.content), (200, b""))
 
     @override_settings(NGAO_WEBHOOK_SECRET="s3cret")
     def test_secret_is_enforced_silently(self):
-        body = {"correlator": "message_1588", "deliveryStatus": "0"}
-        self.assertEqual(self.anon.post("/ngao/v1/sms/delivery", body, format="json").status_code, 200)
+        self.assertEqual(self.report("Success").status_code, 200)
         self.message.refresh_from_db()
         self.assertEqual(self.message.status, "SENT")
-        self.anon.post("/ngao/v1/sms/delivery?k=s3cret", body, format="json")
+        form(self.anon, "/ngao/v1/sms/delivery?k=s3cret", {"id": "ATXid_1588", "status": "Success"})
         self.message.refresh_from_db()
         self.assertEqual(self.message.status, "DELIVERED")
 
-    @override_settings(NGAO_WASILIANA_DLR_FIELDS={"provider_msg_id": ["ref"], "status": ["state"]})
+    @override_settings(NGAO_SMS_DLR_FIELDS={"provider_msg_id": ["ref"], "status": ["state"]})
     def test_field_names_come_from_settings(self):
-        self.anon.post("/ngao/v1/sms/delivery", {"ref": "message_1588", "state": "DELIVERED"}, format="json")
+        form(self.anon, "/ngao/v1/sms/delivery", {"ref": "ATXid_1588", "state": "Success"})
         self.message.refresh_from_db()
         self.assertEqual(self.message.status, "DELIVERED")
 
@@ -104,8 +187,10 @@ class DeliveryReportTests(NgaoTestCase):
 class InboundHelpers:
     FARMER = "+254700000101"  # Moiben, sw
 
-    def inbound(self, text, phone="254700000101", **extra):
-        response = self.anon.post("/ngao/v1/sms/inbound", {"phone": phone, "message": text, **extra}, format="json")
+    def inbound(self, text, phone="+254700000101", **extra):
+        data = {"from": phone, "to": "12345", "text": text, "date": "2026-10-15 09:12:01", "id": "at-1",
+                "networkCode": "63902", **extra}
+        response = form(self.anon, "/ngao/v1/sms/inbound", data)
         self.assertEqual(response.status_code, 200)
         return Message.objects.filter(direction="IN").latest("message_id")
 
@@ -113,7 +198,7 @@ class InboundHelpers:
 class InboundTests(InboundHelpers, NgaoTestCase):
     def test_reply_becomes_auto_accepted_report_and_ack(self):
         message = self.inbound("Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu")
-        self.assertEqual((message.phone, message.status), (self.FARMER, "RECEIVED"))
+        self.assertEqual((message.phone, message.status, message.provider_msg_id), (self.FARMER, "RECEIVED", "at-1"))
         report = Report.objects.get(message=message)
         self.assertEqual((report.report_type, report.report_count, report.unit, report.ward_id),
                          ("wet_bags", 20, "bags", 12))
@@ -127,8 +212,8 @@ class InboundTests(InboundHelpers, NgaoTestCase):
         self.assertEqual((report.report_type, report.review_status), ("other", "NEEDS_REVIEW"))
         self.assertFalse(Message.objects.filter(direction="OUT").exists())
 
-    def test_form_encoded_body(self):
-        self.anon.post("/ngao/v1/sms/inbound", {"msisdn": "254700000102", "text": "STOP"})
+    def test_json_body_is_accepted_too(self):
+        self.anon.post("/ngao/v1/sms/inbound", {"from": "+254700000102", "text": "STOP"}, format="json")
         self.assertEqual(Subscriber.objects.get(phone="+254700000102").status, "STOPPED")
 
     def test_simulated_inbound_endpoint(self):
@@ -260,13 +345,20 @@ class RulesTests(SimpleTestCase):
 
 
 class AdapterParsingTests(SimpleTestCase):
-    def test_inbound_candidates(self):
+    def test_africastalking_inbound(self):
+        sms = africastalking.parse_inbound({"from": "+254700000101", "to": "12345", "text": "hi", "id": "A1",
+                                            "linkId": "L1"})
+        self.assertEqual((sms.phone, sms.text, sms.provider_msg_id), ("+254700000101", "hi", "A1"))
+
+    def test_africastalking_delivery(self):
+        report = africastalking.parse_delivery_report({"id": "ATXid_1", "status": "Rejected",
+                                                       "failureReason": "DoNotDisturbRejection"})
+        self.assertEqual((report.provider_msg_id, report.outcome, report.reason),
+                         ("ATXid_1", "FAILED", "DoNotDisturbRejection"))
+        self.assertIsNone(africastalking.parse_delivery_report({"id": "x", "status": "Buffered"}).outcome)
+
+    def test_wasiliana_parsers_still_work(self):
         sms = wasiliana.parse_inbound({"msisdn": "254700000101", "text": "hi", "linkId": "L1"})
         self.assertEqual((sms.phone, sms.text, sms.provider_msg_id), ("254700000101", "hi", "L1"))
-
-    def test_nested_payload(self):
         report = wasiliana.parse_delivery_report({"data": {"correlator": "c1", "deliveryStatus": "DeliveredToTerminal"}})
         self.assertEqual((report.provider_msg_id, report.outcome), ("c1", "DELIVERED"))
-
-    def test_unknown_status_changes_nothing(self):
-        self.assertIsNone(wasiliana.parse_delivery_report({"correlator": "c1", "deliveryStatus": "Pending"}).outcome)

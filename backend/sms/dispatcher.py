@@ -1,4 +1,4 @@
-"""MESSAGES queue -> Wasiliana (API_CONTRACT §3.2). The backend is the only SMS sender.
+"""MESSAGES queue -> the SMS provider (Africa's Talking; API_CONTRACT §3). The backend is the only SMS sender.
 
 Producers (alert engine, dryer router, keyword replies) call queue_sms(); kick() sends right away
 in a background thread when SMS_DISPATCH=inline, and `manage.py sms_worker` drains the queue
@@ -15,7 +15,7 @@ from django.utils import timezone
 
 from ngao.models import Alert, Message
 from ngao_core.tasks import run_after_commit
-from sms.wasiliana import get_backend
+from sms.providers import get_backend
 
 logger = logging.getLogger(__name__)
 _send_lock = threading.Lock()

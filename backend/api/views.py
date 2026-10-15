@@ -72,7 +72,7 @@ class HealthView(APIView):
         description="Checks the database connection and reports which SMS backend, dispatch mode and reply "
                     "reader are active. `503` when the database is unreachable. Unauthenticated.",
         responses={200: doc.Health, 503: doc.Health},
-        examples=[doc.example("ok", {"status": "ok", "database": "oracle", "sms_backend": "wasiliana",
+        examples=[doc.example("ok", {"status": "ok", "database": "oracle", "sms_backend": "africastalking",
                                      "sms_dispatch": "inline", "reply_reader": "genai",
                                      "alerts_require_approval": True}, response=True)],
     )
@@ -228,7 +228,7 @@ class DispatchJobView(_JobView):
     @_job_schema(
         "dispatch", doc.DispatchSummary, "Send approved alerts and queued SMS now",
         "Fans out every `APPROVED` alert that has no messages yet (e.g. approved on the APEX page), then sends "
-        "the `MESSAGES` queue through Wasiliana. The scheduler does this every 15 s anyway. Synthetic "
+        "the `MESSAGES` queue through Africa's Talking. The scheduler does this every 15 s anyway. Synthetic "
         "subscribers are marked `SENT` with `provider_msg_id='SIMULATED'`.",
         [("now", {}), ("retry failures", {"retry_failed": True})],
         {"approved_dispatch": {"alerts_dispatched": 1, "messages_queued": 3, "suppressed_cooldown": 0,
@@ -534,7 +534,7 @@ class AlertApproveView(APIView):
         tags=["Alerts"], auth=doc.API_AUTH, operation_id="alert_approve", summary="Approve an alert (sends it)",
         description="`PENDING_APPROVAL` → `APPROVED`, then queues one SMS per eligible subscriber in that language "
                     "(per-subscriber 48 h cooldown and 3/week routine cap; floods and disease skip the cap). The "
-                    "alert becomes `SENT` once the first SMS is handed to Wasiliana, or `SUPPRESSED` when nobody is "
+                    "alert becomes `SENT` once the first SMS is handed to Africa's Talking, or `SUPPRESSED` when nobody is "
                     "eligible. Replay alerts and alerts older than 48 h are approved but **not** sent "
                     "(`dispatch.skipped`).",
         request=ApproveIn,

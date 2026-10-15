@@ -1,7 +1,7 @@
 # backend/ (Dennis · branch `backend-dennis`)
 
 Django + DRF service for Ngao · MvuaSmart. It owns the **REST API** (`/ngao/v1`, including the
-USSD contract Louisa calls), the **alert engine**, **Wasiliana SMS** (send, delivery reports,
+USSD contract Louisa calls), the **alert engine**, **Africa's Talking SMS** (send, delivery reports,
 inbound), the **reply reader** (OCI Generative AI → JSON, with a keyword fallback), the **dryer
 router**, scoring/replay fallbacks and the public scorecard. It writes the shared ADB schema `NGAO`
 ([db/schema.sql](../db/schema.sql)); paths and payloads follow [docs/API_CONTRACT.md](../docs/API_CONTRACT.md).
@@ -17,12 +17,12 @@ backend/
 ├── api/           §2.2 jobs (JOB_RUNS) and §2.3 reads, alert approval endpoints
 ├── alerts/        alert catalogue + sw/en copy, template rendering, alert engine, grading + scorecard
 ├── scoring/       heuristic-v0 fallback scorer and the Garissa 2006 replay (Trevor's models replace it)
-├── sms/           the one Wasiliana adapter, MESSAGES queue dispatcher, webhooks, SMS keywords
+├── sms/           providers (Africa's Talking, Wasiliana fallback, console), queue dispatcher, webhooks, keywords
 ├── reply_reader/  OCI GenAI client, §2.4 JSON validation, keyword + number fallback
 ├── ussd_api/      §5 endpoints for the ussd/ service
 ├── routing/       greedy dryer router, bookings, operator stop lists
 ├── postman/       Postman collection + environments + openapi.yaml (generated: manage.py export_postman)
-├── tests/         135 tests (pass on SQLite; the 129 pre-docs tests also pass on Oracle 23ai)
+├── tests/         143 tests (pass on SQLite; the original 129 also pass on Oracle 23ai)
 ├── requirements.txt · .env.example · Dockerfile · docker-compose.yml
 ```
 
@@ -35,7 +35,7 @@ cp .env.example .env            # set DJANGO_DEBUG=true for local work
 venv/bin/python manage.py migrate          # SQLite only; never against ADB
 venv/bin/python manage.py seed_demo        # SYNTHETIC wards, forecasts, subscribers, dryers
 venv/bin/python manage.py runserver
-venv/bin/python manage.py test tests       # 135 tests
+venv/bin/python manage.py test tests       # 143 tests
 ```
 
 With `SMS_BACKEND=console` every SMS is logged instead of sent. Then walk through the demo script:
@@ -98,9 +98,9 @@ Served under **`/ngao/v1/`** (what `ussd/` calls) and **`/api/v1/`** (the contra
 | | `POST /jobs/dispatch`, `POST /jobs/grade-outcomes`, `GET /jobs/{id}/status` | additive | |
 | | `GET /wards`, `/wards/{id}/risk`, `/reports`, `PATCH /reports/{id}`, `GET /routes`, `POST /bookings/{id}/confirm` | §2.3 | |
 | | `GET /alerts`, `POST /alerts/{id}/approve`, `/reject` | additive | same effect as the APEX Alert Approvals page |
-| | `POST /demo/inbound-sms` `{"phone","text"}` | additive | the reply path without Wasiliana forwarding |
+| | `POST /demo/inbound-sms` `{"phone","text"}` | additive | the reply path without a shortcode callback |
 | Louisa (`USSD_SERVICE_TOKEN`) | `POST /ussd/language`, `/ussd/register`, `/ussd/report`, `GET /ussd/ward-status`, `POST /ussd/unsubscribe` | §5 | DB only, no GenAI; 0.1–0.3 s measured against local Oracle 23ai (not yet timed on ADB) |
-| Wasiliana (public) | `POST /sms/delivery`, `POST /sms/inbound` | §3.3–3.4 | always `200`; `?k=<WEBHOOK_SECRET>` when set |
+| Africa's Talking (public) | `POST /sms/delivery`, `POST /sms/inbound` | §3 | form-encoded; always `200`; `?k=<WEBHOOK_SECRET>` when set |
 | Public | `GET /public/scorecard`, `/public/calibration`, `GET /health`, `/docs/`, `/redoc/`, `/schema` | §2.3 | |
 
 Errors always use the §2.1 body, with `request_id` matching the `X-Request-ID` response header.
@@ -113,15 +113,15 @@ RISK_SCORES (Trevor, or /jobs/score) ──ACT──► alert engine ──► A
                                                                     ▼
           per-subscriber fan-out (consent, ACTIVE, audience role, 48 h cooldown, 3/week cap)
                                                                     ▼
-                         MESSAGES QUEUED ──dispatcher (SKIP LOCKED)──► Wasiliana ──► SENT ──DLR──► DELIVERED/FAILED
-Wasiliana inbound ──► MESSAGES IN ──► keywords (STOP, LUGHA/LANG, 1/NDIYO, RVF) ──► else reply reader ──► REPORTS
+                         MESSAGES QUEUED ──dispatcher (SKIP LOCKED)──► Africa's Talking ──► SENT ──DLR──► DELIVERED/FAILED
+AT incoming SMS ──► MESSAGES IN ──► keywords (STOP, LUGHA/LANG, 1/NDIYO, RVF) ──► else reply reader ──► REPORTS
 REPORTS wet_bags ──► dryer router (wet bags × P(rain 48 h) × aflatoxin) ──► ROUTES/STOPS/BOOKINGS + A5 SMS
 ```
 
 Safety rules built in:
 - **Watch/Abstain never send SMS.** Replay scores (`is_replay='Y'`) and approvals older than
   `ALERT_MAX_AGE_HOURS` are never sent, even if someone approves them.
-- **Synthetic subscribers never reach Wasiliana** (`is_demo='Y'` → `SENT` with
+- **Synthetic subscribers never reach the SMS provider** (`is_demo='Y'` → `SENT` with
   `provider_msg_id='SIMULATED'`). Presenter phones in `DEMO_PHONES` are sent for real.
 - **AI only reads.** The GenAI output must match the §2.4 schema exactly. `confidence < 0.7`,
   `other`, any failure or AI-detected `stop`/`booking_confirm` → `NEEDS_REVIEW`. Actions only follow exact keywords.
@@ -150,10 +150,32 @@ Safety rules built in:
    Add `--templates` only if `ALERT_TEMPLATE` has no rows for our hazards (see below).
 5. Put HTTPS in front (Caddy: `ngao-api.example.org { reverse_proxy 127.0.0.1:8000 }`), open 443 in the
    VCN security list, set `DJANGO_ALLOWED_HOSTS`.
-6. In the Wasiliana dashboard set the delivery-report and inbound callbacks to
-   `https://<host>/ngao/v1/sms/delivery?k=<WEBHOOK_SECRET>` and `.../sms/inbound?k=<WEBHOOK_SECRET>`.
-7. `SMS_BACKEND=wasiliana`, `WASILIANA_API_KEY`, `WASILIANA_SENDER_ID`, `DEMO_PHONES=<presenter phones>`.
-   Send one SMS to yourself with `run_job dispatch` after queueing.
+6. Africa's Talking (see [SMS: Africa's Talking](#sms-africas-talking) below): set `SMS_BACKEND=africastalking`,
+   `AT_USERNAME`, `AT_API_KEY`, `DEMO_PHONES=<presenter phones>`, and the two callback URLs in the dashboard.
+
+## SMS: Africa's Talking
+
+Outbound SMS, delivery reports and incoming SMS use **Africa's Talking** (`sms/providers/africastalking.py`).
+Wasiliana stays available as a fallback (`SMS_BACKEND=wasiliana`). USSD is unchanged: Louisa's `ussd/`
+service still takes the **Wasiliana** USSD callback. Africa's Talking USSD uses the same `CON`/`END` text if the team
+moves it later.
+
+| Step | Sandbox (rehearsals, free) | Live (the pitch) |
+|---|---|---|
+| App | the built-in sandbox app | your app on account.africastalking.com |
+| `.env` | `AT_USERNAME=sandbox`, `AT_API_KEY=<sandbox key>` | `AT_USERNAME=<app username>`, `AT_API_KEY=<live key>` |
+| Sender | default (`AT_SENDER_ID` empty) | registered sender ID or shortcode in `AT_SENDER_ID`; default sender until approved |
+| Where SMS land | the AT **simulator** (simulator.africastalking.com, "launch" with your number) | real phones (needs SMS credit) |
+| Delivery reports | SMS → Delivery Reports callback: `https://<host>/ngao/v1/sms/delivery?k=<WEBHOOK_SECRET>` | same |
+| Farmer replies | create a **sandbox shortcode**, set its incoming-messages callback to `https://<host>/ngao/v1/sms/inbound?k=<WEBHOOK_SECRET>`, reply from the simulator | a shortcode (dedicated, or shared + keyword) with the same callback |
+
+How the adapter behaves:
+- **Send:** a form POST to `/version1/messaging` (`username`, `to`, `message`, `bulkSMSMode=1`, optional `from`). The recipient's `messageId` is stored as `MESSAGES.provider_msg_id`.
+- **Send results:** status codes 100/101/102 count as accepted. 500/501/502 are retried until `SMS_RETRY_HOURS` runs out. Anything else (invalid number, blacklist, `InvalidSenderId`, insufficient balance) marks the message `FAILED`.
+- **Delivery reports:** `Success` → `DELIVERED`, `Failed`/`Rejected` → `FAILED`. `Sent`/`Submitted`/`Buffered` change nothing.
+- **Incoming SMS:** form fields `from`, `to`, `text`, `id`, `linkId`. Keywords run first, then the reply reader.
+- **Callback security:** Africa's Talking does not sign callbacks, so set `WEBHOOK_SECRET` and keep `?k=` in both URLs.
+- **Network:** the callbacks need a public HTTPS URL (the VM, or `ngrok http 8000` for a laptop demo).
 
 ### For Chris (APEX)
 - The **Alert Approvals** page works unchanged: when it sets `status='APPROVED'`, the scheduler (or
@@ -184,12 +206,13 @@ model_version** (counted as `kept_existing`). Your trained scores win automatica
 reads features with `available_date <= as_of`.
 
 ## Open items (confirm before the demo)
-1. **Wasiliana field names.** The send call, `apiKey` header and DLR keys (`correlator`,
-   `deliveryStatus`, `failure_reason`) come from the `pytek-wasiliana` client, not the docs
-   site (docs.wasiliana.com is a JavaScript app that did not render). The adapter
-   (`sms/wasiliana.py`) logs every raw callback body; adjust `WASILIANA_*` env vars, not code. Whether
-   `deliveryStatus "0"` means delivered is an **assumption**.
-2. **Inbound SMS forwarding** is still unconfirmed. `/demo/inbound-sms` and USSD menu 2 cover the demo either way.
+1. **Africa's Talking sender ID and shortcode.** An alphanumeric sender ID needs approval, which can take days. Until
+   then SMS go out from AT's default sender. Farmer replies need a shortcode with the incoming-messages callback.
+   Until one exists, `/demo/inbound-sms` and USSD menu 2 cover the demo. The send call matches the official
+   `africastalking` Python SDK. The response and callback field names follow AT's documented shapes,
+   because developers.africastalking.com blocked automated reads. Every raw callback body is logged, so
+   check the first real delivery report in the log.
+2. **Wasiliana** remains only as a fallback; its field names were never confirmed.
 3. `check_schema` against the **live** ADB: the APEX export shows `ALERTS` with
    `hazard/severity/lang/body/approved_*/sent_at`. Its exact DDL was not in git, so run the migration and the check.
 4. OCI GenAI: set `REPLY_READER=genai`, `OCI_COMPARTMENT_ID`, and test the 10 Swahili replies
