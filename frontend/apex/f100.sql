@@ -36,13 +36,13 @@ prompt APPLICATION 100 - Ngao MvuaSmart
 --   Exported By:     ADMIN
 --   Flashback:       0
 --   Export Type:     Application Export
---     Pages:                     31
---       Items:                   48
+--     Pages:                     37
+--       Items:                   68
 --       Validations:              2
---       Processes:               23
---       Regions:                 77
---       Buttons:                 43
---       Dynamic Actions:         12
+--       Processes:               29
+--       Regions:                122
+--       Buttons:                 47
+--       Dynamic Actions:         25
 --     Shared Components:
 --       Logic:
 --         App Settings:           1
@@ -50,22 +50,23 @@ prompt APPLICATION 100 - Ngao MvuaSmart
 --       Navigation:
 --         Lists:                  5
 --         Breadcrumbs:            1
---           Entries:             12
+--           Entries:             18
 --       Security:
---         Authentication:         1
+--         Authentication:         2
 --         Authorization:          3
 --         ACL Roles:              3
 --       User Interface:
 --         Themes:                 1
 --         Templates:
 --         LOVs:                   9
+--         Map Backgrounds:        1
 --       PWA:
 --       Globalization:
 --       Reports:
 --       E-Mail:
 --     Supporting Objects:  Excluded
 --   Version:         26.1.5
---   Instance ID:     9259722437994499
+--   Instance ID:     9259711748331874
 --
 
 prompt --application/delete_application
@@ -92,10 +93,10 @@ wwv_imp_workspace.create_flow(
 ,p_timestamp_format=>'DS'
 ,p_timestamp_tz_format=>'DS'
 ,p_flow_image_prefix=>nvl(wwv_flow_application_install.get_image_prefix,'')
-,p_authentication_id=>wwv_flow_imp.id(9427018850154681)
+,p_authentication_id=>wwv_flow_imp.id(9844605371340163)
 ,p_application_tab_set=>1
 ,p_logo_type=>'T'
-,p_logo_text=>'Ngao MvuaSmart'
+,p_logo_text=>'Ngao MvuaSmart | Co-op'
 ,p_proxy_server=>nvl(wwv_flow_application_install.get_proxy,'')
 ,p_no_proxy_domains=>nvl(wwv_flow_application_install.get_no_proxy_domains,'')
 ,p_flow_version=>'Release 1.0'
@@ -103,15 +104,14 @@ wwv_imp_workspace.create_flow(
 ,p_browser_cache=>'N'
 ,p_browser_frame=>'D'
 ,p_runtime_api_usage=>'T'
-,p_security_scheme=>wwv_flow_imp.id(9433684759154892)
 ,p_authorize_batch_job=>'N'
-,p_rejoin_existing_sessions=>'N'
+,p_rejoin_existing_sessions=>'P'
 ,p_csv_encoding=>'Y'
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'Ngao MvuaSmart'
 ,p_file_prefix=>nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
-,p_files_version=>2461328091946
-,p_version_scn=>'50678215850634'
+,p_files_version=>2461328103830
+,p_version_scn=>'50678233267970'
 ,p_print_server_type=>'NATIVE'
 ,p_file_storage=>'DB'
 ,p_is_pwa=>'Y'
@@ -478,91 +478,144 @@ wwv_flow_imp_shared.create_list_item(
 ,p_list_item_current_type=>'TARGET_PAGE'
 );
 wwv_flow_imp_shared.create_list_item(
- p_id=>wwv_flow_imp.id(9465994223155331)
-,p_list_item_display_sequence=>30
-,p_list_item_link_text=>'Alert Approvals'
-,p_static_id=>'alert-approvals'
-,p_list_item_link_target=>'f?p=&APP_ID.:3:&APP_SESSION.::&DEBUG.:::'
-,p_list_item_icon=>'fa-table'
-,p_list_item_current_type=>'TARGET_PAGE'
-);
-wwv_flow_imp_shared.create_list_item(
- p_id=>wwv_flow_imp.id(9546252024156901)
-,p_list_item_display_sequence=>90
+ p_id=>wwv_flow_imp.id(9960000000014)
+,p_list_item_display_sequence=>95
 ,p_list_item_link_text=>'Alert Templates'
 ,p_static_id=>'alert-templates'
 ,p_list_item_link_target=>'f?p=&APP_ID.:11:&APP_SESSION.::&DEBUG.:::'
-,p_list_item_icon=>'fa-table-pointer'
+,p_list_item_icon=>'fa-file-text-o'
 ,p_list_item_current_type=>'TARGET_PAGE'
 );
 wwv_flow_imp_shared.create_list_item(
- p_id=>wwv_flow_imp.id(9529182437156500)
-,p_list_item_display_sequence=>80
-,p_list_item_link_text=>'Cooperatives'
-,p_static_id=>'cooperatives'
-,p_list_item_link_target=>'f?p=&APP_ID.:9:&APP_SESSION.::&DEBUG.:::'
-,p_list_item_icon=>'fa-table'
-,p_list_item_current_type=>'TARGET_PAGE'
-);
-wwv_flow_imp_shared.create_list_item(
- p_id=>wwv_flow_imp.id(9507756142156061)
-,p_list_item_display_sequence=>70
-,p_list_item_link_text=>'Farmers'
-,p_static_id=>'farmers'
-,p_list_item_link_target=>'f?p=&APP_ID.:7:&APP_SESSION.::&DEBUG.:::'
-,p_list_item_icon=>'fa-table'
-,p_list_item_current_type=>'TARGET_PAGE'
-);
-wwv_flow_imp_shared.create_list_item(
- p_id=>wwv_flow_imp.id(9498480613155931)
-,p_list_item_display_sequence=>60
-,p_list_item_link_text=>'Garissa 2006 Replay'
-,p_static_id=>'garissa-2006-replay'
-,p_list_item_link_target=>'f?p=&APP_ID.:6:&APP_SESSION.::&DEBUG.:::'
-,p_list_item_icon=>'fa-table'
-,p_list_item_current_type=>'TARGET_PAGE'
-);
-wwv_flow_imp_shared.create_list_item(
- p_id=>wwv_flow_imp.id(9812677812526308)
-,p_list_item_display_sequence=>110
-,p_list_item_link_text=>'Insurer View'
-,p_static_id=>'insurer-view'
-,p_list_item_link_target=>'f?p=&APP_ID.:30:&APP_SESSION.::&DEBUG.:::'
-,p_list_item_icon=>'fa-file-o'
-,p_list_item_current_type=>'COLON_DELIMITED_PAGE_LIST'
-,p_list_item_current_for_pages=>'30'
-);
-wwv_flow_imp_shared.create_list_item(
- p_id=>wwv_flow_imp.id(9800690509417325)
-,p_list_item_display_sequence=>100
-,p_list_item_link_text=>'My Ward Alerts'
-,p_static_id=>'my-ward-alerts'
-,p_list_item_link_target=>'f?p=&APP_ID.:20:&APP_SESSION.::&DEBUG.:::'
-,p_list_item_icon=>'fa-file-o'
-,p_list_item_current_type=>'COLON_DELIMITED_PAGE_LIST'
-,p_list_item_current_for_pages=>'20'
-);
-wwv_flow_imp_shared.create_list_item(
- p_id=>wwv_flow_imp.id(9488753620155805)
-,p_list_item_display_sequence=>50
-,p_list_item_link_text=>'Rain & Soil'
-,p_static_id=>'rain-soil'
-,p_list_item_link_target=>'f?p=&APP_ID.:5:&APP_SESSION.::&DEBUG.:::'
-,p_list_item_icon=>'fa-table'
-,p_list_item_current_type=>'TARGET_PAGE'
-);
-wwv_flow_imp_shared.create_list_item(
- p_id=>wwv_flow_imp.id(9451425735155014)
+ p_id=>wwv_flow_imp.id(9960000000001)
 ,p_list_item_display_sequence=>10
-,p_list_item_link_text=>'Risk Overview'
-,p_static_id=>'risk-overview'
+,p_list_item_link_text=>'Co-op Command Centre'
+,p_static_id=>'co-op-command-centre'
 ,p_list_item_link_target=>'f?p=&APP_ID.:1:&APP_SESSION.::&DEBUG.:::'
 ,p_list_item_icon=>'fa-dashboard'
 ,p_list_item_current_type=>'TARGET_PAGE'
 );
 wwv_flow_imp_shared.create_list_item(
- p_id=>wwv_flow_imp.id(9478711288155673)
-,p_list_item_display_sequence=>40
+ p_id=>wwv_flow_imp.id(9960000000012)
+,p_list_item_display_sequence=>80
+,p_list_item_link_text=>'Cooperatives'
+,p_static_id=>'cooperatives'
+,p_list_item_link_target=>'f?p=&APP_ID.:9:&APP_SESSION.::&DEBUG.:::'
+,p_list_item_icon=>'fa-building-o'
+,p_list_item_current_type=>'TARGET_PAGE'
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(9960000000015)
+,p_list_item_display_sequence=>100
+,p_list_item_link_text=>'Farmer View: My Ward Alerts'
+,p_static_id=>'farmer-view-my-ward-alerts'
+,p_list_item_link_target=>'f?p=&APP_ID.:20:&APP_SESSION.::&DEBUG.:::'
+,p_list_item_icon=>'fa-mobile'
+,p_list_item_current_type=>'TARGET_PAGE'
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(9960000000008)
+,p_list_item_display_sequence=>50
+,p_list_item_link_text=>'Flood & Climate Risk Map'
+,p_static_id=>'flood-climate-risk-map'
+,p_list_item_link_target=>'f?p=&APP_ID.:2:&APP_SESSION.::&DEBUG.:::'
+,p_list_item_icon=>'fa-map-marker'
+,p_list_item_current_type=>'TARGET_PAGE'
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(9960000000016)
+,p_list_item_display_sequence=>110
+,p_list_item_link_text=>'Insurer View'
+,p_static_id=>'insurer-view'
+,p_list_item_link_target=>'f?p=&APP_ID.:30:&APP_SESSION.::&DEBUG.:::'
+,p_list_item_icon=>'fa-shield'
+,p_list_item_current_type=>'TARGET_PAGE'
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(9960000000002)
+,p_list_item_display_sequence=>20
+,p_list_item_link_text=>'Live Disease Alerts'
+,p_static_id=>'live-disease-alerts'
+,p_list_item_link_target=>'f?p=&APP_ID.:40:&APP_SESSION.::&DEBUG.:::'
+,p_list_item_icon=>'fa-bell'
+,p_list_item_current_type=>'TARGET_PAGE'
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(9960000000007)
+,p_list_item_display_sequence=>45
+,p_list_item_link_text=>'Live Message Feed'
+,p_static_id=>'live-message-feed'
+,p_list_item_link_target=>'f?p=&APP_ID.:45:&APP_SESSION.::&DEBUG.:::'
+,p_list_item_icon=>'fa-comments'
+,p_list_item_current_type=>'TARGET_PAGE'
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(9960000000011)
+,p_list_item_display_sequence=>70
+,p_list_item_link_text=>'Members'
+,p_static_id=>'members'
+,p_list_item_link_target=>'f?p=&APP_ID.:7:&APP_SESSION.::&DEBUG.:::'
+,p_list_item_icon=>'fa-users'
+,p_list_item_current_type=>'TARGET_PAGE'
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(9960000000013)
+,p_list_item_display_sequence=>90
+,p_list_item_link_text=>'Model Alert Approvals'
+,p_static_id=>'model-alert-approvals'
+,p_list_item_link_target=>'f?p=&APP_ID.:3:&APP_SESSION.::&DEBUG.:::'
+,p_list_item_icon=>'fa-check-square-o'
+,p_list_item_disp_cond_type=>'NEVER'
+,p_list_item_current_type=>'TARGET_PAGE'
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(9960000000003)
+,p_list_item_display_sequence=>25
+,p_list_item_link_text=>'Outbreak Map & Spread'
+,p_static_id=>'outbreak-map-spread'
+,p_list_item_link_target=>'f?p=&APP_ID.:41:&APP_SESSION.::&DEBUG.:::'
+,p_list_item_icon=>'fa-map'
+,p_list_item_current_type=>'TARGET_PAGE'
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(9960000000010)
+,p_list_item_display_sequence=>60
+,p_list_item_link_text=>'Rain & Soil'
+,p_static_id=>'rain-soil'
+,p_list_item_link_target=>'f?p=&APP_ID.:5:&APP_SESSION.::&DEBUG.:::'
+,p_list_item_icon=>'fa-cloud-rain'
+,p_list_item_current_type=>'TARGET_PAGE'
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(9960000000005)
+,p_list_item_display_sequence=>35
+,p_list_item_link_text=>'Send Co-op Alerts'
+,p_static_id=>'send-co-op-alerts'
+,p_list_item_link_target=>'f?p=&APP_ID.:43:&APP_SESSION.::&DEBUG.:::'
+,p_list_item_icon=>'fa-paper-plane'
+,p_list_item_current_type=>'TARGET_PAGE'
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(9970000000001)
+,p_list_item_display_sequence=>47
+,p_list_item_link_text=>'USSD Phone Simulator'
+,p_static_id=>'ussd-phone-simulator'
+,p_list_item_link_target=>'https://158.180.57.75.sslip.io/simulator/'
+,p_list_item_icon=>'fa-phone'
+,p_list_item_current_type=>'NEVER'
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(9960000000004)
+,p_list_item_display_sequence=>30
+,p_list_item_link_text=>'Vet Verification'
+,p_static_id=>'vet-verification'
+,p_list_item_link_target=>'f?p=&APP_ID.:42:&APP_SESSION.::&DEBUG.:::'
+,p_list_item_icon=>'fa-user-md'
+,p_list_item_current_type=>'TARGET_PAGE'
+);
+wwv_flow_imp_shared.create_list_item(
+ p_id=>wwv_flow_imp.id(9960000000009)
+,p_list_item_display_sequence=>55
 ,p_list_item_link_text=>'Ward Risk'
 ,p_static_id=>'ward-risk'
 ,p_list_item_link_target=>'f?p=&APP_ID.:4:&APP_SESSION.::&DEBUG.:::'
@@ -570,12 +623,12 @@ wwv_flow_imp_shared.create_list_item(
 ,p_list_item_current_type=>'TARGET_PAGE'
 );
 wwv_flow_imp_shared.create_list_item(
- p_id=>wwv_flow_imp.id(9462529051155064)
-,p_list_item_display_sequence=>20
-,p_list_item_link_text=>'Ward Risk Map'
-,p_static_id=>'ward-risk-map'
-,p_list_item_link_target=>'f?p=&APP_ID.:2:&APP_SESSION.::&DEBUG.:::'
-,p_list_item_icon=>'fa-map-marker'
+ p_id=>wwv_flow_imp.id(9960000000006)
+,p_list_item_display_sequence=>40
+,p_list_item_link_text=>'Yield, Profit & Partners'
+,p_static_id=>'yield-profit-partners'
+,p_list_item_link_target=>'f?p=&APP_ID.:44:&APP_SESSION.::&DEBUG.:::'
+,p_list_item_icon=>'fa-line-chart'
 ,p_list_item_current_type=>'TARGET_PAGE'
 );
 end;
@@ -7358,6 +7411,27 @@ wwv_flow_imp_shared.create_app_static_file(
 );
 end;
 /
+prompt --application/shared_components/files/ngao_qr_png
+begin
+wwv_flow_imp.g_varchar2_table := wwv_flow_imp.empty_varchar2_table;
+wwv_flow_imp.g_varchar2_table(1) := '89504E470D0A1A0A0000000D494844520000019A0000019A01000000001E7DB8CE000002F049444154789CED9BCD6DDC301046DF44027CA48014E052B89D0529291D48A5A48000D4D180842F075222EDF8E2D8D6AE57A38340AEF8B02430987F9A78F333';
+wwv_flow_imp.g_varchar2_table(2) := '7D7B3B030E39E490430E39E4D07D42569E9E3A85D9CC2EAC6697795B70B9CAF61C3A1E8A92A4044C66964704ED6E672749FBF46B9CC9A17741F3A6006202A093D9D02EAC1AE4CB9CC9A1FF81FA973F4C973210B301F380983FE09F1CFAAA5090ECC26A66';
+wwv_flow_imp.g_varchar2_table(3) := '4327FD7C5C3EED9F1CBA4568D31141C00C46587BC1D203AB09BAEC3DB499AC1B3F9343EF81683D463A11D36BAF6D4194A4F1C6CFE4D07BA0AC23AA02101433A1E97141D3D05134C835B6E7D0E150D111510B1AE9F208C292F501D0496358F2BAFCB88E38';
+wwv_flow_imp.g_varchar2_table(4) := '03343F6CC2004536987B34E6AF3DC0EA19AA13407BF4B91AF1D7C03357F2C9140516B5F6167F7D971DBD3D870E878A3518C3424E52C6D449631D41F9C06E3ADC6ADC33B4F91109C8EA21ECD34D0E28CE84E4B1C6B9A0A827D3C86A10A4329A1FB280D88F';
+wwv_flow_imp.g_varchar2_table(5) := 'B4DA55B7E7D021D01643244A49236B81CD6A1013D9BDCC2FB71A770F355643D21673EE72507D8B1CA0BA44DC3DD4E62C8BF750F211390B316E7E847B962781368908E59535434C9DA446332C680C9EA13A03B45B8D52C3680424A62DF4C81D3309AF6B9C';
+wwv_flow_imp.g_varchar2_table(6) := '006AF2116DB23AEDDFC3B23B958B4BC409A046476433914B1A69AF706C390A978893408D52C89EC208545B5144008A8FE91271F750AE6B184118188A5ADB5AC764DD02748B113AAF6B9C007A5ED7A806A35638166AB6C2638DFB87DA0CD5C8E640423122';
+wwv_flow_imp.g_varchar2_table(7) := 'CD42CF509D036A3B61F6C0B3893FB2BCD488D425E2DEA1977D96D9C72CDE666B3FEA6297883340710B38CC864E7699CD981E977CC5AB36D9D9E53ADB73E82A7E446D96A9E166E9AF035A7372E36772E823A1D20611A4DC1A4178B2DA7679F5ED39F4E9D0';
+wwv_flow_imp.g_varchar2_table(8) := 'CB5B7E9A0C2CFEEE178B02625A31420242C2E278ECF61C3A1C7A79A70BE8169B064CD39030C21F8863B9D2A1A3B7E7D0E1D0BF77BA6ADBCCB3BA86E7234E02BD72A7AB76E7B7573EEBF4E6CFE490430E39E490430E1D03FD056968ABA52AD026A5000000';
+wwv_flow_imp.g_varchar2_table(9) := '0049454E44AE426082';
+wwv_flow_imp_shared.create_app_static_file(
+ p_id=>wwv_flow_imp.id(9838298262287781)
+,p_file_name=>'ngao_qr.png'
+,p_mime_type=>'image/png'
+,p_file_charset=>'utf-8'
+,p_file_content=>wwv_flow_imp.varchar2_to_blob(wwv_flow_imp.g_varchar2_table)
+);
+end;
+/
 prompt --application/shared_components/security/authorizations/administration_rights
 begin
 wwv_flow_imp_shared.create_security_scheme(
@@ -7717,13 +7791,6 @@ wwv_flow_imp_shared.create_menu_option(
 ,p_page_id=>7
 );
 wwv_flow_imp_shared.create_menu_option(
- p_id=>wwv_flow_imp.id(9507377175156060)
-,p_short_name=>'Garissa 2006 Replay'
-,p_static_id=>'garissa-2006-replay'
-,p_link=>'f?p=&APP_ID.:6:&APP_SESSION.::&DEBUG.:::'
-,p_page_id=>6
-);
-wwv_flow_imp_shared.create_menu_option(
  p_id=>wwv_flow_imp.id(9813640834526316)
 ,p_short_name=>'Insurer View'
 ,p_static_id=>'insurer-view'
@@ -7731,11 +7798,43 @@ wwv_flow_imp_shared.create_menu_option(
 ,p_page_id=>30
 );
 wwv_flow_imp_shared.create_menu_option(
+ p_id=>wwv_flow_imp.id(9970000000007)
+,p_parent_id=>wwv_flow_imp.id(9427682691154694)
+,p_short_name=>'KPI Details'
+,p_static_id=>'kpi-details'
+,p_link=>'f?p=&APP_ID.:46:&APP_SESSION.::&DEBUG.:::'
+,p_page_id=>46
+);
+wwv_flow_imp_shared.create_menu_option(
+ p_id=>wwv_flow_imp.id(9970000000001)
+,p_parent_id=>wwv_flow_imp.id(9427682691154694)
+,p_short_name=>'Live Disease Alerts'
+,p_static_id=>'live-disease-alerts'
+,p_link=>'f?p=&APP_ID.:40:&APP_SESSION.::&DEBUG.:::'
+,p_page_id=>40
+);
+wwv_flow_imp_shared.create_menu_option(
+ p_id=>wwv_flow_imp.id(9970000000006)
+,p_parent_id=>wwv_flow_imp.id(9427682691154694)
+,p_short_name=>'Live Message Feed'
+,p_static_id=>'live-message-feed'
+,p_link=>'f?p=&APP_ID.:45:&APP_SESSION.::&DEBUG.:::'
+,p_page_id=>45
+);
+wwv_flow_imp_shared.create_menu_option(
  p_id=>wwv_flow_imp.id(9801613934417346)
 ,p_short_name=>'My Ward Alerts'
 ,p_static_id=>'my-ward-alerts'
 ,p_link=>'f?p=&APP_ID.:20:&APP_SESSION.::&DEBUG.:::'
 ,p_page_id=>20
+);
+wwv_flow_imp_shared.create_menu_option(
+ p_id=>wwv_flow_imp.id(9970000000002)
+,p_parent_id=>wwv_flow_imp.id(9427682691154694)
+,p_short_name=>'Outbreak Map & Spread'
+,p_static_id=>'outbreak-map-spread'
+,p_link=>'f?p=&APP_ID.:41:&APP_SESSION.::&DEBUG.:::'
+,p_page_id=>41
 );
 wwv_flow_imp_shared.create_menu_option(
  p_id=>wwv_flow_imp.id(9498083255155930)
@@ -7746,10 +7845,26 @@ wwv_flow_imp_shared.create_menu_option(
 );
 wwv_flow_imp_shared.create_menu_option(
  p_id=>wwv_flow_imp.id(9427682691154694)
-,p_short_name=>'Risk Overview'
+,p_short_name=>'Co-op Command Centre'
 ,p_static_id=>'risk-overview'
 ,p_link=>'f?p=&APP_ID.:1:&APP_SESSION.::&DEBUG.:::'
 ,p_page_id=>1
+);
+wwv_flow_imp_shared.create_menu_option(
+ p_id=>wwv_flow_imp.id(9970000000004)
+,p_parent_id=>wwv_flow_imp.id(9427682691154694)
+,p_short_name=>'Send Co-op Alerts'
+,p_static_id=>'send-co-op-alerts'
+,p_link=>'f?p=&APP_ID.:43:&APP_SESSION.::&DEBUG.:::'
+,p_page_id=>43
+);
+wwv_flow_imp_shared.create_menu_option(
+ p_id=>wwv_flow_imp.id(9970000000003)
+,p_parent_id=>wwv_flow_imp.id(9427682691154694)
+,p_short_name=>'Vet Verification'
+,p_static_id=>'vet-verification'
+,p_link=>'f?p=&APP_ID.:42:&APP_SESSION.::&DEBUG.:::'
+,p_page_id=>42
 );
 wwv_flow_imp_shared.create_menu_option(
  p_id=>wwv_flow_imp.id(9488386342155804)
@@ -7764,6 +7879,14 @@ wwv_flow_imp_shared.create_menu_option(
 ,p_static_id=>'ward-risk-map'
 ,p_link=>'f?p=&APP_ID.:2:&APP_SESSION.::&DEBUG.:::'
 ,p_page_id=>2
+);
+wwv_flow_imp_shared.create_menu_option(
+ p_id=>wwv_flow_imp.id(9970000000005)
+,p_parent_id=>wwv_flow_imp.id(9427682691154694)
+,p_short_name=>'Yield, Profit & Partners'
+,p_static_id=>'yield-profit-partners'
+,p_link=>'f?p=&APP_ID.:44:&APP_SESSION.::&DEBUG.:::'
+,p_page_id=>44
 );
 end;
 /
@@ -7906,6 +8029,21 @@ begin
 null;
 end;
 /
+prompt --application/shared_components/security/authentications/open_no_auth
+begin
+wwv_flow_imp_shared.create_authentication(
+ p_id=>wwv_flow_imp.id(9844605371340163)
+,p_name=>'Open (no auth)'
+,p_static_id=>'open-no-auth'
+,p_scheme_type=>'NATIVE_DAD'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'username', 'nobody')).to_clob
+,p_use_secure_cookie_yn=>'N'
+,p_ras_mode=>0
+,p_version_scn=>'SH256:D2l_eyRTCd4RkRUfcSREXwGzgNzypUX8ap4Cik_VMLQ'
+);
+end;
+/
 prompt --application/shared_components/security/authentications/oracle_apex_accounts
 begin
 wwv_flow_imp_shared.create_authentication(
@@ -7917,6 +8055,20 @@ wwv_flow_imp_shared.create_authentication(
 ,p_use_secure_cookie_yn=>'N'
 ,p_ras_mode=>0
 ,p_version_scn=>'SH256:MwlwV9vQNyvTGV3nRFfTrp5n7mJ1Ugme2lUrlsOYuxw'
+);
+end;
+/
+prompt --application/shared_components/user_interface/map_backgrounds/openstreetmap
+begin
+wwv_flow_imp_shared.create_map_background(
+ p_id=>wwv_flow_imp.id(9970000000100)
+,p_name=>'OpenStreetMap'
+,p_static_id=>'openstreetmap'
+,p_type=>'RASTER'
+,p_url=>'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+,p_attribution=>'&copy; OpenStreetMap contributors'
+,p_zoom_min=>0
+,p_zoom_max=>19
 );
 end;
 /
@@ -7936,208 +8088,93 @@ wwv_flow_imp_page.create_page(
 ,p_protection_level=>'D'
 ,p_page_component_map=>'14'
 );
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9838859389307401)
+,p_plug_name=>'New'
+,p_static_id=>'new'
+,p_region_template_options=>'#DEFAULT#'
+,p_plug_template=>4502917002193490937
+,p_plug_display_sequence=>10
+,p_plug_display_point=>'BEFORE_NAVIGATION_BAR'
+,p_plug_item_display_point=>'ABOVE'
+,p_location=>null
+,p_plug_source=>'<div id="ngaoQrBtn" onclick="document.getElementById(''ngaoQrFull'').style.display=''flex''" style="position:fixed;bottom:16px;right:16px;z-index:900;background:#fff;padding:6px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:pointer;text-al'
+||'ign:center;font-size:11px;color:#333"><img src="#APP_FILES#ngao_qr.png" style="width:48px;height:48px;display:block">Tap to scan</div><div id="ngaoQrFull" onclick="this.style.display=''none''" style="display:none;position:fixed;inset:0;z-index:10000;ba'
+||'ckground:rgba(255,255,255,.97);flex-direction:column;align-items:center;justify-content:center;cursor:pointer"><img src="#APP_FILES#ngao_qr.png" style="width:min(80vw,80vh);height:min(80vw,80vh)"><div style="font-size:1.4rem;margin-top:16px;color:#12'
+||'3">Scan to open Ngao on your phone. Tap anywhere to close.</div></div>'
+,p_plug_display_condition_type=>'EXPRESSION'
+,p_plug_display_when_condition=>':APP_PAGE_ID not in (9999, 20)'
+,p_plug_display_when_cond2=>'PLSQL'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9838976499307402)
+,p_plug_name=>'New'
+,p_static_id=>'new_1'
+,p_plug_display_sequence=>10
+,p_plug_display_point=>'BEFORE_NAVIGATION_BAR'
+,p_plug_item_display_point=>'ABOVE'
+,p_location=>null
+,p_plug_source=>'<style>.t-Header{position:sticky!important;top:0;z-index:800}@media (max-width: 900px), (orientation: portrait) { #ngaoQrBtn, #ngaoQrFull { display:none !important; } }</style>'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
 end;
 /
 prompt --application/pages/page_00001
 begin
 wwv_flow_imp_page.create_page(
  p_id=>1
-,p_name=>'Risk Overview'
+,p_name=>'Co-op Command Centre'
 ,p_alias=>'HOME'
-,p_step_title=>'Ngao MvuaSmart'
+,p_step_title=>'Co-op Command Centre | Ngao MvuaSmart'
 ,p_autocomplete_on_off=>'OFF'
-,p_inline_css=>'@media (max-width:640px){.ngao-kpi .a-CardView-items{grid-template-columns:repeat(2,1fr)!important}} .ngao-kpi .a-CardView-title{font-size:2.2rem;font-weight:700}'
+,p_inline_css=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'.coop-kpi .a-CardView-items{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px}',
+'@media (max-width:900px){.coop-kpi .a-CardView-items{grid-template-columns:repeat(2,1fr)!important}}',
+'.coop-kpi .a-CardView{border-radius:12px;border-top:5px solid #1b7f5f}',
+'.coop-link .a-CardView{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}',
+'.coop-link .a-CardView:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(0,0,0,.16);border-top-color:#0f5c43}',
+'.coop-link .a-CardView:hover .a-CardView-subTitle{text-decoration:underline}',
+'.coop-kpi .a-CardView-title{font-size:2.3rem;font-weight:800;line-height:1.1}',
+'.coop-kpi .a-CardView-subTitle{font-size:1rem;font-weight:600;color:#3d4a46}',
+'.coop-kpi .a-CardView-mainContent{font-size:.85rem;color:#5d6b67}',
+'.ngao-hero{display:flex;align-items:center;gap:28px;padding:28px 32px;border-radius:16px;color:#fff;background:radial-gradient(circle at 85% 20%,rgba(255,255,255,.14),transparent 45%),linear-gradient(120deg,#0f5c43 0%,#1b7f5f 45%,#1f5f8b 100%);box-sh'
+||'adow:0 10px 26px rgba(15,92,67,.25);margin:8px 0 4px}',
+'.ngao-hero-logo{width:132px;height:132px;flex:0 0 auto;background:#fff;border-radius:24px;padding:10px;box-shadow:0 6px 16px rgba(0,0,0,.2)}',
+'.ngao-hero-kicker{text-transform:uppercase;letter-spacing:.14em;font-size:.8rem;font-weight:700;opacity:.85}',
+'.ngao-hero h1{margin:4px 0 8px;font-size:2.4rem;line-height:1.15;font-weight:800;color:#fff}',
+'.ngao-hero p{margin:0;font-size:1.08rem;line-height:1.5;max-width:720px;color:#eaf6f1}',
+'@media (max-width:640px){.ngao-hero{flex-direction:column;text-align:center;gap:14px;padding:22px 18px}.ngao-hero-logo{width:104px;height:104px}.ngao-hero h1{font-size:1.75rem}.ngao-hero p{font-size:.98rem}}',
+'.coop-method{padding:10px 14px;border-radius:10px;background:#eef6f3;border:1px solid #9fd1bf;font-size:.95rem}',
+'.coop-tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;font-weight:700;color:#fff}',
+'.t-Header{position:sticky!important;top:0;z-index:800}',
+'.t-Report-cell,.t-Report-colHead{font-size:.95rem}'))
 ,p_step_template=>4073832297226169690
 ,p_page_template_options=>'#DEFAULT#'
 ,p_protection_level=>'C'
 ,p_page_component_map=>'13'
 );
 wwv_flow_imp_page.create_page_plug(
- p_id=>wwv_flow_imp.id(9452104026155027)
-,p_plug_name=>'Chart 1'
-,p_static_id=>'chart-1'
-,p_title=>'Alerts by status'
+ p_id=>wwv_flow_imp.id(9950000000020)
+,p_plug_name=>'Alerts by day (all co-ops)'
+,p_static_id=>'alerts-by-day-all-co-ops'
+,p_title=>'Alerts by day (all co-ops)'
 ,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
 ,p_escape_on_http_output=>'Y'
 ,p_plug_template=>4073835273271169698
-,p_plug_display_sequence=>10
+,p_plug_display_sequence=>50
+,p_plug_grid_column_span=>7
 ,p_plug_item_display_point=>'ABOVE'
 ,p_location=>null
 ,p_plug_source_type=>'NATIVE_JET_CHART'
 );
 wwv_flow_imp_page.create_jet_chart(
- p_id=>wwv_flow_imp.id(9452557014155028)
-,p_region_id=>wwv_flow_imp.id(9452104026155027)
-,p_chart_type=>'bar'
-,p_animation_on_display=>'auto'
-,p_animation_on_data_change=>'auto'
-,p_orientation=>'vertical'
-,p_data_cursor=>'auto'
-,p_data_cursor_behavior=>'auto'
-,p_hover_behavior=>'dim'
-,p_stack=>'off'
-,p_connect_nulls=>'Y'
-,p_sorting=>'label-asc'
-,p_fill_multi_series_gaps=>true
-,p_zoom_and_scroll=>'off'
-,p_tooltip_rendered=>'Y'
-,p_show_series_name=>true
-,p_show_group_name=>true
-,p_show_value=>true
-,p_legend_rendered=>'off'
-);
-wwv_flow_imp_page.create_jet_chart_series(
- p_id=>wwv_flow_imp.id(9454279966155037)
-,p_chart_id=>wwv_flow_imp.id(9452557014155028)
-,p_static_id=>'series-1'
-,p_seq=>10
-,p_name=>'Series 1'
-,p_data_source_type=>'SQL'
-,p_data_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select status label, count(*) value',
-'from v_alert_queue',
-'group by status'))
-,p_max_row_count=>20
-,p_items_value_column_name=>'VALUE'
-,p_items_label_column_name=>'LABEL'
-,p_assigned_to_y2=>'off'
-,p_items_label_rendered=>false
-);
-wwv_flow_imp_page.create_jet_chart_axis(
- p_id=>wwv_flow_imp.id(9453022578155032)
-,p_chart_id=>wwv_flow_imp.id(9452557014155028)
-,p_static_id=>'x'
-,p_axis=>'x'
-,p_is_rendered=>'on'
-,p_format_scaling=>'auto'
-,p_scaling=>'linear'
-,p_baseline_scaling=>'zero'
-,p_major_tick_rendered=>'auto'
-,p_minor_tick_rendered=>'auto'
-,p_tick_label_rendered=>'on'
-,p_tick_label_rotation=>'auto'
-,p_tick_label_position=>'outside'
-);
-wwv_flow_imp_page.create_jet_chart_axis(
- p_id=>wwv_flow_imp.id(9453666731155035)
-,p_chart_id=>wwv_flow_imp.id(9452557014155028)
-,p_static_id=>'y'
-,p_axis=>'y'
-,p_is_rendered=>'on'
-,p_format_type=>'decimal'
-,p_decimal_places=>0
-,p_format_scaling=>'auto'
-,p_scaling=>'linear'
-,p_baseline_scaling=>'zero'
-,p_position=>'auto'
-,p_major_tick_rendered=>'auto'
-,p_minor_tick_rendered=>'auto'
-,p_tick_label_rendered=>'on'
-);
-wwv_flow_imp_page.create_page_plug(
- p_id=>wwv_flow_imp.id(9454870989155041)
-,p_plug_name=>'Chart 2'
-,p_static_id=>'chart-2'
-,p_title=>'Top ward risks today'
-,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
-,p_escape_on_http_output=>'Y'
-,p_plug_template=>4073835273271169698
-,p_plug_display_sequence=>20
-,p_plug_new_grid_row=>false
-,p_plug_item_display_point=>'ABOVE'
-,p_location=>null
-,p_plug_source_type=>'NATIVE_JET_CHART'
-);
-wwv_flow_imp_page.create_jet_chart(
- p_id=>wwv_flow_imp.id(9455272628155042)
-,p_region_id=>wwv_flow_imp.id(9454870989155041)
-,p_chart_type=>'bar'
-,p_animation_on_display=>'auto'
-,p_animation_on_data_change=>'auto'
-,p_orientation=>'vertical'
-,p_data_cursor=>'auto'
-,p_data_cursor_behavior=>'auto'
-,p_hover_behavior=>'dim'
-,p_stack=>'off'
-,p_stack_label=>'off'
-,p_connect_nulls=>'Y'
-,p_sorting=>'label-asc'
-,p_fill_multi_series_gaps=>true
-,p_zoom_and_scroll=>'off'
-,p_tooltip_rendered=>'Y'
-,p_show_series_name=>true
-,p_show_group_name=>true
-,p_show_value=>true
-,p_legend_rendered=>'off'
-,p_legend_position=>'auto'
-,p_overview_rendered=>'off'
-);
-wwv_flow_imp_page.create_jet_chart_series(
- p_id=>wwv_flow_imp.id(9456922609155046)
-,p_chart_id=>wwv_flow_imp.id(9455272628155042)
-,p_static_id=>'series-1'
-,p_seq=>10
-,p_name=>'Series 1'
-,p_data_source_type=>'SQL'
-,p_data_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select ward_name||'' - ''||hazard label, round(risk_score*100) value',
-'from v_ward_risk_latest',
-'where nvl(risk_level,''LOW'') <> ''LOW''',
-'order by risk_score desc',
-'fetch first 10 rows only'))
-,p_max_row_count=>20
-,p_items_value_column_name=>'VALUE'
-,p_items_label_column_name=>'LABEL'
-,p_assigned_to_y2=>'off'
-,p_items_label_rendered=>false
-);
-wwv_flow_imp_page.create_jet_chart_axis(
- p_id=>wwv_flow_imp.id(9455726887155043)
-,p_chart_id=>wwv_flow_imp.id(9455272628155042)
-,p_static_id=>'x'
-,p_axis=>'x'
-,p_is_rendered=>'on'
-,p_format_scaling=>'auto'
-,p_scaling=>'linear'
-,p_baseline_scaling=>'zero'
-,p_major_tick_rendered=>'auto'
-,p_minor_tick_rendered=>'auto'
-,p_tick_label_rendered=>'on'
-,p_tick_label_rotation=>'auto'
-,p_tick_label_position=>'outside'
-);
-wwv_flow_imp_page.create_jet_chart_axis(
- p_id=>wwv_flow_imp.id(9456336068155044)
-,p_chart_id=>wwv_flow_imp.id(9455272628155042)
-,p_static_id=>'y'
-,p_axis=>'y'
-,p_is_rendered=>'on'
-,p_format_type=>'decimal'
-,p_decimal_places=>0
-,p_format_scaling=>'auto'
-,p_scaling=>'linear'
-,p_baseline_scaling=>'zero'
-,p_position=>'auto'
-,p_major_tick_rendered=>'auto'
-,p_minor_tick_rendered=>'auto'
-,p_tick_label_rendered=>'on'
-);
-wwv_flow_imp_page.create_page_plug(
- p_id=>wwv_flow_imp.id(9457570239155048)
-,p_plug_name=>'Chart 3'
-,p_static_id=>'chart-3'
-,p_title=>'Garissa 2006 RVF risk'
-,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
-,p_escape_on_http_output=>'Y'
-,p_plug_template=>4073835273271169698
-,p_plug_display_sequence=>30
-,p_plug_item_display_point=>'ABOVE'
-,p_location=>null
-,p_plug_source_type=>'NATIVE_JET_CHART'
-);
-wwv_flow_imp_page.create_jet_chart(
- p_id=>wwv_flow_imp.id(9457934823155049)
-,p_region_id=>wwv_flow_imp.id(9457570239155048)
+ p_id=>wwv_flow_imp.id(9950000000021)
+,p_region_id=>wwv_flow_imp.id(9950000000020)
 ,p_chart_type=>'line'
 ,p_animation_on_display=>'auto'
 ,p_animation_on_data_change=>'auto'
@@ -8160,30 +8197,30 @@ wwv_flow_imp_page.create_jet_chart(
 ,p_overview_rendered=>'off'
 );
 wwv_flow_imp_page.create_jet_chart_series(
- p_id=>wwv_flow_imp.id(9459613767155053)
-,p_chart_id=>wwv_flow_imp.id(9457934823155049)
+ p_id=>wwv_flow_imp.id(9950000000022)
+,p_chart_id=>wwv_flow_imp.id(9950000000021)
 ,p_static_id=>'series-1'
 ,p_seq=>10
-,p_name=>'Series 1'
+,p_name=>'Disease reports'
 ,p_data_source_type=>'SQL'
-,p_data_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select to_char(score_date,''YYYY-MM-DD'') label, round(avg(rvf_risk)*100) value',
-'from v_garissa_replay',
-'group by score_date',
-'order by score_date'))
-,p_max_row_count=>20
+,p_data_source=>'select to_char(trunc(cast(reported_at as date)),''DD Mon'') label, count(*) value, trunc(cast(reported_at as date)) d from coop_disease_reports group by trunc(cast(reported_at as date)) order by 3'
+,p_max_row_count=>200
+,p_series_type=>'line'
 ,p_items_value_column_name=>'VALUE'
 ,p_items_label_column_name=>'LABEL'
+,p_color=>'#1b7f5f'
 ,p_line_style=>'solid'
 ,p_line_type=>'auto'
 ,p_marker_rendered=>'auto'
 ,p_marker_shape=>'auto'
 ,p_assigned_to_y2=>'off'
 ,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
 );
 wwv_flow_imp_page.create_jet_chart_axis(
- p_id=>wwv_flow_imp.id(9458479489155050)
-,p_chart_id=>wwv_flow_imp.id(9457934823155049)
+ p_id=>wwv_flow_imp.id(9950000000023)
+,p_chart_id=>wwv_flow_imp.id(9950000000021)
 ,p_static_id=>'x'
 ,p_axis=>'x'
 ,p_is_rendered=>'on'
@@ -8197,8 +8234,8 @@ wwv_flow_imp_page.create_jet_chart_axis(
 ,p_tick_label_position=>'outside'
 );
 wwv_flow_imp_page.create_jet_chart_axis(
- p_id=>wwv_flow_imp.id(9459089864155052)
-,p_chart_id=>wwv_flow_imp.id(9457934823155049)
+ p_id=>wwv_flow_imp.id(9950000000024)
+,p_chart_id=>wwv_flow_imp.id(9950000000021)
 ,p_static_id=>'y'
 ,p_axis=>'y'
 ,p_is_rendered=>'on'
@@ -8213,36 +8250,353 @@ wwv_flow_imp_page.create_jet_chart_axis(
 ,p_tick_label_rendered=>'on'
 );
 wwv_flow_imp_page.create_page_plug(
- p_id=>wwv_flow_imp.id(9460245227155055)
-,p_plug_name=>'Chart 4'
-,p_static_id=>'chart-4'
-,p_title=>'Subscribers by language'
+ p_id=>wwv_flow_imp.id(9950000000002)
+,p_plug_name=>'Co-op filter'
+,p_static_id=>'co-op-filter'
+,p_title=>'Co-op filter'
+,p_region_template_options=>'#DEFAULT#:t-Region--noUI:t-Region--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>15
+,p_plug_item_display_point=>'ABOVE'
+,p_plug_query_num_rows=>15
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000001)
+,p_plug_name=>'Co-op Command Centre'
+,p_static_id=>'coop-hero'
+,p_region_template_options=>'#DEFAULT#:t-Region--noUI:t-Region--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>10
+,p_plug_item_display_point=>'ABOVE'
+,p_plug_source=>'<div class="ngao-hero"><img class="ngao-hero-logo" src="#APP_FILES#icons/app-icon-512.png" alt="Ngao logo"><div class="ngao-hero-text"><div class="ngao-hero-kicker">Ngao MvuaSmart</div><h1>Co-op Command Centre</h1><p>Helping co-operatives protect the'
+||'ir farmers&#39; crops and animals: early warnings from the field, checked by vets and shared with every ward at risk.</p></div></div>'
+,p_plug_query_num_rows=>15
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000008)
+,p_plug_name=>'Disease alerts per ward (14 days)'
+,p_static_id=>'disease-alerts-per-ward-14-days'
+,p_title=>'Disease alerts per ward (14 days)'
 ,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
 ,p_escape_on_http_output=>'Y'
 ,p_plug_template=>4073835273271169698
-,p_plug_display_sequence=>40
-,p_plug_new_grid_row=>false
+,p_plug_display_sequence=>30
+,p_plug_grid_column_span=>7
 ,p_plug_item_display_point=>'ABOVE'
 ,p_location=>null
 ,p_plug_source_type=>'NATIVE_JET_CHART'
 );
 wwv_flow_imp_page.create_jet_chart(
- p_id=>wwv_flow_imp.id(9460697934155056)
-,p_region_id=>wwv_flow_imp.id(9460245227155055)
-,p_chart_type=>'pie'
+ p_id=>wwv_flow_imp.id(9950000000009)
+,p_region_id=>wwv_flow_imp.id(9950000000008)
+,p_chart_type=>'bar'
 ,p_animation_on_display=>'auto'
 ,p_animation_on_data_change=>'auto'
+,p_orientation=>'horizontal'
+,p_data_cursor=>'auto'
+,p_data_cursor_behavior=>'auto'
+,p_hide_and_show_behavior=>'withRescale'
+,p_hover_behavior=>'dim'
+,p_stack=>'on'
+,p_stack_label=>'off'
+,p_connect_nulls=>'Y'
+,p_sorting=>'value-desc'
+,p_fill_multi_series_gaps=>true
+,p_zoom_and_scroll=>'off'
+,p_tooltip_rendered=>'Y'
+,p_show_series_name=>true
+,p_show_group_name=>true
+,p_show_value=>true
+,p_legend_rendered=>'on'
+,p_legend_position=>'bottom'
+,p_overview_rendered=>'off'
+);
+wwv_flow_imp_page.create_jet_chart_series(
+ p_id=>wwv_flow_imp.id(9950000000010)
+,p_chart_id=>wwv_flow_imp.id(9950000000009)
+,p_static_id=>'series-1'
+,p_seq=>10
+,p_name=>'Vet confirmed'
+,p_data_source_type=>'SQL'
+,p_data_source=>'with t as (select r.ward_id, count(*) n from coop_disease_reports r where r.reported_at > systimestamp - interval ''14'' day and (:P1_COOP is null or r.coop_id = :P1_COOP) group by r.ward_id order by n desc fetch first 8 rows only) select regexp_substr'
+||'(w.ward_name,''^[^/]+'') label, count(r.report_id) value from t join wards w on w.ward_id=t.ward_id left join coop_disease_reports r on r.ward_id=t.ward_id and r.reported_at > systimestamp - interval ''14'' day and r.vet_status=''VET_CONFIRMED'' and (:P1_C'
+||'OOP is null or r.coop_id = :P1_COOP) group by w.ward_name, t.n order by t.n desc'
+,p_max_row_count=>200
+,p_ajax_items_to_submit=>'P1_COOP'
+,p_series_type=>'bar'
+,p_items_value_column_name=>'VALUE'
+,p_items_label_column_name=>'LABEL'
+,p_color=>'#1b7f5f'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_series(
+ p_id=>wwv_flow_imp.id(9950000000011)
+,p_chart_id=>wwv_flow_imp.id(9950000000009)
+,p_static_id=>'series-2'
+,p_seq=>20
+,p_name=>'Pending vet'
+,p_data_source_type=>'SQL'
+,p_data_source=>'with t as (select r.ward_id, count(*) n from coop_disease_reports r where r.reported_at > systimestamp - interval ''14'' day and (:P1_COOP is null or r.coop_id = :P1_COOP) group by r.ward_id order by n desc fetch first 8 rows only) select regexp_substr'
+||'(w.ward_name,''^[^/]+'') label, count(r.report_id) value from t join wards w on w.ward_id=t.ward_id left join coop_disease_reports r on r.ward_id=t.ward_id and r.reported_at > systimestamp - interval ''14'' day and r.vet_status=''PENDING'' and (:P1_COOP is'
+||' null or r.coop_id = :P1_COOP) group by w.ward_name, t.n order by t.n desc'
+,p_max_row_count=>200
+,p_ajax_items_to_submit=>'P1_COOP'
+,p_series_type=>'bar'
+,p_items_value_column_name=>'VALUE'
+,p_items_label_column_name=>'LABEL'
+,p_color=>'#f4a259'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_series(
+ p_id=>wwv_flow_imp.id(9950000000012)
+,p_chart_id=>wwv_flow_imp.id(9950000000009)
+,p_static_id=>'series-3'
+,p_seq=>30
+,p_name=>'Rejected'
+,p_data_source_type=>'SQL'
+,p_data_source=>'with t as (select r.ward_id, count(*) n from coop_disease_reports r where r.reported_at > systimestamp - interval ''14'' day and (:P1_COOP is null or r.coop_id = :P1_COOP) group by r.ward_id order by n desc fetch first 8 rows only) select regexp_substr'
+||'(w.ward_name,''^[^/]+'') label, count(r.report_id) value from t join wards w on w.ward_id=t.ward_id left join coop_disease_reports r on r.ward_id=t.ward_id and r.reported_at > systimestamp - interval ''14'' day and r.vet_status=''REJECTED'' and (:P1_COOP i'
+||'s null or r.coop_id = :P1_COOP) group by w.ward_name, t.n order by t.n desc'
+,p_max_row_count=>200
+,p_ajax_items_to_submit=>'P1_COOP'
+,p_series_type=>'bar'
+,p_items_value_column_name=>'VALUE'
+,p_items_label_column_name=>'LABEL'
+,p_color=>'#8d99ae'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_axis(
+ p_id=>wwv_flow_imp.id(9950000000013)
+,p_chart_id=>wwv_flow_imp.id(9950000000009)
+,p_static_id=>'x'
+,p_axis=>'x'
+,p_is_rendered=>'on'
+,p_format_scaling=>'auto'
+,p_scaling=>'linear'
+,p_baseline_scaling=>'zero'
+,p_major_tick_rendered=>'auto'
+,p_minor_tick_rendered=>'auto'
+,p_tick_label_rendered=>'on'
+,p_tick_label_rotation=>'auto'
+,p_tick_label_position=>'outside'
+);
+wwv_flow_imp_page.create_jet_chart_axis(
+ p_id=>wwv_flow_imp.id(9950000000014)
+,p_chart_id=>wwv_flow_imp.id(9950000000009)
+,p_static_id=>'y'
+,p_axis=>'y'
+,p_is_rendered=>'on'
+,p_title=>'Reports'
+,p_format_type=>'decimal'
+,p_decimal_places=>0
+,p_format_scaling=>'auto'
+,p_scaling=>'linear'
+,p_baseline_scaling=>'zero'
+,p_step=>1
+,p_position=>'auto'
+,p_major_tick_rendered=>'auto'
+,p_minor_tick_rendered=>'auto'
+,p_tick_label_rendered=>'on'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000005)
+,p_plug_name=>'Key indicators'
+,p_static_id=>'key-indicators'
+,p_title=>'Key indicators'
+,p_region_css_classes=>'coop-kpi coop-link'
+,p_region_template_options=>'#DEFAULT#:t-CardsRegion--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>2074200852440250129
+,p_plug_display_sequence=>20
+,p_plug_item_display_point=>'ABOVE'
+,p_query_type=>'SQL'
+,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select ''Live disease alerts (14 days)'' card_title, to_char(count(*)) card_value, ''Raised by members via USSD'' card_note, 1 o, apex_page.get_url(p_page=>40, p_items=>''P40_COOP,P40_DAYS'', p_values=>:P1_COOP||'',14'', p_clear_cache=>''40'') link_url',
+'  from coop_disease_reports r where r.reported_at > systimestamp - interval ''14'' day and (:P1_COOP is null or r.coop_id = :P1_COOP)',
+'union all select ''Awaiting vet check'', to_char(count(*)), ''Not yet sent to farmers'', 2, apex_page.get_url(p_page=>42, p_items=>''P42_COOP,P42_VSTATUS'', p_values=>:P1_COOP||'',PENDING'', p_clear_cache=>''42'')||''#all-reports'' link_url',
+'  from coop_disease_reports r where r.vet_status = ''PENDING'' and (:P1_COOP is null or r.coop_id = :P1_COOP)',
+'union all select ''Wards affected or at risk'', to_char(count(*)), ''Map rule: red or orange (2+ cases in 14 days)'', 3, apex_page.get_url(p_page=>41, p_items=>''P41_COUNTY,P41_LEVEL'', p_values=>''ALL,HM'', p_clear_cache=>''41'')||''#spread-forecast'' link_url',
+'  from v_ward_outbreak_class where scope = ''ALL'' and lvl >= 2',
+'union all select ''Wards with HIGH flood/RVF risk'', to_char(count(distinct ward_id)), ''Ngao flood and RVF risk scores'', 4, apex_page.get_url(p_page=>46, p_items=>''P46_KPI,P46_COOP'', p_values=>''HIGHRISK,''||:P1_COOP, p_clear_cache=>''46'') link_url',
+'  from v_ward_risk_latest where risk_level = ''HIGH'' and hazard in (''field_flood'',''rvf'',''rain_coming'')',
+'union all select ''Yield, last season (t)'', to_char(round(sum(tonnes)),''FM999G999''), ''DEMO harvest records'', 5, apex_page.get_url(p_page=>44, p_items=>''P44_COOP'', p_values=>:P1_COOP, p_clear_cache=>''44'')||''#harvest-records'' link_url',
+'  from v_coop_harvest_kpi r where season_start = (select max(season_start) from coop_harvests) and (:P1_COOP is null or r.coop_id = :P1_COOP)',
+'union all select ''Profit, last season (KES)'', to_char(round(sum(profit_kes)/1e6,1),''FM990.0'')||'' M'', ''DEMO prices minus costs'', 6, apex_page.get_url(p_page=>44, p_items=>''P44_COOP'', p_values=>:P1_COOP, p_clear_cache=>''44'')||''#profit-by-season'' link_u'
+||'rl',
+'  from v_coop_harvest_kpi r where season_start = (select max(season_start) from coop_harvests) and (:P1_COOP is null or r.coop_id = :P1_COOP)',
+'union all select ''Members'', to_char(sum(members),''FM999G999''), ''SYNTHETIC co-op registers'', 7, apex_page.get_url(p_page=>46, p_items=>''P46_KPI,P46_COOP'', p_values=>''MEMBERS,''||:P1_COOP, p_clear_cache=>''46'') link_url',
+'  from cooperatives r where (:P1_COOP is null or r.coop_id = :P1_COOP)',
+'union all select ''Wet-season probability OND 2026'', to_char(round(avg(probability)*100))||''%'', ''Real: v3 seasonal model (backtest AUC 0.77)'', 8, apex_page.get_url(p_page=>46, p_items=>''P46_KPI,P46_COOP'', p_values=>''SEASONAL,''||:P1_COOP, p_clear_cache'
+||'=>''46'') link_url',
+'  from v_seasonal_outlook_latest o where (:P1_COOP is null or o.ward_id = (select ward_id from cooperatives where coop_id = :P1_COOP))',
+'order by 4'))
+,p_lazy_loading=>false
+,p_plug_source_type=>'NATIVE_CARDS'
+,p_ajax_items_to_submit=>'P1_COOP'
+,p_plug_query_num_rows_type=>'SCROLL'
+,p_show_total_row_count=>false
+);
+wwv_flow_imp_page.create_card(
+ p_id=>wwv_flow_imp.id(9950000000006)
+,p_region_id=>wwv_flow_imp.id(9950000000005)
+,p_layout_type=>'GRID'
+,p_grid_column_count=>4
+,p_title_adv_formatting=>false
+,p_title_column_name=>'CARD_VALUE'
+,p_sub_title_adv_formatting=>false
+,p_sub_title_column_name=>'CARD_TITLE'
+,p_body_adv_formatting=>false
+,p_body_column_name=>'CARD_NOTE'
+,p_second_body_adv_formatting=>false
+,p_media_adv_formatting=>false
+,p_pk1_column_name=>'CARD_TITLE'
+);
+wwv_flow_imp_page.create_card_action(
+ p_id=>wwv_flow_imp.id(9950000000007)
+,p_card_id=>wwv_flow_imp.id(9950000000006)
+,p_action_type=>'FULL_CARD'
+,p_display_sequence=>10
+,p_static_id=>'action'
+,p_link_target_type=>'REDIRECT_URL'
+,p_link_target=>'&LINK_URL.'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000015)
+,p_plug_name=>'Next wards at risk'
+,p_static_id=>'next-wards-at-risk-rule-based-spread'
+,p_title=>'Next wards at risk'
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_escape_on_http_output=>'Y'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>40
+,p_plug_new_grid_row=>false
+,p_plug_grid_column_span=>5
+,p_plug_item_display_point=>'ABOVE'
+,p_location=>null
+,p_plug_source_type=>'NATIVE_JET_CHART'
+);
+wwv_flow_imp_page.create_jet_chart(
+ p_id=>wwv_flow_imp.id(9950000000016)
+,p_region_id=>wwv_flow_imp.id(9950000000015)
+,p_chart_type=>'bar'
+,p_animation_on_display=>'auto'
+,p_animation_on_data_change=>'auto'
+,p_orientation=>'horizontal'
+,p_data_cursor=>'auto'
+,p_data_cursor_behavior=>'auto'
+,p_hide_and_show_behavior=>'withRescale'
+,p_hover_behavior=>'dim'
+,p_stack=>'on'
+,p_stack_label=>'off'
+,p_connect_nulls=>'Y'
+,p_sorting=>'value-desc'
+,p_fill_multi_series_gaps=>true
+,p_zoom_and_scroll=>'off'
+,p_tooltip_rendered=>'Y'
+,p_show_series_name=>true
+,p_show_group_name=>true
+,p_show_value=>true
+,p_legend_rendered=>'on'
+,p_legend_position=>'bottom'
+,p_overview_rendered=>'off'
+);
+wwv_flow_imp_page.create_jet_chart_series(
+ p_id=>wwv_flow_imp.id(9950000000017)
+,p_chart_id=>wwv_flow_imp.id(9950000000016)
+,p_static_id=>'series-1'
+,p_seq=>10
+,p_name=>'Spread index'
+,p_data_source_type=>'SQL'
+,p_data_source=>'with x as (select f.*, row_number() over (partition by ward_id order by spread_index desc) rn from v_coop_spread_forecast f where ward_state=''AT RISK NEXT'') select regexp_substr(ward_name,''^[^/]+'') label, round(spread_index,2) value, regexp_replace(d'
+||'isease,'' *\(.*\)$'','''') series, spread_level||'' risk: ''||disease tip from x where rn=1 order by spread_index desc fetch first 8 rows only'
+,p_max_row_count=>200
+,p_series_type=>'bar'
+,p_series_name_column_name=>'SERIES'
+,p_items_value_column_name=>'VALUE'
+,p_items_label_column_name=>'LABEL'
+,p_items_short_desc_column_name=>'TIP'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_axis(
+ p_id=>wwv_flow_imp.id(9950000000018)
+,p_chart_id=>wwv_flow_imp.id(9950000000016)
+,p_static_id=>'x'
+,p_axis=>'x'
+,p_is_rendered=>'on'
+,p_format_scaling=>'auto'
+,p_scaling=>'linear'
+,p_baseline_scaling=>'zero'
+,p_major_tick_rendered=>'auto'
+,p_minor_tick_rendered=>'auto'
+,p_tick_label_rendered=>'on'
+,p_tick_label_rotation=>'auto'
+,p_tick_label_position=>'outside'
+);
+wwv_flow_imp_page.create_jet_chart_axis(
+ p_id=>wwv_flow_imp.id(9950000000019)
+,p_chart_id=>wwv_flow_imp.id(9950000000016)
+,p_static_id=>'y'
+,p_axis=>'y'
+,p_is_rendered=>'on'
+,p_title=>'Spread index (higher = sooner)'
+,p_format_type=>'decimal'
+,p_decimal_places=>1
+,p_format_scaling=>'auto'
+,p_scaling=>'linear'
+,p_baseline_scaling=>'zero'
+,p_position=>'auto'
+,p_major_tick_rendered=>'auto'
+,p_minor_tick_rendered=>'auto'
+,p_tick_label_rendered=>'on'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000025)
+,p_plug_name=>'Profit by season (DEMO, KES)'
+,p_static_id=>'profit-by-season-demo-kes'
+,p_title=>'Profit by season (DEMO, KES)'
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_escape_on_http_output=>'Y'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>60
+,p_plug_new_grid_row=>false
+,p_plug_grid_column_span=>5
+,p_plug_item_display_point=>'ABOVE'
+,p_location=>null
+,p_plug_source_type=>'NATIVE_JET_CHART'
+);
+wwv_flow_imp_page.create_jet_chart(
+ p_id=>wwv_flow_imp.id(9950000000026)
+,p_region_id=>wwv_flow_imp.id(9950000000025)
+,p_chart_type=>'bar'
+,p_animation_on_display=>'auto'
+,p_animation_on_data_change=>'auto'
+,p_orientation=>'vertical'
 ,p_data_cursor=>'auto'
 ,p_data_cursor_behavior=>'auto'
 ,p_hover_behavior=>'dim'
 ,p_stack=>'off'
 ,p_stack_label=>'off'
 ,p_connect_nulls=>'Y'
-,p_value_format_type=>'decimal'
-,p_value_decimal_places=>0
-,p_value_format_scaling=>'auto'
 ,p_sorting=>'label-asc'
 ,p_fill_multi_series_gaps=>true
+,p_zoom_and_scroll=>'off'
 ,p_tooltip_rendered=>'Y'
 ,p_show_series_name=>true
 ,p_show_group_name=>true
@@ -8250,75 +8604,139 @@ wwv_flow_imp_page.create_jet_chart(
 ,p_legend_rendered=>'off'
 ,p_legend_position=>'auto'
 ,p_overview_rendered=>'off'
-,p_pie_other_threshold=>0
-,p_pie_selection_effect=>'highlight'
 );
 wwv_flow_imp_page.create_jet_chart_series(
- p_id=>wwv_flow_imp.id(9461169500155058)
-,p_chart_id=>wwv_flow_imp.id(9460697934155056)
+ p_id=>wwv_flow_imp.id(9950000000027)
+,p_chart_id=>wwv_flow_imp.id(9950000000026)
 ,p_static_id=>'series-1'
 ,p_seq=>10
-,p_name=>'Series 1'
+,p_name=>'Profit'
 ,p_data_source_type=>'SQL'
-,p_data_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select decode(preferred_lang,''sw'',''Kiswahili'',''English'') label, count(*) value',
-'from subscribers',
-'group by preferred_lang'))
-,p_max_row_count=>20
+,p_data_source=>'select season label, sum(profit_kes) value, min(season_start) s from v_coop_harvest_kpi r where (:P1_COOP is null or r.coop_id = :P1_COOP) group by season order by 3'
+,p_max_row_count=>200
+,p_ajax_items_to_submit=>'P1_COOP'
+,p_series_type=>'bar'
 ,p_items_value_column_name=>'VALUE'
 ,p_items_label_column_name=>'LABEL'
-,p_items_label_rendered=>true
-,p_items_label_position=>'auto'
-,p_items_label_display_as=>'LABEL'
+,p_color=>'#2a6f97'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_axis(
+ p_id=>wwv_flow_imp.id(9950000000028)
+,p_chart_id=>wwv_flow_imp.id(9950000000026)
+,p_static_id=>'x'
+,p_axis=>'x'
+,p_is_rendered=>'on'
+,p_format_scaling=>'auto'
+,p_scaling=>'linear'
+,p_baseline_scaling=>'zero'
+,p_major_tick_rendered=>'auto'
+,p_minor_tick_rendered=>'auto'
+,p_tick_label_rendered=>'on'
+,p_tick_label_rotation=>'auto'
+,p_tick_label_position=>'outside'
+);
+wwv_flow_imp_page.create_jet_chart_axis(
+ p_id=>wwv_flow_imp.id(9950000000029)
+,p_chart_id=>wwv_flow_imp.id(9950000000026)
+,p_static_id=>'y'
+,p_axis=>'y'
+,p_is_rendered=>'on'
+,p_format_type=>'decimal'
+,p_decimal_places=>0
+,p_format_scaling=>'auto'
+,p_scaling=>'linear'
+,p_baseline_scaling=>'zero'
+,p_position=>'auto'
+,p_major_tick_rendered=>'auto'
+,p_minor_tick_rendered=>'auto'
+,p_tick_label_rendered=>'on'
 );
 wwv_flow_imp_page.create_page_plug(
- p_id=>wwv_flow_imp.id(9780175999228001)
-,p_plug_name=>'Key counts'
-,p_static_id=>'key-counts'
-,p_title=>'Key counts'
-,p_region_css_classes=>'ngao-kpi'
-,p_region_template_options=>'#DEFAULT#:t-CardsRegion--hideHeader js-addHiddenHeadingRoleDesc'
-,p_plug_template=>2074200852440250129
-,p_plug_display_sequence=>10
-,p_plug_display_point=>'REGION_POSITION_07'
+ p_id=>wwv_flow_imp.id(9970000000002)
+,p_plug_name=>'Simulator link'
+,p_static_id=>'ussd-simulator-link'
+,p_title=>'Simulator link'
+,p_region_template_options=>'#DEFAULT#:t-Region--noUI:t-Region--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>16
 ,p_plug_item_display_point=>'ABOVE'
-,p_query_type=>'SQL'
-,p_plug_source=>'select ''Pending approvals'' card_title, to_char((select count(*) from v_alert_queue where status = ''PENDING_APPROVAL'')) card_subtext from dual union all select ''Wards at HIGH risk'', to_char((select count(*) from v_ward_risk_latest where risk_level = '''
-||'HIGH'')) from dual union all select ''Subscribers'', to_char((select count(*) from subscribers)) from dual union all select ''Alerts sent'', to_char((select count(*) from v_alert_queue where status = ''SENT'')) from dual'
-,p_lazy_loading=>false
-,p_plug_source_type=>'NATIVE_CARDS'
-,p_plug_query_num_rows_type=>'SCROLL'
-,p_show_total_row_count=>false
-);
-wwv_flow_imp_page.create_card(
- p_id=>wwv_flow_imp.id(9780296912228002)
-,p_region_id=>wwv_flow_imp.id(9780175999228001)
-,p_layout_type=>'GRID'
-,p_grid_column_count=>4
-,p_title_adv_formatting=>false
-,p_title_column_name=>'CARD_SUBTEXT'
-,p_sub_title_adv_formatting=>false
-,p_sub_title_column_name=>'CARD_TITLE'
-,p_body_adv_formatting=>false
-,p_second_body_adv_formatting=>false
-,p_media_adv_formatting=>false
-,p_pk1_column_name=>'CARD_TITLE'
-);
-wwv_flow_imp_page.create_page_plug(
- p_id=>wwv_flow_imp.id(9461933138155061)
-,p_plug_name=>'Ngao MvuaSmart'
-,p_static_id=>'ngao-mvuasmart'
-,p_region_template_options=>'#DEFAULT#'
-,p_escape_on_http_output=>'Y'
-,p_plug_template=>2675494171183407654
-,p_plug_display_sequence=>10
-,p_plug_display_point=>'REGION_POSITION_01'
-,p_plug_item_display_point=>'ABOVE'
+,p_plug_source=>'<div style="display:flex;justify-content:flex-end;margin:-6px 0 0"><a class="t-Button t-Button--small t-Button--noUI t-Button--icon t-Button--iconLeft" href="https://158.180.57.75.sslip.io/simulator/" target="_blank" rel="noopener" title="Open the US'
+||'SD phone simulator (fake numbers, no real SMS)"><span class="t-Icon t-Icon--left fa fa-phone" aria-hidden="true"></span>Simulator</a></div>'
 ,p_plug_query_num_rows=>15
-,p_region_image=>'#APP_FILES#icons/app-icon-512.png'
 ,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
   'expand_shortcuts', 'N',
   'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000003)
+,p_name=>'P1_COOP'
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_imp.id(9950000000002)
+,p_prompt=>'Co-operative'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_SELECT_LIST'
+,p_lov=>'select replace(coop_name,''SYNTHETIC '','''')||'' (demo)'' d, coop_id r from cooperatives order by coop_name'
+,p_lov_display_null=>'YES'
+,p_lov_null_text=>'All co-operatives (network view)'
+,p_cHeight=>1
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_lov_display_extra=>'NO'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'page_action_on_selection', 'NONE')).to_clob
+);
+wwv_flow_imp_page.create_page_da_event(
+ p_id=>wwv_flow_imp.id(9950000000030)
+,p_name=>'Refresh on P1_COOP'
+,p_static_id=>'refresh-on-p1-coop'
+,p_event_sequence=>10
+,p_triggering_element_type=>'ITEM'
+,p_triggering_element=>'P1_COOP'
+,p_bind_type=>'bind'
+,p_execution_type=>'IMMEDIATE'
+,p_bind_event_type=>'change'
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000031)
+,p_event_id=>wwv_flow_imp.id(9950000000030)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-0'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000005)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000032)
+,p_event_id=>wwv_flow_imp.id(9950000000030)
+,p_event_result=>'TRUE'
+,p_action_sequence=>20
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-1'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000033)
+,p_event_id=>wwv_flow_imp.id(9950000000030)
+,p_event_result=>'TRUE'
+,p_action_sequence=>30
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-2'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000025)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
 );
 end;
 /
@@ -8366,169 +8784,160 @@ wwv_flow_imp_page.create_map_region(
  p_id=>wwv_flow_imp.id(9463367992155296)
 ,p_region_id=>wwv_flow_imp.id(9463229483155296)
 ,p_height=>640
+,p_tilelayer_type=>'SHARED'
+,p_default_shared_tilelayer_id=>wwv_flow_imp.id(9970000000100)
 ,p_navigation_bar_type=>'FULL'
 ,p_navigation_bar_position=>'END'
-,p_init_position_zoom_type=>'STATIC'
+,p_init_position_zoom_type=>'QUERY_RESULTS'
+,p_init_position_zoom_source=>'ALL_LAYERS'
 ,p_init_position_lon_static=>'35.3'
 ,p_init_position_lat_static=>'0.52'
 ,p_init_zoomlevel_static=>'9'
 ,p_layer_messages_position=>'BELOW'
 ,p_legend_position=>'END'
-,p_features=>'SCALE_BAR:INFINITE_MAP:RECTANGLE_ZOOM'
+,p_features=>'SCALE_BAR:INFINITE_MAP:RECTANGLE_ZOOM:MOUSEWHEEL_ZOOM'
 );
 wwv_flow_imp_page.create_map_region_layer(
- p_id=>wwv_flow_imp.id(9782629946228026)
+ p_id=>wwv_flow_imp.id(9970000000130)
 ,p_map_region_id=>wwv_flow_imp.id(9463367992155296)
-,p_name=>'LOW'
-,p_static_id=>'low'
-,p_label=>'LOW'
-,p_layer_type=>'POINT'
-,p_display_sequence=>30
-,p_location=>'LOCAL'
-,p_query_type=>'SQL'
-,p_layer_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select v.*,',
-'  case v.risk_level when ''HIGH'' then ''#d7263d'' when ''MEDIUM'' then ''#f4a259'' when ''UNCERTAIN'' then ''#8d99ae'' else ''#2a9d8f'' end as fill_col,',
-'  v.ward_name||'' | ''||v.hazard||'' | ''||v.risk_level||'' | confidence ''||v.confidence as tooltip_txt',
-'from v_ward_risk_latest v',
-'join wards w on w.ward_id = v.ward_id',
-'where v.risk_level = ''LOW''',
-'  and w.county = :P2_COUNTY',
-'order by case v.risk_level when ''HIGH'' then 3 when ''MEDIUM'' then 2 when ''UNCERTAIN'' then 1 else 0 end'))
-,p_items_to_submit=>'P2_COUNTY'
-,p_use_vector_tiles=>false
-,p_has_spatial_index=>false
-,p_pk_column=>'WARD_ID'
-,p_geometry_column_data_type=>'LONLAT_COLUMNS'
-,p_longitude_column=>'CENTROID_LON'
-,p_latitude_column=>'CENTROID_LAT'
-,p_stroke_color=>'#2a9d8f'
-,p_fill_color=>'#2a9d8f'
-,p_point_display_type=>'SVG'
-,p_point_svg_shape=>'Circle'
-,p_feature_clustering=>false
-,p_tooltip_adv_formatting=>true
-,p_tooltip_html_expr=>'<b>&WARD_NAME.</b><br>Hazard: &HAZARD.<br>Risk level: &RISK_LEVEL.<br>Confidence: &CONFIDENCE.'
-,p_info_window_adv_formatting=>false
-,p_info_window_title_column=>'WARD_NAME'
-,p_info_window_body_column=>'TOOLTIP_TXT'
-,p_legend_adv_formatting=>false
-,p_allow_hide=>true
-);
-wwv_flow_imp_page.create_map_region_layer(
- p_id=>wwv_flow_imp.id(9782536991228025)
-,p_map_region_id=>wwv_flow_imp.id(9463367992155296)
-,p_name=>'MEDIUM'
-,p_static_id=>'medium'
-,p_label=>'MEDIUM'
-,p_layer_type=>'POINT'
-,p_display_sequence=>40
-,p_location=>'LOCAL'
-,p_query_type=>'SQL'
-,p_layer_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select v.*,',
-'  case v.risk_level when ''HIGH'' then ''#d7263d'' when ''MEDIUM'' then ''#f4a259'' when ''UNCERTAIN'' then ''#8d99ae'' else ''#2a9d8f'' end as fill_col,',
-'  v.ward_name||'' | ''||v.hazard||'' | ''||v.risk_level||'' | confidence ''||v.confidence as tooltip_txt',
-'from v_ward_risk_latest v',
-'join wards w on w.ward_id = v.ward_id',
-'where v.risk_level = ''MEDIUM''',
-'  and w.county = :P2_COUNTY',
-'order by case v.risk_level when ''HIGH'' then 3 when ''MEDIUM'' then 2 when ''UNCERTAIN'' then 1 else 0 end'))
-,p_items_to_submit=>'P2_COUNTY'
-,p_use_vector_tiles=>false
-,p_has_spatial_index=>false
-,p_pk_column=>'WARD_ID'
-,p_geometry_column_data_type=>'LONLAT_COLUMNS'
-,p_longitude_column=>'CENTROID_LON'
-,p_latitude_column=>'CENTROID_LAT'
-,p_stroke_color=>'#f4a259'
-,p_fill_color=>'#f4a259'
-,p_point_display_type=>'SVG'
-,p_point_svg_shape=>'Circle'
-,p_feature_clustering=>false
-,p_tooltip_adv_formatting=>true
-,p_tooltip_html_expr=>'<b>&WARD_NAME.</b><br>Hazard: &HAZARD.<br>Risk level: &RISK_LEVEL.<br>Confidence: &CONFIDENCE.'
-,p_info_window_adv_formatting=>false
-,p_info_window_title_column=>'WARD_NAME'
-,p_info_window_body_column=>'TOOLTIP_TXT'
-,p_legend_adv_formatting=>false
-,p_allow_hide=>true
-);
-wwv_flow_imp_page.create_map_region_layer(
- p_id=>wwv_flow_imp.id(9782723689228027)
-,p_map_region_id=>wwv_flow_imp.id(9463367992155296)
-,p_name=>'UNCERTAIN'
-,p_static_id=>'uncertain'
-,p_label=>'UNCERTAIN'
-,p_layer_type=>'POINT'
-,p_display_sequence=>20
-,p_location=>'LOCAL'
-,p_query_type=>'SQL'
-,p_layer_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select v.*,',
-'  case v.risk_level when ''HIGH'' then ''#d7263d'' when ''MEDIUM'' then ''#f4a259'' when ''UNCERTAIN'' then ''#8d99ae'' else ''#2a9d8f'' end as fill_col,',
-'  v.ward_name||'' | ''||v.hazard||'' | ''||v.risk_level||'' | confidence ''||v.confidence as tooltip_txt',
-'from v_ward_risk_latest v',
-'join wards w on w.ward_id = v.ward_id',
-'where v.risk_level = ''UNCERTAIN''',
-'  and w.county = :P2_COUNTY',
-'order by case v.risk_level when ''HIGH'' then 3 when ''MEDIUM'' then 2 when ''UNCERTAIN'' then 1 else 0 end'))
-,p_items_to_submit=>'P2_COUNTY'
-,p_use_vector_tiles=>false
-,p_has_spatial_index=>false
-,p_pk_column=>'WARD_ID'
-,p_geometry_column_data_type=>'LONLAT_COLUMNS'
-,p_longitude_column=>'CENTROID_LON'
-,p_latitude_column=>'CENTROID_LAT'
-,p_stroke_color=>'#8d99ae'
-,p_fill_color=>'#8d99ae'
-,p_point_display_type=>'SVG'
-,p_point_svg_shape=>'Circle'
-,p_feature_clustering=>false
-,p_tooltip_adv_formatting=>true
-,p_tooltip_html_expr=>'<b>&WARD_NAME.</b><br>Hazard: &HAZARD.<br>Risk level: &RISK_LEVEL.<br>Confidence: &CONFIDENCE.'
-,p_info_window_adv_formatting=>false
-,p_info_window_title_column=>'WARD_NAME'
-,p_info_window_body_column=>'TOOLTIP_TXT'
-,p_legend_adv_formatting=>false
-,p_allow_hide=>true
-);
-wwv_flow_imp_page.create_map_region_layer(
- p_id=>wwv_flow_imp.id(9463404224155296)
-,p_map_region_id=>wwv_flow_imp.id(9463367992155296)
-,p_name=>'HIGH'
-,p_static_id=>'ward-risk-map'
-,p_label=>'HIGH'
-,p_layer_type=>'POINT'
+,p_name=>'Green: low / safe'
+,p_static_id=>'lvl-0'
+,p_label=>'Green: low / safe'
+,p_layer_type=>'POLYGON'
 ,p_display_sequence=>10
 ,p_location=>'LOCAL'
 ,p_query_type=>'SQL'
 ,p_layer_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'select v.*,',
-'  case v.risk_level when ''HIGH'' then ''#d7263d'' when ''MEDIUM'' then ''#f4a259'' when ''UNCERTAIN'' then ''#8d99ae'' else ''#2a9d8f'' end as fill_col,',
-'  v.ward_name||'' | ''||v.hazard||'' | ''||v.risk_level||'' | confidence ''||v.confidence as tooltip_txt',
-'from v_ward_risk_latest v',
-'join wards w on w.ward_id = v.ward_id',
-'where v.risk_level = ''HIGH''',
-'  and w.county = :P2_COUNTY',
-'order by case v.risk_level when ''HIGH'' then 3 when ''MEDIUM'' then 2 when ''UNCERTAIN'' then 1 else 0 end'))
+'with v as (',
+'  select ward_id,',
+'         max(case risk_level when ''HIGH'' then 3 when ''MEDIUM'' then 2 when ''UNCERTAIN'' then 1 else 0 end) lvl,',
+'         listagg(distinct hazard || '' '' || risk_level, '', '') within group (order by hazard) hazards',
+'  from v_ward_risk_latest group by ward_id)',
+'select w.ward_id, w.ward_name, w.boundary, nvl(v.hazards, ''No scores'') hazards,',
+'       case nvl(v.lvl, 0) when 3 then ''HIGH'' when 2 then ''MEDIUM'' when 1 then ''Watch (uncertain)'' else ''Low / safe'' end risk',
+'from wards w left join v on v.ward_id = w.ward_id',
+'where w.boundary is not null and w.county = :P2_COUNTY and nvl(v.lvl, 0) = 0'))
 ,p_items_to_submit=>'P2_COUNTY'
 ,p_use_vector_tiles=>false
 ,p_has_spatial_index=>false
 ,p_pk_column=>'WARD_ID'
-,p_geometry_column_data_type=>'LONLAT_COLUMNS'
-,p_longitude_column=>'CENTROID_LON'
-,p_latitude_column=>'CENTROID_LAT'
-,p_stroke_color=>'#d7263d'
-,p_fill_color=>'#d7263d'
-,p_point_display_type=>'SVG'
-,p_point_svg_shape=>'Circle'
-,p_feature_clustering=>false
+,p_geometry_column_data_type=>'SDO_GEOMETRY'
+,p_geometry_column=>'BOUNDARY'
+,p_stroke_color=>'#ffffff'
+,p_stroke_width_subst=>'1'
+,p_fill_color=>'#2a9d4f'
+,p_fill_opacity_subst=>'.55'
 ,p_tooltip_adv_formatting=>true
-,p_tooltip_html_expr=>'<b>&WARD_NAME.</b><br>Hazard: &HAZARD.<br>Risk level: &RISK_LEVEL.<br>Confidence: &CONFIDENCE.'
+,p_tooltip_html_expr=>'<b>&WARD_NAME.</b><br>Worst level: &RISK.<br>&HAZARDS.'
 ,p_info_window_adv_formatting=>false
-,p_info_window_title_column=>'WARD_NAME'
-,p_info_window_body_column=>'TOOLTIP_TXT'
+,p_legend_adv_formatting=>false
+,p_allow_hide=>true
+);
+wwv_flow_imp_page.create_map_region_layer(
+ p_id=>wwv_flow_imp.id(9970000000131)
+,p_map_region_id=>wwv_flow_imp.id(9463367992155296)
+,p_name=>'Amber: watch (uncertain)'
+,p_static_id=>'lvl-1'
+,p_label=>'Amber: watch (uncertain)'
+,p_layer_type=>'POLYGON'
+,p_display_sequence=>11
+,p_location=>'LOCAL'
+,p_query_type=>'SQL'
+,p_layer_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'with v as (',
+'  select ward_id,',
+'         max(case risk_level when ''HIGH'' then 3 when ''MEDIUM'' then 2 when ''UNCERTAIN'' then 1 else 0 end) lvl,',
+'         listagg(distinct hazard || '' '' || risk_level, '', '') within group (order by hazard) hazards',
+'  from v_ward_risk_latest group by ward_id)',
+'select w.ward_id, w.ward_name, w.boundary, nvl(v.hazards, ''No scores'') hazards,',
+'       case nvl(v.lvl, 0) when 3 then ''HIGH'' when 2 then ''MEDIUM'' when 1 then ''Watch (uncertain)'' else ''Low / safe'' end risk',
+'from wards w left join v on v.ward_id = w.ward_id',
+'where w.boundary is not null and w.county = :P2_COUNTY and nvl(v.lvl, 0) = 1'))
+,p_items_to_submit=>'P2_COUNTY'
+,p_use_vector_tiles=>false
+,p_has_spatial_index=>false
+,p_pk_column=>'WARD_ID'
+,p_geometry_column_data_type=>'SDO_GEOMETRY'
+,p_geometry_column=>'BOUNDARY'
+,p_stroke_color=>'#ffffff'
+,p_stroke_width_subst=>'1'
+,p_fill_color=>'#f6c143'
+,p_fill_opacity_subst=>'.55'
+,p_tooltip_adv_formatting=>true
+,p_tooltip_html_expr=>'<b>&WARD_NAME.</b><br>Worst level: &RISK.<br>&HAZARDS.'
+,p_info_window_adv_formatting=>false
+,p_legend_adv_formatting=>false
+,p_allow_hide=>true
+);
+wwv_flow_imp_page.create_map_region_layer(
+ p_id=>wwv_flow_imp.id(9970000000132)
+,p_map_region_id=>wwv_flow_imp.id(9463367992155296)
+,p_name=>'Orange: MEDIUM risk'
+,p_static_id=>'lvl-2'
+,p_label=>'Orange: MEDIUM risk'
+,p_layer_type=>'POLYGON'
+,p_display_sequence=>12
+,p_location=>'LOCAL'
+,p_query_type=>'SQL'
+,p_layer_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'with v as (',
+'  select ward_id,',
+'         max(case risk_level when ''HIGH'' then 3 when ''MEDIUM'' then 2 when ''UNCERTAIN'' then 1 else 0 end) lvl,',
+'         listagg(distinct hazard || '' '' || risk_level, '', '') within group (order by hazard) hazards',
+'  from v_ward_risk_latest group by ward_id)',
+'select w.ward_id, w.ward_name, w.boundary, nvl(v.hazards, ''No scores'') hazards,',
+'       case nvl(v.lvl, 0) when 3 then ''HIGH'' when 2 then ''MEDIUM'' when 1 then ''Watch (uncertain)'' else ''Low / safe'' end risk',
+'from wards w left join v on v.ward_id = w.ward_id',
+'where w.boundary is not null and w.county = :P2_COUNTY and nvl(v.lvl, 0) = 2'))
+,p_items_to_submit=>'P2_COUNTY'
+,p_use_vector_tiles=>false
+,p_has_spatial_index=>false
+,p_pk_column=>'WARD_ID'
+,p_geometry_column_data_type=>'SDO_GEOMETRY'
+,p_geometry_column=>'BOUNDARY'
+,p_stroke_color=>'#ffffff'
+,p_stroke_width_subst=>'1'
+,p_fill_color=>'#f77f00'
+,p_fill_opacity_subst=>'.55'
+,p_tooltip_adv_formatting=>true
+,p_tooltip_html_expr=>'<b>&WARD_NAME.</b><br>Worst level: &RISK.<br>&HAZARDS.'
+,p_info_window_adv_formatting=>false
+,p_legend_adv_formatting=>false
+,p_allow_hide=>true
+);
+wwv_flow_imp_page.create_map_region_layer(
+ p_id=>wwv_flow_imp.id(9970000000133)
+,p_map_region_id=>wwv_flow_imp.id(9463367992155296)
+,p_name=>'Red: HIGH risk'
+,p_static_id=>'lvl-3'
+,p_label=>'Red: HIGH risk'
+,p_layer_type=>'POLYGON'
+,p_display_sequence=>13
+,p_location=>'LOCAL'
+,p_query_type=>'SQL'
+,p_layer_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'with v as (',
+'  select ward_id,',
+'         max(case risk_level when ''HIGH'' then 3 when ''MEDIUM'' then 2 when ''UNCERTAIN'' then 1 else 0 end) lvl,',
+'         listagg(distinct hazard || '' '' || risk_level, '', '') within group (order by hazard) hazards',
+'  from v_ward_risk_latest group by ward_id)',
+'select w.ward_id, w.ward_name, w.boundary, nvl(v.hazards, ''No scores'') hazards,',
+'       case nvl(v.lvl, 0) when 3 then ''HIGH'' when 2 then ''MEDIUM'' when 1 then ''Watch (uncertain)'' else ''Low / safe'' end risk',
+'from wards w left join v on v.ward_id = w.ward_id',
+'where w.boundary is not null and w.county = :P2_COUNTY and nvl(v.lvl, 0) = 3'))
+,p_items_to_submit=>'P2_COUNTY'
+,p_use_vector_tiles=>false
+,p_has_spatial_index=>false
+,p_pk_column=>'WARD_ID'
+,p_geometry_column_data_type=>'SDO_GEOMETRY'
+,p_geometry_column=>'BOUNDARY'
+,p_stroke_color=>'#ffffff'
+,p_stroke_width_subst=>'1'
+,p_fill_color=>'#d7263d'
+,p_fill_opacity_subst=>'.55'
+,p_tooltip_adv_formatting=>true
+,p_tooltip_html_expr=>'<b>&WARD_NAME.</b><br>Worst level: &RISK.<br>&HAZARDS.'
+,p_info_window_adv_formatting=>false
 ,p_legend_adv_formatting=>false
 ,p_allow_hide=>true
 );
@@ -9557,293 +9966,6 @@ wwv_flow_imp_page.create_page_button(
 );
 end;
 /
-prompt --application/pages/page_00006
-begin
-wwv_flow_imp_page.create_page(
- p_id=>6
-,p_name=>'Garissa 2006 Replay'
-,p_alias=>'GARISSA-2006-REPLAY'
-,p_step_title=>'Garissa 2006 Replay'
-,p_autocomplete_on_off=>'OFF'
-,p_step_template=>4073832297226169690
-,p_page_template_options=>'#DEFAULT#'
-,p_protection_level=>'C'
-,p_help_text=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'<p>To find data enter a search term into the search dialog, or click on the column headings to limit the records returned.</p>',
-'',
-'<p>You can perform numerous functions by clicking the <strong>Actions</strong> button. This includes selecting the columns that are displayed / hidden and their display sequence, plus numerous data and format functions.  You can also define additiona'
-||'l views of the data using the chart, group by, and pivot options.</p>',
-'',
-'<p>If you want to save your customizations select report, or click download to unload the data. Enter you email address and time frame under subscription to be sent the data on a regular basis.<p>',
-'',
-'<p>For additional information click Help at the bottom of the Actions menu.</p> ',
-'',
-'<p>Click the <strong>Reset</strong> button to reset the interactive report back to the default settings.</p>'))
-,p_page_component_map=>'18'
-);
-wwv_flow_imp_page.create_page_plug(
- p_id=>wwv_flow_imp.id(9506757435156058)
-,p_plug_name=>'Breadcrumb'
-,p_static_id=>'breadcrumb'
-,p_region_template_options=>'#DEFAULT#:t-BreadcrumbRegion--useBreadcrumbTitle'
-,p_component_template_options=>'#DEFAULT#'
-,p_plug_template=>2532939663579242476
-,p_plug_display_sequence=>20
-,p_plug_display_point=>'REGION_POSITION_01'
-,p_plug_item_display_point=>'ABOVE'
-,p_menu_id=>wwv_flow_imp.id(9427497064154690)
-,p_plug_source_type=>'NATIVE_BREADCRUMB'
-,p_menu_template_id=>4073839682315169711
-);
-wwv_flow_imp_page.create_page_plug(
- p_id=>wwv_flow_imp.id(9499146778155936)
-,p_plug_name=>'Garissa Replaies'
-,p_static_id=>'garissa-2006-replay'
-,p_region_template_options=>'#DEFAULT#:t-IRR-region--hideHeader js-addHiddenHeadingRoleDesc'
-,p_plug_template=>2102002977963900996
-,p_plug_display_sequence=>10
-,p_plug_item_display_point=>'ABOVE'
-,p_query_type=>'TABLE'
-,p_query_table=>'V_GARISSA_REPLAY'
-,p_include_rowid_column=>false
-,p_plug_source_type=>'NATIVE_IR'
-,p_prn_content_disposition=>'ATTACHMENT'
-,p_prn_units=>'INCHES'
-,p_prn_paper_size=>'LETTER'
-,p_prn_width=>11
-,p_prn_height=>8.5
-,p_prn_orientation=>'HORIZONTAL'
-,p_prn_page_header_font_color=>'#000000'
-,p_prn_page_header_font_family=>'Helvetica'
-,p_prn_page_header_font_weight=>'normal'
-,p_prn_page_header_font_size=>'12'
-,p_prn_page_footer_font_color=>'#000000'
-,p_prn_page_footer_font_family=>'Helvetica'
-,p_prn_page_footer_font_weight=>'normal'
-,p_prn_page_footer_font_size=>'12'
-,p_prn_header_bg_color=>'#EEEEEE'
-,p_prn_header_font_color=>'#000000'
-,p_prn_header_font_family=>'Helvetica'
-,p_prn_header_font_weight=>'bold'
-,p_prn_header_font_size=>'10'
-,p_prn_body_bg_color=>'#FFFFFF'
-,p_prn_body_font_color=>'#000000'
-,p_prn_body_font_family=>'Helvetica'
-,p_prn_body_font_weight=>'normal'
-,p_prn_body_font_size=>'10'
-,p_prn_border_width=>.5
-,p_prn_page_header_alignment=>'CENTER'
-,p_prn_page_footer_alignment=>'CENTER'
-,p_prn_border_color=>'#666666'
-,p_ai_enabled=>false
-);
-wwv_flow_imp_page.create_worksheet(
- p_id=>wwv_flow_imp.id(9499237822155936)
-,p_max_row_count_message=>'The maximum row count for this report is #MAX_ROW_COUNT# rows.  Please apply a filter to reduce the number of records in your query.'
-,p_no_data_found_message=>'No data found.'
-,p_allow_save_rpt_public=>'Y'
-,p_pagination_type=>'ROWS_X_TO_Y'
-,p_pagination_display_pos=>'BOTTOM_RIGHT'
-,p_report_list_mode=>'TABS'
-,p_lazy_loading=>false
-,p_show_detail_link=>'N'
-,p_show_notify=>'Y'
-,p_download_formats=>'CSV:HTML:XLSX:PDF'
-,p_enable_mail_download=>'Y'
-,p_internal_uid=>9499237822155936
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(9502841872156036)
-,p_db_column_name=>'CONFIDENCE'
-,p_display_order=>7
-,p_column_identifier=>'G'
-,p_column_label=>'Confidence'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(9505276334156051)
-,p_db_column_name=>'DAYS_BEFORE_INDEX_CASE'
-,p_display_order=>13
-,p_column_identifier=>'M'
-,p_column_label=>'Days Before Index Case'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(9502478768156033)
-,p_db_column_name=>'DECISION'
-,p_display_order=>6
-,p_column_identifier=>'F'
-,p_column_label=>'Decision'
-,p_column_type=>'STRING'
-,p_heading_alignment=>'LEFT'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(9505646928156054)
-,p_db_column_name=>'EVENTS_THIS_WEEK'
-,p_display_order=>14
-,p_column_identifier=>'N'
-,p_column_label=>'Events This Week'
-,p_column_type=>'STRING'
-,p_heading_alignment=>'LEFT'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(9504848220156048)
-,p_db_column_name=>'INDEX_CASE_DATE'
-,p_display_order=>12
-,p_column_identifier=>'L'
-,p_column_label=>'Index Case Date'
-,p_column_type=>'DATE'
-,p_heading_alignment=>'LEFT'
-,p_tz_dependent=>'N'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(9503674866156041)
-,p_db_column_name=>'NDVI'
-,p_display_order=>9
-,p_column_identifier=>'I'
-,p_column_label=>'Ndvi'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(9503248947156038)
-,p_db_column_name=>'RAIN_30D_MM'
-,p_display_order=>8
-,p_column_identifier=>'H'
-,p_column_label=>'Rain 30d Mm'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(9502034496156031)
-,p_db_column_name=>'RISK_LEVEL'
-,p_display_order=>5
-,p_column_identifier=>'E'
-,p_column_label=>'Risk Level'
-,p_column_type=>'STRING'
-,p_heading_alignment=>'LEFT'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(9501677154156029)
-,p_db_column_name=>'RVF_RISK'
-,p_display_order=>4
-,p_column_identifier=>'D'
-,p_column_label=>'Rvf Risk'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(9501268029156026)
-,p_db_column_name=>'SCORE_DATE'
-,p_display_order=>3
-,p_column_identifier=>'C'
-,p_column_label=>'Score Date'
-,p_column_type=>'DATE'
-,p_heading_alignment=>'LEFT'
-,p_tz_dependent=>'N'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(9504008025156044)
-,p_db_column_name=>'SOIL_MOIST_TOP'
-,p_display_order=>10
-,p_column_identifier=>'J'
-,p_column_label=>'Soil Moist Top'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(9504463608156046)
-,p_db_column_name=>'TANA_DISCHARGE_M3S'
-,p_display_order=>11
-,p_column_identifier=>'K'
-,p_column_label=>'Tana Discharge M3s'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(9500498328156021)
-,p_db_column_name=>'WARD_ID'
-,p_display_order=>1
-,p_column_identifier=>'A'
-,p_column_label=>'Ward ID'
-,p_column_type=>'NUMBER'
-,p_heading_alignment=>'RIGHT'
-,p_column_alignment=>'RIGHT'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_column(
- p_id=>wwv_flow_imp.id(9500853807156024)
-,p_db_column_name=>'WARD_NAME'
-,p_display_order=>2
-,p_column_identifier=>'B'
-,p_column_label=>'Ward Name'
-,p_column_type=>'STRING'
-,p_heading_alignment=>'LEFT'
-,p_use_as_row_header=>'N'
-,p_available_clientside=>'N'
-);
-wwv_flow_imp_page.create_worksheet_rpt(
- p_id=>wwv_flow_imp.id(9593903744157141)
-,p_application_user=>'APXWS_DEFAULT'
-,p_report_seq=>10
-,p_report_alias=>'primary'
-,p_status=>'PUBLIC'
-,p_is_default=>'Y'
-,p_report_columns=>'WARD_NAME:SCORE_DATE:RVF_RISK:RISK_LEVEL:DECISION:CONFIDENCE:RAIN_30D_MM:NDVI:SOIL_MOIST_TOP:TANA_DISCHARGE_M3S:INDEX_CASE_DATE:DAYS_BEFORE_INDEX_CASE:EVENTS_THIS_WEEK'
-,p_sort_column_1=>'WARD_NAME'
-,p_sort_direction_1=>'ASC'
-);
-wwv_flow_imp_page.create_page_button(
- p_id=>wwv_flow_imp.id(9506039762156056)
-,p_button_sequence=>10
-,p_button_plug_id=>wwv_flow_imp.id(9499146778155936)
-,p_button_name=>'RESET_REPORT'
-,p_static_id=>'reset-report'
-,p_show_as_disabled=>false
-,p_button_action=>'REDIRECT_PAGE'
-,p_button_template_options=>'t-Button--iconLeft'
-,p_button_template_id=>2084305881903810008
-,p_button_image_alt=>'Reset'
-,p_button_position=>'RIGHT_OF_IR_SEARCH_BAR'
-,p_button_redirect_url=>'f?p=&APP_ID.:6:&APP_SESSION.::&DEBUG.:RR::'
-,p_icon_css_classes=>'fa-undo-alt'
-);
-end;
-/
 prompt --application/pages/page_00007
 begin
 wwv_flow_imp_page.create_page(
@@ -10042,6 +10164,7 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_column_label=>'Subscriber ID'
 ,p_column_type=>'NUMBER'
 ,p_display_text_as=>'HIDDEN_ESCAPE_SC'
+,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
  p_id=>wwv_flow_imp.id(9522939008156465)
@@ -10172,6 +10295,7 @@ wwv_flow_imp_page.create_component_da_action(
 ,p_action_sequence=>10
 ,p_action=>'NATIVE_DIALOG_CANCEL'
 ,p_static_id=>'native-dialog-cancel'
+,p_stop_execution_on_error=>true
 );
 wwv_flow_imp_page.create_page_button(
  p_id=>wwv_flow_imp.id(9518852854156445)
@@ -10414,10 +10538,8 @@ wwv_flow_imp_page.create_page_item(
 ,p_item_sequence=>10
 ,p_item_plug_id=>wwv_flow_imp.id(9508368811156387)
 ,p_item_source_plug_id=>wwv_flow_imp.id(9508368811156387)
-,p_prompt=>'Subscriber ID'
 ,p_source=>'SUBSCRIBER_ID'
 ,p_display_as=>'NATIVE_HIDDEN'
-,p_field_template=>1610598484065263269
 ,p_is_persistent=>'N'
 ,p_protection_level=>'S'
 ,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
@@ -10615,6 +10737,7 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_column_label=>'Coop ID'
 ,p_column_type=>'NUMBER'
 ,p_display_text_as=>'HIDDEN_ESCAPE_SC'
+,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
  p_id=>wwv_flow_imp.id(9540854050156879)
@@ -10791,6 +10914,7 @@ wwv_flow_imp_page.create_component_da_action(
 ,p_action_sequence=>10
 ,p_action=>'NATIVE_DIALOG_CANCEL'
 ,p_static_id=>'native-dialog-cancel'
+,p_stop_execution_on_error=>true
 );
 wwv_flow_imp_page.create_page_button(
  p_id=>wwv_flow_imp.id(9537182370156862)
@@ -10877,10 +11001,8 @@ wwv_flow_imp_page.create_page_item(
 ,p_item_sequence=>10
 ,p_item_plug_id=>wwv_flow_imp.id(9529735366156837)
 ,p_item_source_plug_id=>wwv_flow_imp.id(9529735366156837)
-,p_prompt=>'Coop ID'
 ,p_source=>'COOP_ID'
 ,p_display_as=>'NATIVE_HIDDEN'
-,p_field_template=>1610598484065263269
 ,p_is_persistent=>'N'
 ,p_protection_level=>'S'
 ,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
@@ -11114,6 +11236,8 @@ wwv_flow_imp_page.create_region_column(
 ,p_session_state_data_type=>'VARCHAR2'
 ,p_item_type=>'NATIVE_ROW_ACTION'
 ,p_display_sequence=>20
+,p_use_as_row_header=>false
+,p_include_in_export=>true
 );
 wwv_flow_imp_page.create_region_column(
  p_id=>wwv_flow_imp.id(9548339648156921)
@@ -11125,6 +11249,8 @@ wwv_flow_imp_page.create_region_column(
   'enable_multi_select', 'Y',
   'hide_control', 'N',
   'show_select_all', 'Y')).to_clob
+,p_use_as_row_header=>false
+,p_include_in_export=>true
 );
 wwv_flow_imp_page.create_region_column(
  p_id=>wwv_flow_imp.id(9553875552156956)
@@ -11395,7 +11521,7 @@ wwv_flow_imp_page.create_page(
  p_id=>20
 ,p_name=>'My Ward Alerts'
 ,p_alias=>'MY-WARD-ALERTS'
-,p_step_title=>'My Ward Alerts'
+,p_step_title=>'My Ward Alerts / Tahadhari za Kata Yangu'
 ,p_autocomplete_on_off=>'OFF'
 ,p_step_template=>4073832297226169690
 ,p_page_template_options=>'#DEFAULT#'
@@ -11420,7 +11546,7 @@ wwv_flow_imp_page.create_report_region(
  p_id=>wwv_flow_imp.id(9781227856228012)
 ,p_name=>'Last 5 Alerts'
 ,p_static_id=>'last-5-alerts'
-,p_title=>'Last 5 Alerts for Selected Ward'
+,p_title=>'Last 5 Alerts / Tahadhari 5 za Mwisho'
 ,p_template=>4073835273271169698
 ,p_display_sequence=>40
 ,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
@@ -11547,12 +11673,11 @@ wwv_flow_imp_page.create_page_item(
  p_id=>wwv_flow_imp.id(9780958102228009)
 ,p_name=>'P20_LANG'
 ,p_item_sequence=>20
-,p_item_default=>'sw'
-,p_prompt=>'Language'
+,p_item_default=>'en'
+,p_prompt=>'Language / Lugha'
 ,p_source_type=>'ALWAYS_NULL'
 ,p_display_as=>'NATIVE_RADIOGROUP'
 ,p_lov=>'STATIC:Kiswahili;sw,English;en'
-,p_lov_display_null=>'YES'
 ,p_field_template=>1610598304472262251
 ,p_item_template_options=>'#DEFAULT#'
 ,p_lov_display_extra=>'YES'
@@ -11564,7 +11689,7 @@ wwv_flow_imp_page.create_page_item(
  p_id=>wwv_flow_imp.id(9780856988228008)
 ,p_name=>'P20_WARD'
 ,p_item_sequence=>10
-,p_prompt=>'Ward'
+,p_prompt=>'Ward / Kata'
 ,p_source_type=>'ALWAYS_NULL'
 ,p_display_as=>'NATIVE_SELECT_LIST'
 ,p_lov=>'select ward_name d, ward_id r from wards order by 1'
@@ -11825,6 +11950,7 @@ wwv_flow_imp_page.create_jet_chart(
 ,p_hide_and_show_behavior=>'withRescale'
 ,p_hover_behavior=>'dim'
 ,p_stack=>'off'
+,p_stack_label=>'off'
 ,p_connect_nulls=>'Y'
 ,p_sorting=>'label-asc'
 ,p_fill_multi_series_gaps=>true
@@ -11835,6 +11961,7 @@ wwv_flow_imp_page.create_jet_chart(
 ,p_show_value=>true
 ,p_legend_rendered=>'on'
 ,p_legend_position=>'auto'
+,p_overview_rendered=>'off'
 );
 wwv_flow_imp_page.create_jet_chart_series(
  p_id=>wwv_flow_imp.id(9783877137228038)
@@ -11845,11 +11972,14 @@ wwv_flow_imp_page.create_jet_chart_series(
 ,p_data_source_type=>'SQL'
 ,p_data_source=>'select w.county, v.risk_level, count(distinct w.ward_id) wards from v_ward_risk_latest v join wards w on w.ward_id = v.ward_id where w.county = :P30_COUNTY group by w.county, v.risk_level order by w.county, v.risk_level'
 ,p_ajax_items_to_submit=>'P30_COUNTY'
+,p_series_type=>'bar'
 ,p_series_name_column_name=>'RISK_LEVEL'
 ,p_items_value_column_name=>'WARDS'
 ,p_items_label_column_name=>'COUNTY'
 ,p_assigned_to_y2=>'off'
 ,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
 );
 wwv_flow_imp_page.create_jet_chart_axis(
  p_id=>wwv_flow_imp.id(9783993359228039)
@@ -11932,6 +12062,3718 @@ wwv_flow_imp_page.create_page_da_action(
 ,p_action=>'NATIVE_REFRESH'
 ,p_affected_elements_type=>'REGION'
 ,p_affected_region_id=>wwv_flow_imp.id(9783645869228036)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+end;
+/
+prompt --application/pages/page_00040
+begin
+wwv_flow_imp_page.create_page(
+ p_id=>40
+,p_name=>'Live Disease Alerts'
+,p_alias=>'DISEASE-ALERTS'
+,p_step_title=>'Live Disease Alerts'
+,p_autocomplete_on_off=>'OFF'
+,p_inline_css=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'.coop-kpi .a-CardView-items{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px}',
+'@media (max-width:900px){.coop-kpi .a-CardView-items{grid-template-columns:repeat(2,1fr)!important}}',
+'.coop-kpi .a-CardView{border-radius:12px;border-top:5px solid #1b7f5f}',
+'.coop-link .a-CardView{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}',
+'.coop-link .a-CardView:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(0,0,0,.16);border-top-color:#0f5c43}',
+'.coop-link .a-CardView:hover .a-CardView-subTitle{text-decoration:underline}',
+'.coop-kpi .a-CardView-title{font-size:2.3rem;font-weight:800;line-height:1.1}',
+'.coop-kpi .a-CardView-subTitle{font-size:1rem;font-weight:600;color:#3d4a46}',
+'.coop-kpi .a-CardView-mainContent{font-size:.85rem;color:#5d6b67}',
+'.coop-banner{padding:10px 14px;border-radius:10px;background:#fff6e0;border:1px solid #f0c36d;font-size:.95rem}',
+'.coop-banner b{color:#8a5a00}',
+'.coop-method{padding:10px 14px;border-radius:10px;background:#eef6f3;border:1px solid #9fd1bf;font-size:.95rem}',
+'.coop-tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;font-weight:700;color:#fff}',
+'.t-Header{position:sticky!important;top:0;z-index:800}',
+'.t-Report-cell,.t-Report-colHead{font-size:.95rem}'))
+,p_step_template=>4073832297226169690
+,p_page_template_options=>'#DEFAULT#'
+,p_protection_level=>'C'
+,p_page_component_map=>'13'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000039)
+,p_plug_name=>'Alert totals'
+,p_static_id=>'alert-totals'
+,p_title=>'Alert totals'
+,p_region_css_classes=>'coop-kpi'
+,p_region_template_options=>'#DEFAULT#:t-CardsRegion--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>2074200852440250129
+,p_plug_display_sequence=>10
+,p_plug_item_display_point=>'ABOVE'
+,p_query_type=>'SQL'
+,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select ''Reports'' card_title, to_char(count(*)) card_value, ''in period'' card_note, 1 o from coop_disease_reports r where r.reported_at > systimestamp - numtodsinterval(nvl(:P40_DAYS,14),''DAY'') and (:P40_COOP is null or r.coop_id = :P40_COOP)',
+'union all select ''Wards affected'', to_char(count(distinct ward_id)), ''with at least one report'', 2 from coop_disease_reports r where r.reported_at > systimestamp - numtodsinterval(nvl(:P40_DAYS,14),''DAY'') and (:P40_COOP is null or r.coop_id = :P40_CO'
+||'OP)',
+'union all select ''Pending vet'', to_char(count(case when vet_status=''PENDING'' then 1 end)), ''awaiting verification'', 3 from coop_disease_reports r where r.reported_at > systimestamp - numtodsinterval(nvl(:P40_DAYS,14),''DAY'') and (:P40_COOP is null or '
+||'r.coop_id = :P40_COOP)',
+'union all select ''Vet confirmed'', to_char(count(case when vet_status=''VET_CONFIRMED'' then 1 end)), ''ready to alert farmers'', 4 from coop_disease_reports r where r.reported_at > systimestamp - numtodsinterval(nvl(:P40_DAYS,14),''DAY'') and (:P40_COOP is'
+||' null or r.coop_id = :P40_COOP)',
+'order by 4'))
+,p_lazy_loading=>false
+,p_plug_source_type=>'NATIVE_CARDS'
+,p_ajax_items_to_submit=>'P40_COOP,P40_DAYS'
+,p_plug_query_num_rows_type=>'SCROLL'
+,p_show_total_row_count=>false
+);
+wwv_flow_imp_page.create_card(
+ p_id=>wwv_flow_imp.id(9950000000040)
+,p_region_id=>wwv_flow_imp.id(9950000000039)
+,p_layout_type=>'GRID'
+,p_grid_column_count=>4
+,p_title_adv_formatting=>false
+,p_title_column_name=>'CARD_VALUE'
+,p_sub_title_adv_formatting=>false
+,p_sub_title_column_name=>'CARD_TITLE'
+,p_body_adv_formatting=>false
+,p_body_column_name=>'CARD_NOTE'
+,p_second_body_adv_formatting=>false
+,p_media_adv_formatting=>false
+,p_pk1_column_name=>'CARD_TITLE'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000034)
+,p_plug_name=>'Breadcrumb'
+,p_static_id=>'breadcrumb'
+,p_region_template_options=>'#DEFAULT#:t-BreadcrumbRegion--useBreadcrumbTitle'
+,p_component_template_options=>'#DEFAULT#'
+,p_plug_template=>2532939663579242476
+,p_plug_display_sequence=>1
+,p_plug_display_point=>'REGION_POSITION_01'
+,p_plug_item_display_point=>'ABOVE'
+,p_menu_id=>wwv_flow_imp.id(9427497064154690)
+,p_plug_source_type=>'NATIVE_BREADCRUMB'
+,p_menu_template_id=>4073839682315169711
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000035)
+,p_plug_name=>'Filters'
+,p_static_id=>'filters'
+,p_title=>'Filters'
+,p_region_template_options=>'#DEFAULT#:t-Region--noUI:t-Region--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>5
+,p_plug_item_display_point=>'ABOVE'
+,p_plug_query_num_rows=>15
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000038)
+,p_plug_name=>'Flow'
+,p_static_id=>'flow'
+,p_title=>'Flow'
+,p_region_template_options=>'#DEFAULT#:t-Region--noUI:t-Region--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>8
+,p_plug_item_display_point=>'ABOVE'
+,p_plug_source=>'<div class="coop-method"><b>How alerts arrive:</b> member dials USSD &rarr; picks co-op &rarr; enters member number &rarr; OTP verification &rarr; reports disease. Each report lands here as <b>PENDING</b> until a vet confirms or rejects it. Rows mark'
+||'ed DEMO are seeded.</div>'
+,p_plug_query_num_rows=>15
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(9950000000050)
+,p_name=>'Incoming alerts (newest first)'
+,p_static_id=>'incoming-alerts-newest-first'
+,p_title=>'Incoming alerts (newest first)'
+,p_template=>4073835273271169698
+,p_display_sequence=>30
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_component_template_options=>'#DEFAULT#:t-Report--stretch:t-Report--altRowsDefault:t-Report--rowHighlight'
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'SQL'
+,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select to_char(r.reported_at at time zone ''Africa/Nairobi'',''DD Mon HH24:MI'') "Received (EAT)",',
+'       w.ward_name "Ward", replace(c.coop_name,''SYNTHETIC '','''') "Co-op", r.member_no "Member no.",',
+'       r.disease "Disease", r.category "Type", r.animals_or_acres "Animals / acres", r.symptoms "Symptoms",',
+'       decode(r.otp_verified,''Y'',''OTP verified'',''Not verified'') "Verification",',
+'       r.vet_status "Vet status", decode(r.is_demo,''Y'',''DEMO'',''Live'') "Data"',
+'from coop_disease_reports r join wards w on w.ward_id=r.ward_id join cooperatives c on c.coop_id=r.coop_id',
+'where r.reported_at > systimestamp - numtodsinterval(nvl(:P40_DAYS,14),''DAY'') and (:P40_COOP is null or r.coop_id = :P40_COOP)',
+'order by r.reported_at desc'))
+,p_ajax_enabled=>'Y'
+,p_ajax_items_to_submit=>'P40_COOP,P40_DAYS'
+,p_lazy_loading=>false
+,p_query_row_template=>2540130677583398057
+,p_query_num_rows=>15
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_query_no_data_found=>'No rows yet.'
+,p_query_num_rows_type=>'NEXT_PREVIOUS_LINKS'
+,p_pagination_display_position=>'BOTTOM_RIGHT'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000057)
+,p_query_column_id=>7
+,p_column_alias=>'Animals / acres'
+,p_column_display_sequence=>70
+,p_column_heading=>'Animals / Acres'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000053)
+,p_query_column_id=>3
+,p_column_alias=>'Co-op'
+,p_column_display_sequence=>30
+,p_column_heading=>'Co-Op'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000061)
+,p_query_column_id=>11
+,p_column_alias=>'Data'
+,p_column_display_sequence=>110
+,p_column_heading=>'Data'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000055)
+,p_query_column_id=>5
+,p_column_alias=>'Disease'
+,p_column_display_sequence=>50
+,p_column_heading=>'Disease'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000054)
+,p_query_column_id=>4
+,p_column_alias=>'Member no.'
+,p_column_display_sequence=>40
+,p_column_heading=>'Member No.'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000051)
+,p_query_column_id=>1
+,p_column_alias=>'Received (EAT)'
+,p_column_display_sequence=>10
+,p_column_heading=>'Received (Eat)'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000058)
+,p_query_column_id=>8
+,p_column_alias=>'Symptoms'
+,p_column_display_sequence=>80
+,p_column_heading=>'Symptoms'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000056)
+,p_query_column_id=>6
+,p_column_alias=>'Type'
+,p_column_display_sequence=>60
+,p_column_heading=>'Type'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000059)
+,p_query_column_id=>9
+,p_column_alias=>'Verification'
+,p_column_display_sequence=>90
+,p_column_heading=>'Verification'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000060)
+,p_query_column_id=>10
+,p_column_alias=>'Vet status'
+,p_column_display_sequence=>100
+,p_column_heading=>'Vet Status'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000052)
+,p_query_column_id=>2
+,p_column_alias=>'Ward'
+,p_column_display_sequence=>20
+,p_column_heading=>'Ward'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000041)
+,p_plug_name=>'Reports per ward by disease'
+,p_static_id=>'reports-per-ward-by-disease'
+,p_title=>'Reports per ward by disease'
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_escape_on_http_output=>'Y'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>20
+,p_plug_item_display_point=>'ABOVE'
+,p_location=>null
+,p_plug_source_type=>'NATIVE_JET_CHART'
+);
+wwv_flow_imp_page.create_jet_chart(
+ p_id=>wwv_flow_imp.id(9950000000042)
+,p_region_id=>wwv_flow_imp.id(9950000000041)
+,p_chart_type=>'bar'
+,p_animation_on_display=>'auto'
+,p_animation_on_data_change=>'auto'
+,p_orientation=>'vertical'
+,p_data_cursor=>'auto'
+,p_data_cursor_behavior=>'auto'
+,p_hide_and_show_behavior=>'withRescale'
+,p_hover_behavior=>'dim'
+,p_stack=>'on'
+,p_stack_label=>'off'
+,p_connect_nulls=>'Y'
+,p_sorting=>'label-asc'
+,p_fill_multi_series_gaps=>true
+,p_zoom_and_scroll=>'off'
+,p_tooltip_rendered=>'Y'
+,p_show_series_name=>true
+,p_show_group_name=>true
+,p_show_value=>true
+,p_legend_rendered=>'on'
+,p_legend_position=>'auto'
+,p_overview_rendered=>'off'
+);
+wwv_flow_imp_page.create_jet_chart_series(
+ p_id=>wwv_flow_imp.id(9950000000043)
+,p_chart_id=>wwv_flow_imp.id(9950000000042)
+,p_static_id=>'series-1'
+,p_seq=>10
+,p_name=>'Maize lethal necrosis (MLN)'
+,p_data_source_type=>'SQL'
+,p_data_source=>'select w.ward_name label, count(*) value from coop_disease_reports r join wards w on w.ward_id=r.ward_id where r.disease = ''Maize lethal necrosis (MLN)'' and r.reported_at > systimestamp - numtodsinterval(nvl(:P40_DAYS,14),''DAY'') and (:P40_COOP is nul'
+||'l or r.coop_id = :P40_COOP) group by w.ward_name'
+,p_max_row_count=>200
+,p_ajax_items_to_submit=>'P40_COOP,P40_DAYS'
+,p_series_type=>'bar'
+,p_items_value_column_name=>'VALUE'
+,p_items_label_column_name=>'LABEL'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_series(
+ p_id=>wwv_flow_imp.id(9950000000044)
+,p_chart_id=>wwv_flow_imp.id(9950000000042)
+,p_static_id=>'series-2'
+,p_seq=>20
+,p_name=>'Fall armyworm'
+,p_data_source_type=>'SQL'
+,p_data_source=>'select w.ward_name label, count(*) value from coop_disease_reports r join wards w on w.ward_id=r.ward_id where r.disease = ''Fall armyworm'' and r.reported_at > systimestamp - numtodsinterval(nvl(:P40_DAYS,14),''DAY'') and (:P40_COOP is null or r.coop_id'
+||' = :P40_COOP) group by w.ward_name'
+,p_max_row_count=>200
+,p_ajax_items_to_submit=>'P40_COOP,P40_DAYS'
+,p_series_type=>'bar'
+,p_items_value_column_name=>'VALUE'
+,p_items_label_column_name=>'LABEL'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_series(
+ p_id=>wwv_flow_imp.id(9950000000045)
+,p_chart_id=>wwv_flow_imp.id(9950000000042)
+,p_static_id=>'series-3'
+,p_seq=>30
+,p_name=>'Lumpy skin disease (suspected)'
+,p_data_source_type=>'SQL'
+,p_data_source=>'select w.ward_name label, count(*) value from coop_disease_reports r join wards w on w.ward_id=r.ward_id where r.disease = ''Lumpy skin disease (suspected)'' and r.reported_at > systimestamp - numtodsinterval(nvl(:P40_DAYS,14),''DAY'') and (:P40_COOP is '
+||'null or r.coop_id = :P40_COOP) group by w.ward_name'
+,p_max_row_count=>200
+,p_ajax_items_to_submit=>'P40_COOP,P40_DAYS'
+,p_series_type=>'bar'
+,p_items_value_column_name=>'VALUE'
+,p_items_label_column_name=>'LABEL'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_series(
+ p_id=>wwv_flow_imp.id(9950000000046)
+,p_chart_id=>wwv_flow_imp.id(9950000000042)
+,p_static_id=>'series-4'
+,p_seq=>40
+,p_name=>'Rift Valley fever (suspected)'
+,p_data_source_type=>'SQL'
+,p_data_source=>'select w.ward_name label, count(*) value from coop_disease_reports r join wards w on w.ward_id=r.ward_id where r.disease = ''Rift Valley fever (suspected)'' and r.reported_at > systimestamp - numtodsinterval(nvl(:P40_DAYS,14),''DAY'') and (:P40_COOP is n'
+||'ull or r.coop_id = :P40_COOP) group by w.ward_name'
+,p_max_row_count=>200
+,p_ajax_items_to_submit=>'P40_COOP,P40_DAYS'
+,p_series_type=>'bar'
+,p_items_value_column_name=>'VALUE'
+,p_items_label_column_name=>'LABEL'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_series(
+ p_id=>wwv_flow_imp.id(9950000000047)
+,p_chart_id=>wwv_flow_imp.id(9950000000042)
+,p_static_id=>'series-5'
+,p_seq=>50
+,p_name=>'Peste des petits ruminants (PPR)'
+,p_data_source_type=>'SQL'
+,p_data_source=>'select w.ward_name label, count(*) value from coop_disease_reports r join wards w on w.ward_id=r.ward_id where r.disease = ''Peste des petits ruminants (PPR)'' and r.reported_at > systimestamp - numtodsinterval(nvl(:P40_DAYS,14),''DAY'') and (:P40_COOP i'
+||'s null or r.coop_id = :P40_COOP) group by w.ward_name'
+,p_max_row_count=>200
+,p_ajax_items_to_submit=>'P40_COOP,P40_DAYS'
+,p_series_type=>'bar'
+,p_items_value_column_name=>'VALUE'
+,p_items_label_column_name=>'LABEL'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_axis(
+ p_id=>wwv_flow_imp.id(9950000000048)
+,p_chart_id=>wwv_flow_imp.id(9950000000042)
+,p_static_id=>'x'
+,p_axis=>'x'
+,p_is_rendered=>'on'
+,p_format_scaling=>'auto'
+,p_scaling=>'linear'
+,p_baseline_scaling=>'zero'
+,p_major_tick_rendered=>'auto'
+,p_minor_tick_rendered=>'auto'
+,p_tick_label_rendered=>'on'
+,p_tick_label_rotation=>'auto'
+,p_tick_label_position=>'outside'
+);
+wwv_flow_imp_page.create_jet_chart_axis(
+ p_id=>wwv_flow_imp.id(9950000000049)
+,p_chart_id=>wwv_flow_imp.id(9950000000042)
+,p_static_id=>'y'
+,p_axis=>'y'
+,p_is_rendered=>'on'
+,p_title=>'Reports'
+,p_format_type=>'decimal'
+,p_decimal_places=>0
+,p_format_scaling=>'auto'
+,p_scaling=>'linear'
+,p_baseline_scaling=>'zero'
+,p_position=>'auto'
+,p_major_tick_rendered=>'auto'
+,p_minor_tick_rendered=>'auto'
+,p_tick_label_rendered=>'on'
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000036)
+,p_name=>'P40_COOP'
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_imp.id(9950000000035)
+,p_prompt=>'Co-operative'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_SELECT_LIST'
+,p_lov=>'select replace(coop_name,''SYNTHETIC '','''')||'' (demo)'' d, coop_id r from cooperatives order by coop_name'
+,p_lov_display_null=>'YES'
+,p_lov_null_text=>'All co-operatives'
+,p_cHeight=>1
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_lov_display_extra=>'NO'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'page_action_on_selection', 'NONE')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000037)
+,p_name=>'P40_DAYS'
+,p_item_sequence=>20
+,p_item_plug_id=>wwv_flow_imp.id(9950000000035)
+,p_item_default=>'14'
+,p_prompt=>'Period'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_RADIOGROUP'
+,p_lov=>'STATIC:Last 3 days;3,Last 7 days;7,Last 14 days;14,Last 21 days;21'
+,p_begin_on_new_line=>'N'
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_lov_display_extra=>'NO'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'number_of_columns', '4',
+  'page_action_on_selection', 'NONE')).to_clob
+);
+wwv_flow_imp_page.create_page_da_event(
+ p_id=>wwv_flow_imp.id(9950000000062)
+,p_name=>'Refresh on P40_COOP'
+,p_static_id=>'refresh-on-p40-coop'
+,p_event_sequence=>10
+,p_triggering_element_type=>'ITEM'
+,p_triggering_element=>'P40_COOP'
+,p_bind_type=>'bind'
+,p_execution_type=>'IMMEDIATE'
+,p_bind_event_type=>'change'
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000063)
+,p_event_id=>wwv_flow_imp.id(9950000000062)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-0'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000039)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000064)
+,p_event_id=>wwv_flow_imp.id(9950000000062)
+,p_event_result=>'TRUE'
+,p_action_sequence=>20
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-1'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000041)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000065)
+,p_event_id=>wwv_flow_imp.id(9950000000062)
+,p_event_result=>'TRUE'
+,p_action_sequence=>30
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-2'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000050)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_event(
+ p_id=>wwv_flow_imp.id(9950000000066)
+,p_name=>'Refresh on P40_DAYS'
+,p_static_id=>'refresh-on-p40-days'
+,p_event_sequence=>10
+,p_triggering_element_type=>'ITEM'
+,p_triggering_element=>'P40_DAYS'
+,p_bind_type=>'bind'
+,p_execution_type=>'IMMEDIATE'
+,p_bind_event_type=>'change'
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000067)
+,p_event_id=>wwv_flow_imp.id(9950000000066)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-0'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000039)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000068)
+,p_event_id=>wwv_flow_imp.id(9950000000066)
+,p_event_result=>'TRUE'
+,p_action_sequence=>20
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-1'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000041)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000069)
+,p_event_id=>wwv_flow_imp.id(9950000000066)
+,p_event_result=>'TRUE'
+,p_action_sequence=>30
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-2'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000050)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+end;
+/
+prompt --application/pages/page_00041
+begin
+wwv_flow_imp_page.create_page(
+ p_id=>41
+,p_name=>'Outbreak Map & Spread'
+,p_alias=>'OUTBREAK-MAP'
+,p_step_title=>'Outbreak Map & Spread'
+,p_autocomplete_on_off=>'OFF'
+,p_inline_css=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'.coop-kpi .a-CardView-items{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px}',
+'@media (max-width:900px){.coop-kpi .a-CardView-items{grid-template-columns:repeat(2,1fr)!important}}',
+'.coop-kpi .a-CardView{border-radius:12px;border-top:5px solid #1b7f5f}',
+'.coop-link .a-CardView{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}',
+'.coop-link .a-CardView:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(0,0,0,.16);border-top-color:#0f5c43}',
+'.coop-link .a-CardView:hover .a-CardView-subTitle{text-decoration:underline}',
+'.coop-kpi .a-CardView-title{font-size:2.3rem;font-weight:800;line-height:1.1}',
+'.coop-kpi .a-CardView-subTitle{font-size:1rem;font-weight:600;color:#3d4a46}',
+'.coop-kpi .a-CardView-mainContent{font-size:.85rem;color:#5d6b67}',
+'.coop-banner{padding:10px 14px;border-radius:10px;background:#fff6e0;border:1px solid #f0c36d;font-size:.95rem}',
+'.coop-banner b{color:#8a5a00}',
+'.coop-method{padding:10px 14px;border-radius:10px;background:#eef6f3;border:1px solid #9fd1bf;font-size:.95rem}',
+'.coop-tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;font-weight:700;color:#fff}',
+'.t-Header{position:sticky!important;top:0;z-index:800}',
+'.t-Report-cell,.t-Report-colHead{font-size:.95rem}'))
+,p_step_template=>4073832297226169690
+,p_page_template_options=>'#DEFAULT#'
+,p_protection_level=>'C'
+,p_page_component_map=>'13'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000070)
+,p_plug_name=>'Breadcrumb'
+,p_static_id=>'breadcrumb'
+,p_region_template_options=>'#DEFAULT#:t-BreadcrumbRegion--useBreadcrumbTitle'
+,p_component_template_options=>'#DEFAULT#'
+,p_plug_template=>2532939663579242476
+,p_plug_display_sequence=>1
+,p_plug_display_point=>'REGION_POSITION_01'
+,p_plug_item_display_point=>'ABOVE'
+,p_menu_id=>wwv_flow_imp.id(9427497064154690)
+,p_plug_source_type=>'NATIVE_BREADCRUMB'
+,p_menu_template_id=>4073839682315169711
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000099)
+,p_plug_name=>'Magnitude'
+,p_static_id=>'magnitude'
+,p_title=>'Magnitude'
+,p_region_css_classes=>'coop-kpi'
+,p_region_template_options=>'#DEFAULT#:t-CardsRegion--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>2074200852440250129
+,p_plug_display_sequence=>9
+,p_plug_item_display_point=>'ABOVE'
+,p_query_type=>'SQL'
+,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select ''Red: affected wards'' card_title, to_char(count(case when lvl=3 then 1 end)) card_value, ''5+ cases in 14 days, 3+ vet-confirmed'' card_note, 1 o',
+'  from v_ward_outbreak_class f where f.scope = nvl(:P41_DISEASE, ''ALL'') and (:P41_COUNTY = ''ALL'' or f.county = :P41_COUNTY)',
+'union all select ''Orange: at risk'', to_char(count(case when lvl=2 then 1 end)), ''2-4 cases, or 1 case next to a red ward'', 1.5',
+'  from v_ward_outbreak_class f where f.scope = nvl(:P41_DISEASE, ''ALL'') and (:P41_COUNTY = ''ALL'' or f.county = :P41_COUNTY)',
+'union all select ''Amber: watch'', to_char(count(case when lvl=1 then 1 end)), ''1 case, or next to red / high rain risk'', 2',
+'  from v_ward_outbreak_class f where f.scope = nvl(:P41_DISEASE, ''ALL'') and (:P41_COUNTY = ''ALL'' or f.county = :P41_COUNTY)',
+'union all select ''Last 7 vs previous 7 days'', to_char(sum(case when r.reported_at > systimestamp - interval ''7'' day then 1 else 0 end))||'' vs ''||',
+'       to_char(sum(case when r.reported_at <= systimestamp - interval ''7'' day and r.reported_at > systimestamp - interval ''14'' day then 1 else 0 end)), ''reports (growth of the outbreak)'', 3',
+'  from coop_disease_reports r join wards w on w.ward_id=r.ward_id where (:P41_COUNTY = ''ALL'' or w.county = :P41_COUNTY) and (:P41_DISEASE is null or r.disease = :P41_DISEASE)',
+'union all select ''Animals / acres reported'', to_char(nvl(sum(animals_or_acres),0)), ''last 21 days, not rejected'', 4',
+'  from coop_disease_reports r join wards w on w.ward_id=r.ward_id where (:P41_COUNTY = ''ALL'' or w.county = :P41_COUNTY) and r.vet_status <> ''REJECTED''',
+'   and r.reported_at > systimestamp - interval ''21'' day and (:P41_DISEASE is null or r.disease = :P41_DISEASE)',
+'order by 4'))
+,p_lazy_loading=>false
+,p_plug_source_type=>'NATIVE_CARDS'
+,p_ajax_items_to_submit=>'P41_COUNTY,P41_DISEASE'
+,p_plug_query_num_rows_type=>'SCROLL'
+,p_show_total_row_count=>false
+);
+wwv_flow_imp_page.create_card(
+ p_id=>wwv_flow_imp.id(9950000000100)
+,p_region_id=>wwv_flow_imp.id(9950000000099)
+,p_layout_type=>'GRID'
+,p_grid_column_count=>5
+,p_title_adv_formatting=>false
+,p_title_column_name=>'CARD_VALUE'
+,p_sub_title_adv_formatting=>false
+,p_sub_title_column_name=>'CARD_TITLE'
+,p_body_adv_formatting=>false
+,p_body_column_name=>'CARD_NOTE'
+,p_second_body_adv_formatting=>false
+,p_media_adv_formatting=>false
+,p_pk1_column_name=>'CARD_TITLE'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000071)
+,p_plug_name=>'Map filters'
+,p_static_id=>'map-filters'
+,p_title=>'Map filters'
+,p_region_template_options=>'#DEFAULT#:t-Region--noUI:t-Region--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>5
+,p_plug_item_display_point=>'ABOVE'
+,p_plug_query_num_rows=>15
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000076)
+,p_plug_name=>'Outbreak map'
+,p_static_id=>'outbreak-map'
+,p_title=>'Outbreak map: affected wards and wards at risk next'
+,p_region_template_options=>'#DEFAULT#'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>10
+,p_plug_item_display_point=>'ABOVE'
+,p_location=>null
+,p_lazy_loading=>true
+,p_plug_source_type=>'NATIVE_MAP_REGION'
+);
+wwv_flow_imp_page.create_map_region(
+ p_id=>wwv_flow_imp.id(9950000000077)
+,p_region_id=>wwv_flow_imp.id(9950000000076)
+,p_height=>560
+,p_tilelayer_type=>'SHARED'
+,p_default_shared_tilelayer_id=>wwv_flow_imp.id(9970000000100)
+,p_navigation_bar_type=>'FULL'
+,p_navigation_bar_position=>'END'
+,p_init_position_zoom_type=>'QUERY_RESULTS'
+,p_init_position_zoom_source=>'ALL_LAYERS'
+,p_init_position_lon_static=>'35.3'
+,p_init_position_lat_static=>'0.52'
+,p_init_zoomlevel_static=>'9'
+,p_layer_messages_position=>'BELOW'
+,p_legend_position=>'END'
+,p_features=>'SCALE_BAR:INFINITE_MAP:RECTANGLE_ZOOM:MOUSEWHEEL_ZOOM'
+);
+wwv_flow_imp_page.create_map_region_layer(
+ p_id=>wwv_flow_imp.id(9970000000110)
+,p_map_region_id=>wwv_flow_imp.id(9950000000077)
+,p_name=>'Green: safe (0 cases, no high risk)'
+,p_static_id=>'lvl-0'
+,p_label=>'Green: safe (0 cases, no high risk)'
+,p_layer_type=>'POLYGON'
+,p_display_sequence=>10
+,p_location=>'LOCAL'
+,p_query_type=>'SQL'
+,p_layer_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select c.ward_id, c.ward_name, w.boundary, c.cases, c.confirmed, c.reason,',
+'       case when c.diseases is null then ''Reported: none'' else ''Reported: ''||c.diseases end reported,',
+'       case when c.risks is null then '''' else ''Risk: ''||c.risks||'' (HIGH)'' end risk_note',
+'from v_ward_outbreak_class c join wards w on w.ward_id = c.ward_id',
+'where c.scope = nvl(:P41_DISEASE, ''ALL'') and w.boundary is not null',
+'  and (:P41_COUNTY = ''ALL'' or c.county = :P41_COUNTY) and c.lvl = 0'))
+,p_items_to_submit=>'P41_COUNTY,P41_DISEASE'
+,p_use_vector_tiles=>false
+,p_has_spatial_index=>false
+,p_pk_column=>'WARD_ID'
+,p_geometry_column_data_type=>'SDO_GEOMETRY'
+,p_geometry_column=>'BOUNDARY'
+,p_stroke_color=>'#ffffff'
+,p_stroke_width_subst=>'1'
+,p_fill_color=>'#2a9d4f'
+,p_fill_opacity_subst=>'.55'
+,p_tooltip_adv_formatting=>true
+,p_tooltip_html_expr=>'<b>&WARD_NAME.</b><br>&REASON.<br>Cases (14 days): &CASES. &middot; vet-confirmed: &CONFIRMED.<br>&REPORTED.<br>&RISK_NOTE.'
+,p_info_window_adv_formatting=>false
+,p_legend_adv_formatting=>false
+,p_allow_hide=>true
+);
+wwv_flow_imp_page.create_map_region_layer(
+ p_id=>wwv_flow_imp.id(9970000000111)
+,p_map_region_id=>wwv_flow_imp.id(9950000000077)
+,p_name=>'Amber: watch (1 case, or next to red / high rain risk)'
+,p_static_id=>'lvl-1'
+,p_label=>'Amber: watch (1 case, or next to red / high rain risk)'
+,p_layer_type=>'POLYGON'
+,p_display_sequence=>11
+,p_location=>'LOCAL'
+,p_query_type=>'SQL'
+,p_layer_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select c.ward_id, c.ward_name, w.boundary, c.cases, c.confirmed, c.reason,',
+'       case when c.diseases is null then ''Reported: none'' else ''Reported: ''||c.diseases end reported,',
+'       case when c.risks is null then '''' else ''Risk: ''||c.risks||'' (HIGH)'' end risk_note',
+'from v_ward_outbreak_class c join wards w on w.ward_id = c.ward_id',
+'where c.scope = nvl(:P41_DISEASE, ''ALL'') and w.boundary is not null',
+'  and (:P41_COUNTY = ''ALL'' or c.county = :P41_COUNTY) and c.lvl = 1'))
+,p_items_to_submit=>'P41_COUNTY,P41_DISEASE'
+,p_use_vector_tiles=>false
+,p_has_spatial_index=>false
+,p_pk_column=>'WARD_ID'
+,p_geometry_column_data_type=>'SDO_GEOMETRY'
+,p_geometry_column=>'BOUNDARY'
+,p_stroke_color=>'#ffffff'
+,p_stroke_width_subst=>'1'
+,p_fill_color=>'#f6c143'
+,p_fill_opacity_subst=>'.55'
+,p_tooltip_adv_formatting=>true
+,p_tooltip_html_expr=>'<b>&WARD_NAME.</b><br>&REASON.<br>Cases (14 days): &CASES. &middot; vet-confirmed: &CONFIRMED.<br>&REPORTED.<br>&RISK_NOTE.'
+,p_info_window_adv_formatting=>false
+,p_legend_adv_formatting=>false
+,p_allow_hide=>true
+);
+wwv_flow_imp_page.create_map_region_layer(
+ p_id=>wwv_flow_imp.id(9970000000112)
+,p_map_region_id=>wwv_flow_imp.id(9950000000077)
+,p_name=>'Orange: at risk (2-4 cases, or 1 next to red)'
+,p_static_id=>'lvl-2'
+,p_label=>'Orange: at risk (2-4 cases, or 1 next to red)'
+,p_layer_type=>'POLYGON'
+,p_display_sequence=>12
+,p_location=>'LOCAL'
+,p_query_type=>'SQL'
+,p_layer_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select c.ward_id, c.ward_name, w.boundary, c.cases, c.confirmed, c.reason,',
+'       case when c.diseases is null then ''Reported: none'' else ''Reported: ''||c.diseases end reported,',
+'       case when c.risks is null then '''' else ''Risk: ''||c.risks||'' (HIGH)'' end risk_note',
+'from v_ward_outbreak_class c join wards w on w.ward_id = c.ward_id',
+'where c.scope = nvl(:P41_DISEASE, ''ALL'') and w.boundary is not null',
+'  and (:P41_COUNTY = ''ALL'' or c.county = :P41_COUNTY) and c.lvl = 2'))
+,p_items_to_submit=>'P41_COUNTY,P41_DISEASE'
+,p_use_vector_tiles=>false
+,p_has_spatial_index=>false
+,p_pk_column=>'WARD_ID'
+,p_geometry_column_data_type=>'SDO_GEOMETRY'
+,p_geometry_column=>'BOUNDARY'
+,p_stroke_color=>'#ffffff'
+,p_stroke_width_subst=>'1'
+,p_fill_color=>'#f77f00'
+,p_fill_opacity_subst=>'.55'
+,p_tooltip_adv_formatting=>true
+,p_tooltip_html_expr=>'<b>&WARD_NAME.</b><br>&REASON.<br>Cases (14 days): &CASES. &middot; vet-confirmed: &CONFIRMED.<br>&REPORTED.<br>&RISK_NOTE.'
+,p_info_window_adv_formatting=>false
+,p_legend_adv_formatting=>false
+,p_allow_hide=>true
+);
+wwv_flow_imp_page.create_map_region_layer(
+ p_id=>wwv_flow_imp.id(9970000000113)
+,p_map_region_id=>wwv_flow_imp.id(9950000000077)
+,p_name=>'Red: affected (5+ cases, 3+ vet-confirmed)'
+,p_static_id=>'lvl-3'
+,p_label=>'Red: affected (5+ cases, 3+ vet-confirmed)'
+,p_layer_type=>'POLYGON'
+,p_display_sequence=>13
+,p_location=>'LOCAL'
+,p_query_type=>'SQL'
+,p_layer_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select c.ward_id, c.ward_name, w.boundary, c.cases, c.confirmed, c.reason,',
+'       case when c.diseases is null then ''Reported: none'' else ''Reported: ''||c.diseases end reported,',
+'       case when c.risks is null then '''' else ''Risk: ''||c.risks||'' (HIGH)'' end risk_note',
+'from v_ward_outbreak_class c join wards w on w.ward_id = c.ward_id',
+'where c.scope = nvl(:P41_DISEASE, ''ALL'') and w.boundary is not null',
+'  and (:P41_COUNTY = ''ALL'' or c.county = :P41_COUNTY) and c.lvl = 3'))
+,p_items_to_submit=>'P41_COUNTY,P41_DISEASE'
+,p_use_vector_tiles=>false
+,p_has_spatial_index=>false
+,p_pk_column=>'WARD_ID'
+,p_geometry_column_data_type=>'SDO_GEOMETRY'
+,p_geometry_column=>'BOUNDARY'
+,p_stroke_color=>'#ffffff'
+,p_stroke_width_subst=>'1'
+,p_fill_color=>'#d7263d'
+,p_fill_opacity_subst=>'.55'
+,p_tooltip_adv_formatting=>true
+,p_tooltip_html_expr=>'<b>&WARD_NAME.</b><br>&REASON.<br>Cases (14 days): &CASES. &middot; vet-confirmed: &CONFIRMED.<br>&REPORTED.<br>&RISK_NOTE.'
+,p_info_window_adv_formatting=>false
+,p_legend_adv_formatting=>false
+,p_allow_hide=>true
+);
+wwv_flow_imp_page.create_map_region_layer(
+ p_id=>wwv_flow_imp.id(9970000000120)
+,p_map_region_id=>wwv_flow_imp.id(9950000000077)
+,p_name=>'Reports (21 days)'
+,p_static_id=>'reports'
+,p_label=>'Reports (21 days)'
+,p_layer_type=>'POINT'
+,p_display_sequence=>50
+,p_location=>'LOCAL'
+,p_query_type=>'SQL'
+,p_layer_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select r.report_id, w.ward_name, r.disease, r.vet_status, to_char(r.reported_at, ''DD Mon HH24:MI'') reported,',
+'       w.centroid_lat + mod(r.report_id,7)*0.004 - 0.012 lat, w.centroid_lon + mod(r.report_id,5)*0.005 - 0.01 lon',
+'from coop_disease_reports r join wards w on w.ward_id = r.ward_id',
+'where r.vet_status <> ''REJECTED'' and r.reported_at > systimestamp - interval ''21'' day',
+'  and (:P41_COUNTY = ''ALL'' or w.county = :P41_COUNTY) and (:P41_DISEASE is null or r.disease = :P41_DISEASE)'))
+,p_items_to_submit=>'P41_COUNTY,P41_DISEASE'
+,p_use_vector_tiles=>false
+,p_has_spatial_index=>false
+,p_pk_column=>'REPORT_ID'
+,p_geometry_column_data_type=>'LONLAT_COLUMNS'
+,p_longitude_column=>'LON'
+,p_latitude_column=>'LAT'
+,p_stroke_color=>'#ffffff'
+,p_fill_color=>'#1d3557'
+,p_fill_opacity_subst=>'.9'
+,p_point_display_type=>'SVG'
+,p_point_svg_shape=>'Circle'
+,p_point_svg_shape_scale=>'.6'
+,p_feature_clustering=>false
+,p_tooltip_adv_formatting=>true
+,p_tooltip_html_expr=>'<b>&DISEASE.</b><br>&WARD_NAME. &middot; &REPORTED.<br>Vet: &VET_STATUS.'
+,p_info_window_adv_formatting=>false
+,p_legend_adv_formatting=>false
+,p_allow_hide=>true
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000090)
+,p_plug_name=>'Pattern: reports per day by disease'
+,p_static_id=>'pattern-reports-per-day-by-disease'
+,p_title=>'Pattern: reports per day by disease'
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_escape_on_http_output=>'Y'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>30
+,p_plug_new_grid_row=>false
+,p_plug_grid_column_span=>4
+,p_plug_item_display_point=>'ABOVE'
+,p_location=>null
+,p_plug_source_type=>'NATIVE_JET_CHART'
+);
+wwv_flow_imp_page.create_jet_chart(
+ p_id=>wwv_flow_imp.id(9950000000091)
+,p_region_id=>wwv_flow_imp.id(9950000000090)
+,p_chart_type=>'line'
+,p_animation_on_display=>'auto'
+,p_animation_on_data_change=>'auto'
+,p_orientation=>'vertical'
+,p_data_cursor=>'auto'
+,p_data_cursor_behavior=>'auto'
+,p_hide_and_show_behavior=>'withRescale'
+,p_hover_behavior=>'dim'
+,p_stack=>'off'
+,p_stack_label=>'off'
+,p_connect_nulls=>'Y'
+,p_sorting=>'label-asc'
+,p_fill_multi_series_gaps=>true
+,p_zoom_and_scroll=>'off'
+,p_tooltip_rendered=>'Y'
+,p_show_series_name=>true
+,p_show_group_name=>true
+,p_show_value=>true
+,p_legend_rendered=>'on'
+,p_legend_position=>'auto'
+,p_overview_rendered=>'off'
+);
+wwv_flow_imp_page.create_jet_chart_series(
+ p_id=>wwv_flow_imp.id(9950000000092)
+,p_chart_id=>wwv_flow_imp.id(9950000000091)
+,p_static_id=>'series-1'
+,p_seq=>10
+,p_name=>'Maize lethal necrosis (MLN)'
+,p_data_source_type=>'SQL'
+,p_data_source=>'select to_char(trunc(cast(r.reported_at as date)),''DD Mon'') label, count(*) value from coop_disease_reports r join wards w on w.ward_id=r.ward_id where r.disease=''Maize lethal necrosis (MLN)'' and (:P41_COUNTY = ''ALL'' or w.county = :P41_COUNTY) and r.'
+||'reported_at > systimestamp - interval ''21'' day group by trunc(cast(r.reported_at as date)) order by trunc(cast(r.reported_at as date))'
+,p_max_row_count=>200
+,p_ajax_items_to_submit=>'P41_COUNTY'
+,p_series_type=>'line'
+,p_items_value_column_name=>'VALUE'
+,p_items_label_column_name=>'LABEL'
+,p_line_style=>'solid'
+,p_line_type=>'auto'
+,p_marker_rendered=>'auto'
+,p_marker_shape=>'auto'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_series(
+ p_id=>wwv_flow_imp.id(9950000000093)
+,p_chart_id=>wwv_flow_imp.id(9950000000091)
+,p_static_id=>'series-2'
+,p_seq=>20
+,p_name=>'Fall armyworm'
+,p_data_source_type=>'SQL'
+,p_data_source=>'select to_char(trunc(cast(r.reported_at as date)),''DD Mon'') label, count(*) value from coop_disease_reports r join wards w on w.ward_id=r.ward_id where r.disease=''Fall armyworm'' and (:P41_COUNTY = ''ALL'' or w.county = :P41_COUNTY) and r.reported_at > '
+||'systimestamp - interval ''21'' day group by trunc(cast(r.reported_at as date)) order by trunc(cast(r.reported_at as date))'
+,p_max_row_count=>200
+,p_ajax_items_to_submit=>'P41_COUNTY'
+,p_series_type=>'line'
+,p_items_value_column_name=>'VALUE'
+,p_items_label_column_name=>'LABEL'
+,p_line_style=>'solid'
+,p_line_type=>'auto'
+,p_marker_rendered=>'auto'
+,p_marker_shape=>'auto'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_series(
+ p_id=>wwv_flow_imp.id(9950000000094)
+,p_chart_id=>wwv_flow_imp.id(9950000000091)
+,p_static_id=>'series-3'
+,p_seq=>30
+,p_name=>'Lumpy skin disease (suspected)'
+,p_data_source_type=>'SQL'
+,p_data_source=>'select to_char(trunc(cast(r.reported_at as date)),''DD Mon'') label, count(*) value from coop_disease_reports r join wards w on w.ward_id=r.ward_id where r.disease=''Lumpy skin disease (suspected)'' and (:P41_COUNTY = ''ALL'' or w.county = :P41_COUNTY) and'
+||' r.reported_at > systimestamp - interval ''21'' day group by trunc(cast(r.reported_at as date)) order by trunc(cast(r.reported_at as date))'
+,p_max_row_count=>200
+,p_ajax_items_to_submit=>'P41_COUNTY'
+,p_series_type=>'line'
+,p_items_value_column_name=>'VALUE'
+,p_items_label_column_name=>'LABEL'
+,p_line_style=>'solid'
+,p_line_type=>'auto'
+,p_marker_rendered=>'auto'
+,p_marker_shape=>'auto'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_series(
+ p_id=>wwv_flow_imp.id(9950000000095)
+,p_chart_id=>wwv_flow_imp.id(9950000000091)
+,p_static_id=>'series-4'
+,p_seq=>40
+,p_name=>'Rift Valley fever (suspected)'
+,p_data_source_type=>'SQL'
+,p_data_source=>'select to_char(trunc(cast(r.reported_at as date)),''DD Mon'') label, count(*) value from coop_disease_reports r join wards w on w.ward_id=r.ward_id where r.disease=''Rift Valley fever (suspected)'' and (:P41_COUNTY = ''ALL'' or w.county = :P41_COUNTY) and '
+||'r.reported_at > systimestamp - interval ''21'' day group by trunc(cast(r.reported_at as date)) order by trunc(cast(r.reported_at as date))'
+,p_max_row_count=>200
+,p_ajax_items_to_submit=>'P41_COUNTY'
+,p_series_type=>'line'
+,p_items_value_column_name=>'VALUE'
+,p_items_label_column_name=>'LABEL'
+,p_line_style=>'solid'
+,p_line_type=>'auto'
+,p_marker_rendered=>'auto'
+,p_marker_shape=>'auto'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_series(
+ p_id=>wwv_flow_imp.id(9950000000096)
+,p_chart_id=>wwv_flow_imp.id(9950000000091)
+,p_static_id=>'series-5'
+,p_seq=>50
+,p_name=>'Peste des petits ruminants (PPR)'
+,p_data_source_type=>'SQL'
+,p_data_source=>'select to_char(trunc(cast(r.reported_at as date)),''DD Mon'') label, count(*) value from coop_disease_reports r join wards w on w.ward_id=r.ward_id where r.disease=''Peste des petits ruminants (PPR)'' and (:P41_COUNTY = ''ALL'' or w.county = :P41_COUNTY) a'
+||'nd r.reported_at > systimestamp - interval ''21'' day group by trunc(cast(r.reported_at as date)) order by trunc(cast(r.reported_at as date))'
+,p_max_row_count=>200
+,p_ajax_items_to_submit=>'P41_COUNTY'
+,p_series_type=>'line'
+,p_items_value_column_name=>'VALUE'
+,p_items_label_column_name=>'LABEL'
+,p_line_style=>'solid'
+,p_line_type=>'auto'
+,p_marker_rendered=>'auto'
+,p_marker_shape=>'auto'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_axis(
+ p_id=>wwv_flow_imp.id(9950000000097)
+,p_chart_id=>wwv_flow_imp.id(9950000000091)
+,p_static_id=>'x'
+,p_axis=>'x'
+,p_is_rendered=>'on'
+,p_format_scaling=>'auto'
+,p_scaling=>'linear'
+,p_baseline_scaling=>'zero'
+,p_major_tick_rendered=>'auto'
+,p_minor_tick_rendered=>'auto'
+,p_tick_label_rendered=>'on'
+,p_tick_label_rotation=>'auto'
+,p_tick_label_position=>'outside'
+);
+wwv_flow_imp_page.create_jet_chart_axis(
+ p_id=>wwv_flow_imp.id(9950000000098)
+,p_chart_id=>wwv_flow_imp.id(9950000000091)
+,p_static_id=>'y'
+,p_axis=>'y'
+,p_is_rendered=>'on'
+,p_format_type=>'decimal'
+,p_decimal_places=>0
+,p_format_scaling=>'auto'
+,p_scaling=>'linear'
+,p_baseline_scaling=>'zero'
+,p_position=>'auto'
+,p_major_tick_rendered=>'auto'
+,p_minor_tick_rendered=>'auto'
+,p_tick_label_rendered=>'on'
+);
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(9950000000081)
+,p_name=>'Spread forecast by ward'
+,p_static_id=>'spread-forecast-by-ward'
+,p_title=>'Spread forecast by ward'
+,p_region_name=>'spread-forecast'
+,p_template=>4073835273271169698
+,p_display_sequence=>20
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_component_template_options=>'#DEFAULT#:t-Report--stretch:t-Report--altRowsDefault:t-Report--rowHighlight'
+,p_grid_column_span=>8
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'SQL'
+,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select f.ward_name "Ward", f.disease "Disease", f.ward_state "State", f.local_reports "Reports here",',
+'       f.neighbour_inflow "Pressure from neighbours", f.spread_index "Spread index", f.spread_level "Level",',
+'       f.source_wards "Spreading from"',
+'from v_coop_spread_forecast f',
+'where (:P41_DISEASE is null or f.disease = :P41_DISEASE) and (:P41_COUNTY = ''ALL'' or f.county = :P41_COUNTY) and (:P41_LEVEL is null or (:P41_LEVEL=''HM'' and f.spread_level in (''HIGH'',''MEDIUM'')) or (:P41_LEVEL=''H'' and f.spread_level=''HIGH''))',
+'order by f.spread_index desc'))
+,p_ajax_enabled=>'Y'
+,p_ajax_items_to_submit=>'P41_COUNTY,P41_DISEASE,P41_LEVEL'
+,p_lazy_loading=>false
+,p_query_row_template=>2540130677583398057
+,p_query_num_rows=>60
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_query_no_data_found=>'No rows yet.'
+,p_query_num_rows_type=>'NEXT_PREVIOUS_LINKS'
+,p_pagination_display_position=>'BOTTOM_RIGHT'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000083)
+,p_query_column_id=>2
+,p_column_alias=>'Disease'
+,p_column_display_sequence=>20
+,p_column_heading=>'Disease'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000088)
+,p_query_column_id=>7
+,p_column_alias=>'Level'
+,p_column_display_sequence=>70
+,p_column_heading=>'Level'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000086)
+,p_query_column_id=>5
+,p_column_alias=>'Pressure from neighbours'
+,p_column_display_sequence=>50
+,p_column_heading=>'Pressure From Neighbours'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000085)
+,p_query_column_id=>4
+,p_column_alias=>'Reports here'
+,p_column_display_sequence=>40
+,p_column_heading=>'Reports Here'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000087)
+,p_query_column_id=>6
+,p_column_alias=>'Spread index'
+,p_column_display_sequence=>60
+,p_column_heading=>'Spread Index'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000089)
+,p_query_column_id=>8
+,p_column_alias=>'Spreading from'
+,p_column_display_sequence=>80
+,p_column_heading=>'Spreading From'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000084)
+,p_query_column_id=>3
+,p_column_alias=>'State'
+,p_column_display_sequence=>30
+,p_column_heading=>'State'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000082)
+,p_query_column_id=>1
+,p_column_alias=>'Ward'
+,p_column_display_sequence=>10
+,p_column_heading=>'Ward'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000072)
+,p_name=>'P41_COUNTY'
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_imp.id(9950000000071)
+,p_item_default=>'Uasin Gishu'
+,p_prompt=>'County'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_SELECT_LIST'
+,p_lov=>'select d, r from (select ''All counties'' d, ''ALL'' r, 0 o from dual union all select distinct county, county, 1 from wards) order by o, d'
+,p_cHeight=>1
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_lov_display_extra=>'NO'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'page_action_on_selection', 'NONE')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000074)
+,p_name=>'P41_DISEASE'
+,p_item_sequence=>20
+,p_item_plug_id=>wwv_flow_imp.id(9950000000071)
+,p_prompt=>'Disease'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_SELECT_LIST'
+,p_lov=>'select distinct disease d, disease r from coop_disease_reports order by 1'
+,p_lov_display_null=>'YES'
+,p_lov_null_text=>'All diseases'
+,p_cHeight=>1
+,p_begin_on_new_line=>'N'
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_lov_display_extra=>'NO'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'page_action_on_selection', 'NONE')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000073)
+,p_name=>'P41_LEVEL'
+,p_item_sequence=>30
+,p_item_plug_id=>wwv_flow_imp.id(9950000000071)
+,p_prompt=>'Spread level'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_SELECT_LIST'
+,p_lov=>'STATIC:HIGH or MEDIUM (at risk);HM,HIGH only;H'
+,p_lov_display_null=>'YES'
+,p_lov_null_text=>'All levels'
+,p_cHeight=>1
+,p_begin_on_new_line=>'N'
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_lov_display_extra=>'NO'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'page_action_on_selection', 'NONE')).to_clob
+);
+wwv_flow_imp_page.create_page_da_event(
+ p_id=>wwv_flow_imp.id(9950000000101)
+,p_name=>'Refresh on P41_COUNTY'
+,p_static_id=>'refresh-on-p41-county'
+,p_event_sequence=>10
+,p_triggering_element_type=>'ITEM'
+,p_triggering_element=>'P41_COUNTY'
+,p_bind_type=>'bind'
+,p_execution_type=>'IMMEDIATE'
+,p_bind_event_type=>'change'
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000102)
+,p_event_id=>wwv_flow_imp.id(9950000000101)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-0'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000076)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000103)
+,p_event_id=>wwv_flow_imp.id(9950000000101)
+,p_event_result=>'TRUE'
+,p_action_sequence=>20
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-1'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000081)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000104)
+,p_event_id=>wwv_flow_imp.id(9950000000101)
+,p_event_result=>'TRUE'
+,p_action_sequence=>30
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-2'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000090)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000105)
+,p_event_id=>wwv_flow_imp.id(9950000000101)
+,p_event_result=>'TRUE'
+,p_action_sequence=>40
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-3'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000099)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_event(
+ p_id=>wwv_flow_imp.id(9950000000106)
+,p_name=>'Refresh on P41_DISEASE'
+,p_static_id=>'refresh-on-p41-disease'
+,p_event_sequence=>10
+,p_triggering_element_type=>'ITEM'
+,p_triggering_element=>'P41_DISEASE'
+,p_bind_type=>'bind'
+,p_execution_type=>'IMMEDIATE'
+,p_bind_event_type=>'change'
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000107)
+,p_event_id=>wwv_flow_imp.id(9950000000106)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-0'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000076)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000108)
+,p_event_id=>wwv_flow_imp.id(9950000000106)
+,p_event_result=>'TRUE'
+,p_action_sequence=>20
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-1'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000081)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000109)
+,p_event_id=>wwv_flow_imp.id(9950000000106)
+,p_event_result=>'TRUE'
+,p_action_sequence=>30
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-2'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000099)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_event(
+ p_id=>wwv_flow_imp.id(9950000000110)
+,p_name=>'Refresh on P41_LEVEL'
+,p_static_id=>'refresh-on-p41-level'
+,p_event_sequence=>10
+,p_triggering_element_type=>'ITEM'
+,p_triggering_element=>'P41_LEVEL'
+,p_bind_type=>'bind'
+,p_execution_type=>'IMMEDIATE'
+,p_bind_event_type=>'change'
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000111)
+,p_event_id=>wwv_flow_imp.id(9950000000110)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-0'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000081)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+end;
+/
+prompt --application/pages/page_00042
+begin
+wwv_flow_imp_page.create_page(
+ p_id=>42
+,p_name=>'Vet Verification'
+,p_alias=>'VET-VERIFICATION'
+,p_step_title=>'Vet Verification'
+,p_autocomplete_on_off=>'OFF'
+,p_javascript_code=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'function vetCase(id) {',
+'  $(''#casebody'').html(''<p>Loading case file...</p>'');',
+'  apex.theme.openRegion(''casefile'');',
+'  apex.server.process(''CASE_FILE'', {x01: id}, {dataType: ''text''})',
+'    .done(function (h) { $(''#casebody'').html(h); })',
+'    .fail(function () { $(''#casebody'').html(''<p>Could not load the case file.</p>''); });',
+'}',
+'function vetOpen(id, d) {',
+'  try { apex.theme.closeRegion(''casefile''); } catch (e) {}',
+'  apex.item(''P42_REPORT_ID'').setValue(String(id));',
+'  apex.item(''P42_DECISION'').setValue(d);',
+'  apex.theme.openRegion(''vetdlg'');',
+'}',
+'function vetFilter(s) {',
+'  apex.item(''P42_VSTATUS'').setValue(s);',
+'  document.querySelectorAll(''.vet-c'').forEach(function (e) { e.classList.toggle(''on'', e.dataset.s === s); });',
+'}'))
+,p_inline_css=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'.coop-kpi .a-CardView-items{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px}',
+'@media (max-width:900px){.coop-kpi .a-CardView-items{grid-template-columns:repeat(2,1fr)!important}}',
+'.coop-kpi .a-CardView{border-radius:12px;border-top:5px solid #1b7f5f}',
+'.coop-link .a-CardView{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}',
+'.coop-link .a-CardView:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(0,0,0,.16);border-top-color:#0f5c43}',
+'.coop-link .a-CardView:hover .a-CardView-subTitle{text-decoration:underline}',
+'.coop-kpi .a-CardView-title{font-size:2.3rem;font-weight:800;line-height:1.1}',
+'.coop-kpi .a-CardView-subTitle{font-size:1rem;font-weight:600;color:#3d4a46}',
+'.coop-kpi .a-CardView-mainContent{font-size:.85rem;color:#5d6b67}',
+'.coop-banner{padding:10px 14px;border-radius:10px;background:#fff6e0;border:1px solid #f0c36d;font-size:.95rem}',
+'.coop-banner b{color:#8a5a00}',
+'.coop-method{padding:10px 14px;border-radius:10px;background:#eef6f3;border:1px solid #9fd1bf;font-size:.95rem}',
+'.coop-tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;font-weight:700;color:#fff}',
+'.t-Header{position:sticky!important;top:0;z-index:800}',
+'.t-Report-cell,.t-Report-colHead{font-size:.95rem}',
+'.vet-counters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}',
+'.vet-c{display:block;padding:14px 16px;border-radius:12px;background:#fff;border:1px solid #e3e7e5;border-left:6px solid;text-decoration:none!important;color:#1f2a27;cursor:pointer}',
+'.vet-c:hover{box-shadow:0 6px 16px rgba(0,0,0,.12)}',
+'.vet-c b{display:block;font-size:2rem;line-height:1.1}',
+'.vet-c span{font-weight:600}',
+'.vet-c.on{outline:3px solid #1d3557}',
+'.vet-c.p{border-left-color:#f4a259}.vet-c.p b{color:#c46a0c}',
+'.vet-c.c{border-left-color:#1b7f5f}.vet-c.c b{color:#1b7f5f}',
+'.vet-c.r{border-left-color:#c0392b}.vet-c.r b{color:#c0392b}',
+'.vet-all{display:inline-block;margin-top:8px;font-size:.85rem}',
+'.vet-card{background:#fff;border:1px solid #e3e7e5;border-radius:12px;padding:12px 14px;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}',
+'.vet-main{flex:1 1 260px;min-width:0}',
+'.vet-top{font-size:.8rem;color:#5d6b67}',
+'.vet-title{font-size:1.05rem;font-weight:700;margin:2px 0}',
+'.vet-sym{color:#3d4a46}',
+'.vet-b{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.72rem;font-weight:700;margin-left:4px;vertical-align:middle}',
+'.vet-b.u{background:#e3f0fb;color:#1d4f80}.vet-b.d{background:#eceff1;color:#55636b}',
+'.vet-pill{display:inline-block;padding:4px 12px;border-radius:999px;font-size:.8rem;font-weight:700;color:#fff}',
+'.vet-pill.PENDING{background:#f4a259}.vet-pill.VET_CONFIRMED{background:#1b7f5f}.vet-pill.REJECTED{background:#c0392b}',
+'.vet-act{display:flex;gap:8px;align-items:center}',
+'.vet-btn{border:0;border-radius:8px;padding:8px 14px;font-weight:700;color:#fff;cursor:pointer}',
+'.vet-btn.ok{background:#1b7f5f}.vet-btn.no{background:#c0392b}.vet-btn.ed{background:#eceff1;color:#1f2a27}',
+'.vet-vet{font-size:.8rem;color:#5d6b67;flex-basis:100%}',
+'#all-reports .t-Report-report,#all-reports table{border:0!important;background:transparent}',
+'#vet-counters td.t-Report-cell,#all-reports td.t-Report-cell{padding:0!important;border:0!important;background:transparent!important}',
+'.vet-btn.cf{background:#1d3557}',
+'.vet-title a{color:inherit;text-decoration:none;cursor:pointer}',
+'.case h4{margin:14px 0 6px;font-size:.95rem;color:#1d3557;border-bottom:1px solid #e3e7e5;padding-bottom:3px}',
+'.case-h{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}',
+'.case-dl{display:grid;grid-template-columns:130px 1fr;gap:4px 10px;margin:0;font-size:.9rem}',
+'.case-dl dt{color:#5d6b67}.case-dl dd{margin:0}',
+'.case-kpis{display:flex;gap:10px;margin-bottom:6px}.case-kpis div{flex:1;background:#f4f7f6;border-radius:8px;padding:6px 10px;font-size:.85rem}',
+'.case-kpis b{display:block;font-size:1.3rem}',
+'.case-ul{margin:0;padding-left:18px;font-size:.88rem}.case-ul li{margin:2px 0}',
+'.case-note{list-style:none;margin-left:-18px!important;color:#5d6b67;font-style:italic}',
+'.case-act{display:flex;gap:8px;margin-top:14px;align-items:center;flex-wrap:wrap}',
+'#casebody{padding:4px 14px 16px}',
+'@media (max-width:640px){.vet-counters{grid-template-columns:repeat(3,1fr);gap:6px}.vet-c{padding:10px}.vet-c b{font-size:1.5rem}.vet-c span{font-size:.8rem}.vet-act{width:100%}.vet-btn{flex:1}}'))
+,p_step_template=>4073832297226169690
+,p_page_template_options=>'#DEFAULT#'
+,p_protection_level=>'C'
+,p_page_component_map=>'13'
+);
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(9970000000204)
+,p_name=>'All reports and vet status'
+,p_static_id=>'all-reports-and-vet-status'
+,p_title=>'Reports (pending first, newest first)'
+,p_region_name=>'all-reports'
+,p_template=>4073835273271169698
+,p_display_sequence=>20
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_component_template_options=>'#DEFAULT#:t-Report--stretch'
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'SQL'
+,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select ''<div class="vet-card"><div class="vet-main"><div class="vet-top">#'' || r.report_id || '' &middot; ''',
+'  || apex_escape.html(w.ward_name) || '' &middot; '' || to_char(r.reported_at at time zone ''Africa/Nairobi'', ''DD Mon HH24:MI'') || '' EAT''',
+'  || ''<span class="vet-b u">'' || apex_escape.html(r.channel) || ''</span>''',
+'  || case when r.is_demo = ''Y'' then ''<span class="vet-b d">DEMO</span>'' end || ''</div>''',
+'  || ''<div class="vet-title"><a onclick="vetCase('' || r.report_id || '')">'' || apex_escape.html(r.disease) || ''</a></div>''',
+'  || ''<div class="vet-sym">'' || apex_escape.html(case when r.symptoms like ''USSD report%'' or r.symptoms is null',
+'        then r.disease || case when r.animals_or_acres is not null then '' x'' || r.animals_or_acres end',
+'        else r.symptoms end) || ''</div></div>''',
+'  || ''<div class="vet-act"><span class="vet-pill '' || r.vet_status || ''">''',
+'  || decode(r.vet_status, ''PENDING'', ''Pending vet check'', ''VET_CONFIRMED'', ''Vet confirmed'', ''Rejected'') || ''</span>''',
+'  || ''<button type="button" class="vet-btn cf" onclick="vetCase('' || r.report_id || '')">Case file</button>''',
+'  || case when r.vet_status = ''PENDING'' then',
+'       ''<button type="button" class="vet-btn ok" onclick="vetOpen('' || r.report_id || '',''''VET_CONFIRMED'''')">Confirm</button>''',
+'    || ''<button type="button" class="vet-btn no" onclick="vetOpen('' || r.report_id || '',''''REJECTED'''')">Reject</button>''',
+'     else ''<button type="button" class="vet-btn ed" onclick="vetOpen('' || r.report_id || '',''''PENDING'''')">Change</button>'' end',
+'  || ''</div>''',
+'  || case when r.vet_name is not null then ''<div class="vet-vet">Vet: '' || apex_escape.html(r.vet_name)',
+'       || case when r.vet_notes is not null then '' &middot; '' || apex_escape.html(r.vet_notes) end || ''</div>'' end',
+'  || ''</div>'' card',
+'from coop_disease_reports r join wards w on w.ward_id = r.ward_id',
+'where (:P42_COOP is null or r.coop_id = :P42_COOP) and (:P42_VSTATUS is null or r.vet_status = :P42_VSTATUS)',
+'order by decode(r.vet_status, ''PENDING'', 0, 1), r.reported_at desc'))
+,p_ajax_enabled=>'Y'
+,p_ajax_items_to_submit=>'P42_COOP,P42_VSTATUS'
+,p_lazy_loading=>false
+,p_query_row_template=>2540130677583398057
+,p_query_headings_type=>'NO_HEADINGS'
+,p_query_num_rows=>60
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_query_no_data_found=>'No reports for this filter.'
+,p_query_num_rows_type=>'NEXT_PREVIOUS_LINKS'
+,p_pagination_display_position=>'BOTTOM_RIGHT'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9970000000202)
+,p_query_column_id=>1
+,p_column_alias=>'CARD'
+,p_column_display_sequence=>10
+,p_display_as=>'WITHOUT_MODIFICATION'
+,p_derived_column=>'N'
+,p_include_in_export=>'N'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000112)
+,p_plug_name=>'Breadcrumb'
+,p_static_id=>'breadcrumb'
+,p_region_template_options=>'#DEFAULT#:t-BreadcrumbRegion--useBreadcrumbTitle'
+,p_component_template_options=>'#DEFAULT#'
+,p_plug_template=>2532939663579242476
+,p_plug_display_sequence=>1
+,p_plug_display_point=>'REGION_POSITION_01'
+,p_plug_item_display_point=>'ABOVE'
+,p_menu_id=>wwv_flow_imp.id(9427497064154690)
+,p_plug_source_type=>'NATIVE_BREADCRUMB'
+,p_menu_template_id=>4073839682315169711
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9970000000205)
+,p_plug_name=>'Case file'
+,p_static_id=>'case-file'
+,p_title=>'Case file'
+,p_region_name=>'casefile'
+,p_region_template_options=>'#DEFAULT#:js-dialog-size600x400:t-DialogRegion--noPadding'
+,p_plug_template=>1662449473392619772
+,p_plug_display_sequence=>95
+,p_plug_display_point=>'REGION_POSITION_04'
+,p_plug_source=>'<div id="casebody"></div>'
+,p_plug_query_num_rows=>15
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000114)
+,p_plug_name=>'Filters'
+,p_static_id=>'filters'
+,p_title=>'Filters'
+,p_region_template_options=>'#DEFAULT#:t-Region--noUI:t-Region--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>6
+,p_plug_item_display_point=>'ABOVE'
+,p_plug_query_num_rows=>15
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000119)
+,p_plug_name=>'Record vet decision'
+,p_static_id=>'record-vet-decision'
+,p_title=>'Vet decision'
+,p_region_name=>'vetdlg'
+,p_region_template_options=>'#DEFAULT#:js-dialog-autoheight:t-DialogRegion--noPadding:js-dialog-size480x320'
+,p_plug_template=>2674150083631647148
+,p_plug_display_sequence=>90
+,p_plug_display_point=>'REGION_POSITION_04'
+,p_plug_item_display_point=>'ABOVE'
+,p_plug_query_num_rows=>15
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(9970000000201)
+,p_name=>'Vet status counters'
+,p_static_id=>'vet-status-counters'
+,p_region_name=>'vet-counters'
+,p_template=>4073835273271169698
+,p_display_sequence=>8
+,p_region_template_options=>'#DEFAULT#:t-Region--noUI:t-Region--hideHeader js-addHiddenHeadingRoleDesc'
+,p_component_template_options=>'#DEFAULT#:t-Report--stretch'
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'SQL'
+,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select ''<div class="vet-counters">''',
+'  || ''<a class="vet-c p" data-s="PENDING" onclick="vetFilter(''''PENDING'''')"><b>'' || count(case when vet_status = ''PENDING'' then 1 end) || ''</b><span>Pending vet check</span></a>''',
+'  || ''<a class="vet-c c" data-s="VET_CONFIRMED" onclick="vetFilter(''''VET_CONFIRMED'''')"><b>'' || count(case when vet_status = ''VET_CONFIRMED'' then 1 end) || ''</b><span>Vet confirmed</span></a>''',
+'  || ''<a class="vet-c r" data-s="REJECTED" onclick="vetFilter(''''REJECTED'''')"><b>'' || count(case when vet_status = ''REJECTED'' then 1 end) || ''</b><span>Rejected</span></a>''',
+'  || ''</div><a class="vet-all" href="javascript:vetFilter('''''''')">Show all reports</a>'' card',
+'from coop_disease_reports where (:P42_COOP is null or coop_id = :P42_COOP)'))
+,p_ajax_enabled=>'Y'
+,p_ajax_items_to_submit=>'P42_COOP'
+,p_lazy_loading=>false
+,p_query_row_template=>2540130677583398057
+,p_query_headings_type=>'NO_HEADINGS'
+,p_query_num_rows=>1
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_query_no_data_found=>'-'
+,p_query_num_rows_type=>'NEXT_PREVIOUS_LINKS'
+,p_pagination_display_position=>'BOTTOM_RIGHT'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9970000000203)
+,p_query_column_id=>1
+,p_column_alias=>'CARD'
+,p_column_display_sequence=>10
+,p_display_as=>'WITHOUT_MODIFICATION'
+,p_derived_column=>'N'
+,p_include_in_export=>'N'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000113)
+,p_plug_name=>'Vet step'
+,p_static_id=>'vet-step'
+,p_title=>'Vet step'
+,p_region_template_options=>'#DEFAULT#:t-Region--noUI:t-Region--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>5
+,p_plug_item_display_point=>'ABOVE'
+,p_plug_source=>'<div class="coop-method"><b>Vet double-check:</b> a co-op only alerts farmers about reports a vet has <b>confirmed</b>. Press <b>Confirm</b> or <b>Reject</b> on a pending report. Nothing is sent from this page.</div>'
+,p_plug_query_num_rows=>15
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(9950000000124)
+,p_button_sequence=>10
+,p_button_plug_id=>wwv_flow_imp.id(9950000000119)
+,p_button_name=>'SAVE_REVIEW'
+,p_static_id=>'save-review'
+,p_button_action=>'SUBMIT'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>4073839297780169708
+,p_button_is_hot=>'Y'
+,p_button_image_alt=>'Save vet decision'
+,p_button_position=>'CREATE'
+,p_icon_css_classes=>'fa-user-md'
+);
+wwv_flow_imp_page.create_page_branch(
+ p_id=>wwv_flow_imp.id(9950000000126)
+,p_branch_name=>'Back to page'
+,p_branch_action=>'f?p=&APP_ID.:42:&APP_SESSION.::&DEBUG.:::&success_msg=#SUCCESS_MSG#'
+,p_branch_point=>'AFTER_PROCESSING'
+,p_branch_type=>'REDIRECT_URL'
+,p_branch_sequence=>10
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000115)
+,p_name=>'P42_COOP'
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_imp.id(9950000000114)
+,p_prompt=>'Co-operative'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_SELECT_LIST'
+,p_lov=>'select replace(coop_name,''SYNTHETIC '','''')||'' (demo)'' d, coop_id r from cooperatives order by coop_name'
+,p_lov_display_null=>'YES'
+,p_lov_null_text=>'All co-operatives'
+,p_cHeight=>1
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_lov_display_extra=>'NO'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'page_action_on_selection', 'NONE')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000121)
+,p_name=>'P42_DECISION'
+,p_is_required=>true
+,p_item_sequence=>20
+,p_item_plug_id=>wwv_flow_imp.id(9950000000119)
+,p_item_default=>'VET_CONFIRMED'
+,p_prompt=>'Vet decision'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_RADIOGROUP'
+,p_lov=>'STATIC:Confirm;VET_CONFIRMED,Reject;REJECTED,Back to pending;PENDING'
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_lov_display_extra=>'NO'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'number_of_columns', '3',
+  'page_action_on_selection', 'NONE')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000123)
+,p_name=>'P42_NOTES'
+,p_item_sequence=>40
+,p_item_plug_id=>wwv_flow_imp.id(9950000000119)
+,p_prompt=>'Notes (lab test, field visit, advice)'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_TEXTAREA'
+,p_cSize=>60
+,p_cMaxlength=>320
+,p_cHeight=>3
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'auto_height', 'N',
+  'character_counter', 'N',
+  'resizable', 'Y',
+  'trim_spaces', 'BOTH')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000120)
+,p_name=>'P42_REPORT_ID'
+,p_is_required=>true
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_imp.id(9950000000119)
+,p_prompt=>'Report'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_SELECT_LIST'
+,p_lov=>'select ''#''||r.report_id||'' ''||w.ward_name||'' - ''||r.disease||'' (''||r.vet_status||'', ''||to_char(r.reported_at at time zone ''Africa/Nairobi'',''DD Mon HH24:MI'')||'')'' d, r.report_id r from coop_disease_reports r join wards w on w.ward_id=r.ward_id order b'
+||'y decode(r.vet_status,''PENDING'',0,1), r.reported_at desc'
+,p_lov_display_null=>'YES'
+,p_lov_null_text=>'- choose a report -'
+,p_cHeight=>1
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_lov_display_extra=>'NO'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'page_action_on_selection', 'NONE')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000122)
+,p_name=>'P42_VET_NAME'
+,p_is_required=>true
+,p_item_sequence=>30
+,p_item_plug_id=>wwv_flow_imp.id(9950000000119)
+,p_prompt=>'Vet name'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_TEXT_FIELD'
+,p_cSize=>60
+,p_cMaxlength=>320
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'disabled', 'N',
+  'submit_when_enter_pressed', 'N',
+  'subtype', 'TEXT',
+  'trim_spaces', 'BOTH')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000116)
+,p_name=>'P42_VSTATUS'
+,p_item_sequence=>20
+,p_item_plug_id=>wwv_flow_imp.id(9950000000114)
+,p_prompt=>'Vet status'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_SELECT_LIST'
+,p_lov=>'STATIC:Pending;PENDING,Vet confirmed;VET_CONFIRMED,Rejected;REJECTED'
+,p_lov_display_null=>'YES'
+,p_lov_null_text=>'All statuses'
+,p_cHeight=>1
+,p_begin_on_new_line=>'N'
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_lov_display_extra=>'NO'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'page_action_on_selection', 'NONE')).to_clob
+);
+wwv_flow_imp_page.create_page_da_event(
+ p_id=>wwv_flow_imp.id(9950000000137)
+,p_name=>'Refresh on P42_COOP'
+,p_static_id=>'refresh-on-p42-coop'
+,p_event_sequence=>10
+,p_triggering_element_type=>'ITEM'
+,p_triggering_element=>'P42_COOP'
+,p_bind_type=>'bind'
+,p_execution_type=>'IMMEDIATE'
+,p_bind_event_type=>'change'
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000138)
+,p_event_id=>wwv_flow_imp.id(9950000000137)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-0'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9970000000201)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000139)
+,p_event_id=>wwv_flow_imp.id(9950000000137)
+,p_event_result=>'TRUE'
+,p_action_sequence=>20
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-1'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9970000000204)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_event(
+ p_id=>wwv_flow_imp.id(9950000000140)
+,p_name=>'Refresh on P42_VSTATUS'
+,p_static_id=>'refresh-on-p42-vstatus'
+,p_event_sequence=>10
+,p_triggering_element_type=>'ITEM'
+,p_triggering_element=>'P42_VSTATUS'
+,p_bind_type=>'bind'
+,p_execution_type=>'IMMEDIATE'
+,p_bind_event_type=>'change'
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000141)
+,p_event_id=>wwv_flow_imp.id(9950000000140)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-0'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9970000000204)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_process(
+ p_id=>wwv_flow_imp.id(9970000000206)
+,p_process_sequence=>20
+,p_process_point=>'ON_DEMAND'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'CASE_FILE'
+,p_static_id=>'case-file-ajax'
+,p_process_sql_clob=>'begin apex_util.prn(ngao_vet_case_html(to_number(apex_application.g_x01)), false); end;'
+,p_process_clob_language=>'PLSQL'
+,p_internal_uid=>9970000000206
+);
+wwv_flow_imp_page.create_page_process(
+ p_id=>wwv_flow_imp.id(9950000000125)
+,p_process_sequence=>10
+,p_process_point=>'AFTER_SUBMIT'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'Save vet decision'
+,p_static_id=>'save-vet-decision'
+,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'begin',
+'  update coop_disease_reports',
+'     set vet_status = :P42_DECISION,',
+'         vet_name = case when :P42_DECISION = ''PENDING'' then null else :P42_VET_NAME end,',
+'         vet_notes = :P42_NOTES,',
+'         vet_reviewed_at = case when :P42_DECISION = ''PENDING'' then null else systimestamp end',
+'   where report_id = :P42_REPORT_ID;',
+'  if sql%rowcount = 0 then raise_application_error(-20001, ''Report not found''); end if;',
+'  if :P42_DECISION = ''VET_CONFIRMED'' then',
+'    apex_application.g_print_success_message := ''Report #''||:P42_REPORT_ID||'' confirmed. <a href="''',
+'      ||apex_page.get_url(p_page=>43, p_items=>''P43_REPORT_ID'', p_values=>:P42_REPORT_ID)||''">Send Co-op Alerts for this report &rarr;</a>'';',
+'  elsif :P42_DECISION = ''REJECTED'' then',
+'    apex_application.g_print_success_message := ''Report #''||:P42_REPORT_ID||'' rejected. No alert will be sent.'';',
+'  else',
+'    apex_application.g_print_success_message := ''Report #''||:P42_REPORT_ID||'' moved back to pending.'';',
+'  end if;',
+'end;'))
+,p_process_clob_language=>'PLSQL'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
+,p_process_when_button_id=>wwv_flow_imp.id(9950000000124)
+,p_process_success_message=>'Vet decision saved.'
+,p_internal_uid=>9950000000125
+);
+end;
+/
+prompt --application/pages/page_00043
+begin
+wwv_flow_imp_page.create_page(
+ p_id=>43
+,p_name=>'Send Co-op Alerts'
+,p_alias=>'SEND-ALERTS'
+,p_step_title=>'Send Co-op Alerts'
+,p_autocomplete_on_off=>'OFF'
+,p_inline_css=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'.coop-kpi .a-CardView-items{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px}',
+'@media (max-width:900px){.coop-kpi .a-CardView-items{grid-template-columns:repeat(2,1fr)!important}}',
+'.coop-kpi .a-CardView{border-radius:12px;border-top:5px solid #1b7f5f}',
+'.coop-link .a-CardView{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}',
+'.coop-link .a-CardView:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(0,0,0,.16);border-top-color:#0f5c43}',
+'.coop-link .a-CardView:hover .a-CardView-subTitle{text-decoration:underline}',
+'.coop-kpi .a-CardView-title{font-size:2.3rem;font-weight:800;line-height:1.1}',
+'.coop-kpi .a-CardView-subTitle{font-size:1rem;font-weight:600;color:#3d4a46}',
+'.coop-kpi .a-CardView-mainContent{font-size:.85rem;color:#5d6b67}',
+'.coop-banner{padding:10px 14px;border-radius:10px;background:#fff6e0;border:1px solid #f0c36d;font-size:.95rem}',
+'.coop-banner b{color:#8a5a00}',
+'.coop-method{padding:10px 14px;border-radius:10px;background:#eef6f3;border:1px solid #9fd1bf;font-size:.95rem}',
+'.coop-tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;font-weight:700;color:#fff}',
+'.t-Header{position:sticky!important;top:0;z-index:800}',
+'.t-Report-cell,.t-Report-colHead{font-size:.95rem}'))
+,p_step_template=>4073832297226169690
+,p_page_template_options=>'#DEFAULT#'
+,p_protection_level=>'C'
+,p_page_component_map=>'13'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000156)
+,p_plug_name=>'2. Approve & send drafted alerts'
+,p_static_id=>'2-approve-send-drafted-alerts'
+,p_title=>'2. Approve & send drafted alerts'
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>30
+,p_plug_item_display_point=>'ABOVE'
+,p_plug_query_num_rows=>15
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(9950000000163)
+,p_name=>'Alert batches'
+,p_static_id=>'alert-batches'
+,p_title=>'Alert batches'
+,p_template=>4073835273271169698
+,p_display_sequence=>40
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_component_template_options=>'#DEFAULT#:t-Report--stretch:t-Report--altRowsDefault:t-Report--rowHighlight'
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'SQL'
+,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select d.dispatch_id "Batch", to_char(d.drafted_at at time zone ''Africa/Nairobi'',''DD Mon HH24:MI'') "Drafted (EAT)", d.status "Status",',
+'       d.target_wards "Wards", d.alerts_pending "Real members", d.alerts_suppressed_demo "Demo suppressed",',
+'       (select count(*) from alerts a where a.coop_dispatch_id = d.dispatch_id and a.status = ''SENT'') "Sent", d.message "SMS text"',
+'from coop_alert_dispatch d order by d.dispatch_id desc'))
+,p_ajax_enabled=>'Y'
+,p_lazy_loading=>false
+,p_query_row_template=>2540130677583398057
+,p_query_num_rows=>10
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_query_no_data_found=>'No rows yet.'
+,p_query_num_rows_type=>'NEXT_PREVIOUS_LINKS'
+,p_pagination_display_position=>'BOTTOM_RIGHT'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000164)
+,p_query_column_id=>1
+,p_column_alias=>'Batch'
+,p_column_display_sequence=>10
+,p_column_heading=>'Batch'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000169)
+,p_query_column_id=>6
+,p_column_alias=>'Demo suppressed'
+,p_column_display_sequence=>60
+,p_column_heading=>'Demo Suppressed'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000165)
+,p_query_column_id=>2
+,p_column_alias=>'Drafted (EAT)'
+,p_column_display_sequence=>20
+,p_column_heading=>'Drafted (Eat)'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000168)
+,p_query_column_id=>5
+,p_column_alias=>'Real members'
+,p_column_display_sequence=>50
+,p_column_heading=>'Real Members'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000171)
+,p_query_column_id=>8
+,p_column_alias=>'SMS text'
+,p_column_display_sequence=>80
+,p_column_heading=>'Sms Text'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000170)
+,p_query_column_id=>7
+,p_column_alias=>'Sent'
+,p_column_display_sequence=>70
+,p_column_heading=>'Sent'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000166)
+,p_query_column_id=>3
+,p_column_alias=>'Status'
+,p_column_display_sequence=>30
+,p_column_heading=>'Status'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000167)
+,p_query_column_id=>4
+,p_column_alias=>'Wards'
+,p_column_display_sequence=>40
+,p_column_heading=>'Wards'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000142)
+,p_plug_name=>'Breadcrumb'
+,p_static_id=>'breadcrumb'
+,p_region_template_options=>'#DEFAULT#:t-BreadcrumbRegion--useBreadcrumbTitle'
+,p_component_template_options=>'#DEFAULT#'
+,p_plug_template=>2532939663579242476
+,p_plug_display_sequence=>1
+,p_plug_display_point=>'REGION_POSITION_01'
+,p_plug_item_display_point=>'ABOVE'
+,p_menu_id=>wwv_flow_imp.id(9427497064154690)
+,p_plug_source_type=>'NATIVE_BREADCRUMB'
+,p_menu_template_id=>4073839682315169711
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000144)
+,p_plug_name=>'Choose a vet-confirmed outbreak'
+,p_static_id=>'choose-a-vet-confirmed-outbreak'
+,p_title=>'Choose a vet-confirmed outbreak'
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>10
+,p_plug_grid_column_span=>6
+,p_plug_item_display_point=>'ABOVE'
+,p_plug_query_num_rows=>15
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000300)
+,p_plug_name=>'Demo: send to a judge''s phone'
+,p_static_id=>'demo-judge-send'
+,p_title=>'Demo: send to a judge''s phone'
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>35
+,p_plug_item_display_point=>'ABOVE'
+,p_plug_source=>'<p>Sends <b>one live SMS</b> via Africa''s Talking to the single number typed below and to nobody else (no ward members). Logged in the Live Message Feed as <i>Demo send (judge)</i>. Limit: 20 demo sends per hour.</p>'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000143)
+,p_plug_name=>'Send rule'
+,p_static_id=>'send-rule'
+,p_title=>'Send rule'
+,p_region_template_options=>'#DEFAULT#:t-Region--noUI:t-Region--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>5
+,p_plug_item_display_point=>'ABOVE'
+,p_plug_source=>'<div class="coop-banner"><b>SMS is live (Africa&#39;s Talking).</b> Step 1 drafts alerts for members in the affected ward and its neighbouring wards; nothing is sent. Step 2, <b>Approve &amp; send</b>, asks for confirmation and then releases the SMS.'
+||' Demo / synthetic subscribers are never messaged: their alerts are recorded as SUPPRESSED.</div>'
+,p_plug_query_num_rows=>15
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(9950000000149)
+,p_name=>'Wards that will be alerted'
+,p_static_id=>'wards-that-will-be-alerted'
+,p_title=>'Wards that will be alerted'
+,p_template=>4073835273271169698
+,p_display_sequence=>25
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_component_template_options=>'#DEFAULT#:t-Report--stretch:t-Report--altRowsDefault:t-Report--rowHighlight'
+,p_new_grid_row=>false
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'SQL'
+,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select w.ward_name "Ward", case when w.ward_id = r.ward_id then ''Affected ward'' else ''Neighbour (''||n.centroid_km||'' km)'' end "Why",',
+'       (select count(*) from subscribers s where s.ward_id = w.ward_id and s.status=''ACTIVE'' and s.consent_at is not null and s.role in (''farmer'',''herder'',''both'') and s.is_demo=''N'') "Real members",',
+'       (select count(*) from subscribers s where s.ward_id = w.ward_id and s.status=''ACTIVE'' and s.consent_at is not null and s.role in (''farmer'',''herder'',''both'') and s.is_demo=''Y'') "Demo (suppressed)"',
+'from coop_disease_reports r',
+'join wards w on w.ward_id = r.ward_id or w.ward_id in (select neighbour_id from ward_neighbours where ward_id = r.ward_id)',
+'left join ward_neighbours n on n.ward_id = r.ward_id and n.neighbour_id = w.ward_id',
+'where r.report_id = :P43_REPORT_ID',
+'order by nvl(n.centroid_km,0)'))
+,p_ajax_enabled=>'Y'
+,p_ajax_items_to_submit=>'P43_REPORT_ID'
+,p_lazy_loading=>false
+,p_query_row_template=>2540130677583398057
+,p_query_num_rows=>12
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_query_no_data_found=>'No rows yet.'
+,p_query_num_rows_type=>'NEXT_PREVIOUS_LINKS'
+,p_pagination_display_position=>'BOTTOM_RIGHT'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000153)
+,p_query_column_id=>4
+,p_column_alias=>'Demo (suppressed)'
+,p_column_display_sequence=>40
+,p_column_heading=>'Demo (Suppressed)'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000152)
+,p_query_column_id=>3
+,p_column_alias=>'Real members'
+,p_column_display_sequence=>30
+,p_column_heading=>'Real Members'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000150)
+,p_query_column_id=>1
+,p_column_alias=>'Ward'
+,p_column_display_sequence=>10
+,p_column_heading=>'Ward'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000151)
+,p_query_column_id=>2
+,p_column_alias=>'Why'
+,p_column_display_sequence=>20
+,p_column_heading=>'Why'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(9950000000158)
+,p_button_sequence=>10
+,p_button_plug_id=>wwv_flow_imp.id(9950000000156)
+,p_button_name=>'APPROVE_SEND'
+,p_static_id=>'approve-send'
+,p_button_action=>'SUBMIT'
+,p_button_template_options=>'#DEFAULT#:t-Button--large'
+,p_button_template_id=>4073839297780169708
+,p_button_is_hot=>'Y'
+,p_button_image_alt=>'Approve & send SMS'
+,p_button_position=>'NEXT'
+,p_confirm_message=>'This sends live SMS via Africa''s Talking to the real members in this batch. Continue?'
+,p_confirm_style=>'danger'
+,p_icon_css_classes=>'fa-paper-plane'
+);
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(9950000000159)
+,p_button_sequence=>20
+,p_button_plug_id=>wwv_flow_imp.id(9950000000156)
+,p_button_name=>'CANCEL_DRAFT'
+,p_static_id=>'cancel-draft'
+,p_button_action=>'SUBMIT'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>4073839297780169708
+,p_button_image_alt=>'Cancel draft'
+,p_button_position=>'NEXT'
+,p_icon_css_classes=>'fa-times'
+);
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(9950000000147)
+,p_button_sequence=>10
+,p_button_plug_id=>wwv_flow_imp.id(9950000000144)
+,p_button_name=>'DRAFT'
+,p_static_id=>'draft'
+,p_button_action=>'SUBMIT'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>4073839297780169708
+,p_button_image_alt=>'1. Draft alerts (no SMS)'
+,p_button_position=>'NEXT'
+,p_icon_css_classes=>'fa-pencil-square-o'
+);
+wwv_flow_imp_page.create_page_button(
+ p_id=>wwv_flow_imp.id(9950000000301)
+,p_button_sequence=>10
+,p_button_plug_id=>wwv_flow_imp.id(9950000000300)
+,p_button_name=>'JUDGE_SEND'
+,p_static_id=>'judge-send'
+,p_button_action=>'SUBMIT'
+,p_button_template_options=>'#DEFAULT#:t-Button--large'
+,p_button_template_id=>4073839297780169708
+,p_button_is_hot=>'Y'
+,p_button_image_alt=>'Send now'
+,p_button_position=>'NEXT'
+,p_confirm_message=>'Send ONE live SMS to this number now?'
+,p_confirm_style=>'warning'
+,p_icon_css_classes=>'fa-paper-plane'
+);
+wwv_flow_imp_page.create_page_branch(
+ p_id=>wwv_flow_imp.id(9950000000162)
+,p_branch_name=>'Back to page'
+,p_branch_action=>'f?p=&APP_ID.:43:&APP_SESSION.::&DEBUG.:::&success_msg=#SUCCESS_MSG#'
+,p_branch_point=>'AFTER_PROCESSING'
+,p_branch_type=>'REDIRECT_URL'
+,p_branch_sequence=>10
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000157)
+,p_name=>'P43_DISPATCH_ID'
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_imp.id(9950000000156)
+,p_prompt=>'Drafted batch'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_SELECT_LIST'
+,p_lov=>'select ''Draft #''||d.dispatch_id||'' - ''||w.ward_name||'' - ''||r.disease||'' (''||d.alerts_pending||'' real, ''||d.alerts_suppressed_demo||'' demo suppressed)'' d, d.dispatch_id r from coop_alert_dispatch d join coop_disease_reports r on r.report_id=d.report_'
+||'id join wards w on w.ward_id=r.ward_id where d.status=''DRAFTED'' order by d.dispatch_id desc'
+,p_lov_display_null=>'YES'
+,p_lov_null_text=>'- choose a draft -'
+,p_cHeight=>1
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_lov_display_extra=>'NO'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'page_action_on_selection', 'NONE')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000303)
+,p_name=>'P43_JUDGE_MSG'
+,p_item_sequence=>20
+,p_item_plug_id=>wwv_flow_imp.id(9950000000300)
+,p_item_default=>'Ngao Co-op: vet-confirmed disease reported near your ward. Check your farm/animals, isolate sick animals and call the co-op vet.'
+,p_prompt=>'SMS text (max 160 characters; fills from the selected drafted batch)'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_TEXTAREA'
+,p_cSize=>60
+,p_cMaxlength=>160
+,p_cHeight=>3
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'auto_height', 'N',
+  'character_counter', 'Y',
+  'resizable', 'Y',
+  'trim_spaces', 'BOTH')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000302)
+,p_name=>'P43_JUDGE_PHONE'
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_imp.id(9950000000300)
+,p_prompt=>'Judge''s phone (one Kenyan mobile, e.g. 0712 345 678 or +254712345678)'
+,p_placeholder=>'07XX XXX XXX'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_TEXT_FIELD'
+,p_cSize=>30
+,p_cMaxlength=>20
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'disabled', 'N',
+  'submit_when_enter_pressed', 'N',
+  'subtype', 'TEL',
+  'trim_spaces', 'BOTH')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000146)
+,p_name=>'P43_MESSAGE'
+,p_item_sequence=>20
+,p_item_plug_id=>wwv_flow_imp.id(9950000000144)
+,p_item_default=>'Ngao Co-op: vet-confirmed disease reported near your ward. Check your farm/animals, isolate sick animals and call the co-op vet.'
+,p_prompt=>'SMS text (max 160 characters)'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_TEXTAREA'
+,p_cSize=>60
+,p_cMaxlength=>320
+,p_cHeight=>3
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'auto_height', 'N',
+  'character_counter', 'N',
+  'resizable', 'Y',
+  'trim_spaces', 'BOTH')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000145)
+,p_name=>'P43_REPORT_ID'
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_imp.id(9950000000144)
+,p_prompt=>'Vet-confirmed report'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_SELECT_LIST'
+,p_lov=>'select ''#''||r.report_id||'' ''||w.ward_name||'' - ''||r.disease||'' (''||to_char(r.reported_at at time zone ''Africa/Nairobi'',''DD Mon'')||'')'' d, r.report_id r from coop_disease_reports r join wards w on w.ward_id=r.ward_id where r.vet_status=''VET_CONFIRMED'' '
+||'order by r.reported_at desc'
+,p_lov_display_null=>'YES'
+,p_lov_null_text=>'- choose -'
+,p_cHeight=>1
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_lov_display_extra=>'NO'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'page_action_on_selection', 'NONE')).to_clob
+);
+wwv_flow_imp_page.create_page_da_event(
+ p_id=>wwv_flow_imp.id(9950000000304)
+,p_name=>'Judge text from draft'
+,p_static_id=>'judge-text-from-draft'
+,p_event_sequence=>40
+,p_triggering_element_type=>'ITEM'
+,p_triggering_element=>'P43_DISPATCH_ID'
+,p_condition_element=>'P43_DISPATCH_ID'
+,p_triggering_condition_type=>'NOT_NULL'
+,p_bind_type=>'bind'
+,p_execution_type=>'IMMEDIATE'
+,p_bind_event_type=>'change'
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000305)
+,p_event_id=>wwv_flow_imp.id(9950000000304)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-set-value-judge'
+,p_action=>'NATIVE_SET_VALUE'
+,p_affected_elements_type=>'ITEM'
+,p_affected_elements=>'P43_JUDGE_MSG'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'items_to_submit', 'P43_DISPATCH_ID',
+  'set_type', 'SQL_STATEMENT',
+  'sql_statement', 'select message from coop_alert_dispatch where dispatch_id = :P43_DISPATCH_ID',
+  'suppress_change_event', 'N')).to_clob
+,p_wait_for_result=>'Y'
+);
+wwv_flow_imp_page.create_page_da_event(
+ p_id=>wwv_flow_imp.id(9950000000154)
+,p_name=>'Refresh on P43_REPORT_ID'
+,p_static_id=>'refresh-on-p43-report-id'
+,p_event_sequence=>10
+,p_triggering_element_type=>'ITEM'
+,p_triggering_element=>'P43_REPORT_ID'
+,p_bind_type=>'bind'
+,p_execution_type=>'IMMEDIATE'
+,p_bind_event_type=>'change'
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000155)
+,p_event_id=>wwv_flow_imp.id(9950000000154)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-0'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000149)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_process(
+ p_id=>wwv_flow_imp.id(9950000000160)
+,p_process_sequence=>20
+,p_process_point=>'AFTER_SUBMIT'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'Approve and send'
+,p_static_id=>'approve-and-send'
+,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'declare l_n number;',
+'begin',
+'  if :P43_DISPATCH_ID is null then raise_application_error(-20004, ''Choose a drafted batch.''); end if;',
+'  update alerts set status = ''APPROVED'', approved_by = :APP_USER, approved_at = systimestamp',
+'   where coop_dispatch_id = :P43_DISPATCH_ID and status = ''PENDING_APPROVAL'';',
+'  l_n := sql%rowcount;',
+'  update coop_alert_dispatch set status = ''APPROVED'', approved_by = :APP_USER, approved_at = systimestamp',
+'   where dispatch_id = :P43_DISPATCH_ID and status = ''DRAFTED'';',
+'  apex_application.g_print_success_message := l_n || '' alert(s) approved; the Ngao scheduler sends them within about 15 seconds.'';',
+'end;'))
+,p_process_clob_language=>'PLSQL'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
+,p_process_when_button_id=>wwv_flow_imp.id(9950000000158)
+,p_internal_uid=>9950000000160
+);
+wwv_flow_imp_page.create_page_process(
+ p_id=>wwv_flow_imp.id(9950000000161)
+,p_process_sequence=>30
+,p_process_point=>'AFTER_SUBMIT'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'Cancel draft'
+,p_static_id=>'cancel-draft'
+,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'begin',
+'  update alerts set status = ''REJECTED'', approved_by = :APP_USER, approved_at = systimestamp',
+'   where coop_dispatch_id = :P43_DISPATCH_ID and status = ''PENDING_APPROVAL'';',
+'  update coop_alert_dispatch set status = ''CANCELLED'' where dispatch_id = :P43_DISPATCH_ID and status = ''DRAFTED'';',
+'end;'))
+,p_process_clob_language=>'PLSQL'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
+,p_process_when_button_id=>wwv_flow_imp.id(9950000000159)
+,p_process_success_message=>'Draft cancelled. Nothing was sent.'
+,p_internal_uid=>9950000000161
+);
+wwv_flow_imp_page.create_page_process(
+ p_id=>wwv_flow_imp.id(9950000000306)
+,p_process_sequence=>40
+,p_process_point=>'AFTER_SUBMIT'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'Demo send to judge'
+,p_static_id=>'demo-send-to-judge'
+,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'begin',
+'  apex_application.g_print_success_message := apex_escape.html(ngao_demo_send.send_one(:P43_JUDGE_PHONE, :P43_JUDGE_MSG, :APP_USER));',
+'end;'))
+,p_process_clob_language=>'PLSQL'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
+,p_process_when_button_id=>wwv_flow_imp.id(9950000000301)
+,p_internal_uid=>9950000000306
+);
+wwv_flow_imp_page.create_page_process(
+ p_id=>wwv_flow_imp.id(9950000000148)
+,p_process_sequence=>10
+,p_process_point=>'AFTER_SUBMIT'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'Draft co-op alerts'
+,p_static_id=>'draft-co-op-alerts'
+,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'declare',
+'  l_rep   coop_disease_reports%rowtype;',
+'  l_disp  number; l_pend number := 0; l_supp number := 0; l_score number; l_wards varchar2(400);',
+'begin',
+'  select * into l_rep from coop_disease_reports where report_id = :P43_REPORT_ID;',
+'  if l_rep.vet_status <> ''VET_CONFIRMED'' then raise_application_error(-20002, ''Only vet-confirmed reports can be alerted.''); end if;',
+'  if length(:P43_MESSAGE) > 160 then raise_application_error(-20003, ''SMS text is longer than 160 characters.''); end if;',
+'  select listagg(ward_name, '', '') within group (order by ord) into l_wards from (',
+'    select w.ward_name, 0 ord from wards w where w.ward_id = l_rep.ward_id',
+'    union all select w.ward_name, n.centroid_km from ward_neighbours n join wards w on w.ward_id = n.neighbour_id where n.ward_id = l_rep.ward_id);',
+'  insert into coop_alert_dispatch (report_id, target_wards, message, drafted_by)',
+'  values (l_rep.report_id, substr(l_wards,1,400), :P43_MESSAGE, :APP_USER) returning dispatch_id into l_disp;',
+'  for t in (select l_rep.ward_id ward_id from dual union select neighbour_id from ward_neighbours where ward_id = l_rep.ward_id) loop',
+'    insert into risk_scores (ward_id, score_date, alert_type, raw_score, probability, confidence_pct, decision, model_version, is_replay, risk_level)',
+'    values (t.ward_id, trunc(sysdate), ''D1'', 1, null, null, ''ACT'', ''coop-vet-confirmed'', ''N'', ''HIGH'') returning score_id into l_score;',
+'    for s in (select subscriber_id, is_demo, preferred_lang from subscribers',
+'               where ward_id = t.ward_id and status = ''ACTIVE'' and consent_at is not null and role in (''farmer'',''herder'',''both'')) loop',
+'      insert into alerts (score_id, subscriber_id, alert_type, ward_id, status, hazard, severity, lang, body, coop_dispatch_id)',
+'      values (l_score, s.subscriber_id, ''D1'', t.ward_id, case s.is_demo when ''Y'' then ''SUPPRESSED'' else ''PENDING_APPROVAL'' end,',
+'              ''coop_disease'', ''warning'', nvl(s.preferred_lang,''en''), :P43_MESSAGE, l_disp);',
+'      if s.is_demo = ''Y'' then l_supp := l_supp + 1; else l_pend := l_pend + 1; end if;',
+'    end loop;',
+'  end loop;',
+'  update coop_alert_dispatch set alerts_pending = l_pend, alerts_suppressed_demo = l_supp where dispatch_id = l_disp;',
+'  apex_application.g_print_success_message := ''Draft #''||l_disp||'': ''||l_pend||'' real member(s) queued for approval, ''||l_supp||'' demo subscriber(s) suppressed. Nothing sent.'';',
+'end;'))
+,p_process_clob_language=>'PLSQL'
+,p_error_display_location=>'INLINE_IN_NOTIFICATION'
+,p_process_when_button_id=>wwv_flow_imp.id(9950000000147)
+,p_internal_uid=>9950000000148
+);
+end;
+/
+prompt --application/pages/page_00044
+begin
+wwv_flow_imp_page.create_page(
+ p_id=>44
+,p_name=>'Yield, Profit & Partners'
+,p_alias=>'YIELD-PARTNERS'
+,p_step_title=>'Yield, Profit & Partners'
+,p_autocomplete_on_off=>'OFF'
+,p_inline_css=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'.coop-kpi .a-CardView-items{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px}',
+'@media (max-width:900px){.coop-kpi .a-CardView-items{grid-template-columns:repeat(2,1fr)!important}}',
+'.coop-kpi .a-CardView{border-radius:12px;border-top:5px solid #1b7f5f}',
+'.coop-link .a-CardView{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}',
+'.coop-link .a-CardView:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(0,0,0,.16);border-top-color:#0f5c43}',
+'.coop-link .a-CardView:hover .a-CardView-subTitle{text-decoration:underline}',
+'.coop-kpi .a-CardView-title{font-size:2.3rem;font-weight:800;line-height:1.1}',
+'.coop-kpi .a-CardView-subTitle{font-size:1rem;font-weight:600;color:#3d4a46}',
+'.coop-kpi .a-CardView-mainContent{font-size:.85rem;color:#5d6b67}',
+'.coop-banner{padding:10px 14px;border-radius:10px;background:#fff6e0;border:1px solid #f0c36d;font-size:.95rem}',
+'.coop-banner b{color:#8a5a00}',
+'.coop-method{padding:10px 14px;border-radius:10px;background:#eef6f3;border:1px solid #9fd1bf;font-size:.95rem}',
+'.coop-tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;font-weight:700;color:#fff}',
+'.t-Header{position:sticky!important;top:0;z-index:800}',
+'.t-Report-cell,.t-Report-colHead{font-size:.95rem}'))
+,p_step_template=>4073832297226169690
+,p_page_template_options=>'#DEFAULT#'
+,p_protection_level=>'C'
+,p_page_component_map=>'13'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000172)
+,p_plug_name=>'Breadcrumb'
+,p_static_id=>'breadcrumb'
+,p_region_template_options=>'#DEFAULT#:t-BreadcrumbRegion--useBreadcrumbTitle'
+,p_component_template_options=>'#DEFAULT#'
+,p_plug_template=>2532939663579242476
+,p_plug_display_sequence=>1
+,p_plug_display_point=>'REGION_POSITION_01'
+,p_plug_item_display_point=>'ABOVE'
+,p_menu_id=>wwv_flow_imp.id(9427497064154690)
+,p_plug_source_type=>'NATIVE_BREADCRUMB'
+,p_menu_template_id=>4073839682315169711
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000173)
+,p_plug_name=>'Co-op'
+,p_static_id=>'co-op'
+,p_title=>'Co-op'
+,p_region_template_options=>'#DEFAULT#:t-Region--noUI:t-Region--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>5
+,p_plug_item_display_point=>'ABOVE'
+,p_plug_query_num_rows=>15
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000175)
+,p_plug_name=>'Demo note'
+,p_static_id=>'demo-note'
+,p_title=>'Demo note'
+,p_region_template_options=>'#DEFAULT#:t-Region--noUI:t-Region--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>8
+,p_plug_item_display_point=>'ABOVE'
+,p_plug_source=>'<div class="coop-banner"><b>DEMO DATA:</b> co-ops, members, disease reports, harvests, prices and seed trials shown here are seeded demonstration records (marked SYNTHETIC / DEMO). Climate data, ward boundaries and the v3 seasonal outlook model outpu'
+||'t are real.</div><div class="coop-method" style="margin-top:8px"><b>Rules used:</b> yield forecast = mean of last 2 seasons x (1 - 0.15 x wet excess); floor price = mean price x (1 + 0.10 x wet excess); premium = 4% + 6% x P(wet) + 1% per confirmed o'
+||'utbreak (max 5); loan rate = 12% + 4% x P(wet) + 0.5% per confirmed outbreak. P(wet) is the real v3 seasonal model probability for OND 2026; wet excess = max(P(wet) - 0.5, 0) / 0.5.</div>'
+,p_plug_query_num_rows=>15
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000176)
+,p_plug_name=>'Harvest KPIs'
+,p_static_id=>'harvest-kpis'
+,p_title=>'Harvest KPIs'
+,p_region_css_classes=>'coop-kpi'
+,p_region_template_options=>'#DEFAULT#:t-CardsRegion--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>2074200852440250129
+,p_plug_display_sequence=>10
+,p_plug_item_display_point=>'ABOVE'
+,p_query_type=>'SQL'
+,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select ''Yield last season'' card_title, to_char(round(sum(tonnes)),''FM999G999'')||'' t'' card_value, ''DEMO deliveries'' card_note, 1 o',
+'  from v_coop_harvest_kpi r where season_start = (select max(season_start) from coop_harvests) and (:P44_COOP is null or r.coop_id = :P44_COOP)',
+'union all select ''Revenue last season'', to_char(round(sum(revenue_kes)/1e6,1),''FM990.0'')||'' M KES'', ''DEMO prices'', 2',
+'  from v_coop_harvest_kpi r where season_start = (select max(season_start) from coop_harvests) and (:P44_COOP is null or r.coop_id = :P44_COOP)',
+'union all select ''Profit last season'', to_char(round(sum(profit_kes)/1e6,1),''FM990.0'')||'' M KES'', ''revenue minus DEMO costs'', 3',
+'  from v_coop_harvest_kpi r where season_start = (select max(season_start) from coop_harvests) and (:P44_COOP is null or r.coop_id = :P44_COOP)',
+'union all select ''Forecast next season'', to_char(sum(forecast_tonnes),''FM999G999'')||'' t'', ''uses the v3 seasonal model'', 4',
+'  from v_coop_partner_panel r where (:P44_COOP is null or r.coop_id = :P44_COOP)',
+'order by 4'))
+,p_lazy_loading=>false
+,p_plug_source_type=>'NATIVE_CARDS'
+,p_ajax_items_to_submit=>'P44_COOP'
+,p_plug_query_num_rows_type=>'SCROLL'
+,p_show_total_row_count=>false
+);
+wwv_flow_imp_page.create_card(
+ p_id=>wwv_flow_imp.id(9950000000177)
+,p_region_id=>wwv_flow_imp.id(9950000000176)
+,p_layout_type=>'GRID'
+,p_grid_column_count=>4
+,p_title_adv_formatting=>false
+,p_title_column_name=>'CARD_VALUE'
+,p_sub_title_adv_formatting=>false
+,p_sub_title_column_name=>'CARD_TITLE'
+,p_body_adv_formatting=>false
+,p_body_column_name=>'CARD_NOTE'
+,p_second_body_adv_formatting=>false
+,p_media_adv_formatting=>false
+,p_pk1_column_name=>'CARD_TITLE'
+);
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(9950000000189)
+,p_name=>'Harvest records, last season (DEMO)'
+,p_static_id=>'harvest-records-last-season-demo'
+,p_title=>'Harvest records, last season (DEMO)'
+,p_region_name=>'harvest-records'
+,p_template=>4073835273271169698
+,p_display_sequence=>35
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_component_template_options=>'#DEFAULT#:t-Report--stretch:t-Report--altRowsDefault:t-Report--rowHighlight'
+,p_grid_column_span=>7
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'SQL'
+,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select replace(r.coop_name,''SYNTHETIC '','''')||'' (demo)'' "Co-op", r.season "Season", r.crop "Crop", round(r.tonnes) "Tonnes", r.bags "Bags",',
+'       r.price_kes_per_bag "Price KES/bag", r.cost_kes_per_bag "Cost KES/bag", to_char(r.profit_kes,''FM999G999G999'') "Profit KES"',
+'from v_coop_harvest_kpi r where r.season_start = (select max(season_start) from coop_harvests) and (:P44_COOP is null or r.coop_id = :P44_COOP)',
+'union all',
+'select ''TOTAL'', max(r.season), null, round(sum(r.tonnes)), sum(r.bags), null, null, to_char(sum(r.profit_kes),''FM999G999G999'')',
+'from v_coop_harvest_kpi r where r.season_start = (select max(season_start) from coop_harvests) and (:P44_COOP is null or r.coop_id = :P44_COOP)'))
+,p_ajax_enabled=>'Y'
+,p_ajax_items_to_submit=>'P44_COOP'
+,p_lazy_loading=>false
+,p_query_row_template=>2540130677583398057
+,p_query_num_rows=>30
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_query_no_data_found=>'No rows yet.'
+,p_query_num_rows_type=>'NEXT_PREVIOUS_LINKS'
+,p_pagination_display_position=>'BOTTOM_RIGHT'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000194)
+,p_query_column_id=>5
+,p_column_alias=>'Bags'
+,p_column_display_sequence=>50
+,p_column_heading=>'Bags'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000190)
+,p_query_column_id=>1
+,p_column_alias=>'Co-op'
+,p_column_display_sequence=>10
+,p_column_heading=>'Co-Op'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000196)
+,p_query_column_id=>7
+,p_column_alias=>'Cost KES/bag'
+,p_column_display_sequence=>70
+,p_column_heading=>'Cost Kes/Bag'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000192)
+,p_query_column_id=>3
+,p_column_alias=>'Crop'
+,p_column_display_sequence=>30
+,p_column_heading=>'Crop'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000195)
+,p_query_column_id=>6
+,p_column_alias=>'Price KES/bag'
+,p_column_display_sequence=>60
+,p_column_heading=>'Price Kes/Bag'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000197)
+,p_query_column_id=>8
+,p_column_alias=>'Profit KES'
+,p_column_display_sequence=>80
+,p_column_heading=>'Profit Kes'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000191)
+,p_query_column_id=>2
+,p_column_alias=>'Season'
+,p_column_display_sequence=>20
+,p_column_heading=>'Season'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000193)
+,p_query_column_id=>4
+,p_column_alias=>'Tonnes'
+,p_column_display_sequence=>40
+,p_column_heading=>'Tonnes'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(9950000000203)
+,p_name=>'Partner value by co-op'
+,p_static_id=>'partner-value-by-co-op'
+,p_title=>'Partner value by co-op'
+,p_template=>4073835273271169698
+,p_display_sequence=>40
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_component_template_options=>'#DEFAULT#:t-Report--stretch:t-Report--altRowsDefault:t-Report--rowHighlight'
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'SQL'
+,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select replace(r.coop_name,''SYNTHETIC '','''')||'' (demo)'' "Co-op", r.ward_name "Ward", r.p_wet_pct||''%'' "P(wet) OND 2026 (real model)",',
+'       r.base_tonnes "Avg yield t (demo)", r.forecast_tonnes "Seed cos: yield forecast t",',
+'       r.suggested_floor_price_kes "Buyers: floor price KES/bag", r.premium_rate_pct||''%'' "Insurer: premium rate",',
+'       r.loan_rate_pct||''%'' "Lender: loan rate"',
+'from v_coop_partner_panel r where (:P44_COOP is null or r.coop_id = :P44_COOP)',
+'order by r.coop_name'))
+,p_ajax_enabled=>'Y'
+,p_ajax_items_to_submit=>'P44_COOP'
+,p_lazy_loading=>false
+,p_query_row_template=>2540130677583398057
+,p_query_num_rows=>12
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_query_no_data_found=>'No rows yet.'
+,p_query_num_rows_type=>'NEXT_PREVIOUS_LINKS'
+,p_pagination_display_position=>'BOTTOM_RIGHT'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000207)
+,p_query_column_id=>4
+,p_column_alias=>'Avg yield t (demo)'
+,p_column_display_sequence=>40
+,p_column_heading=>'Avg Yield T (Demo)'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000209)
+,p_query_column_id=>6
+,p_column_alias=>'Buyers: floor price KES/bag'
+,p_column_display_sequence=>60
+,p_column_heading=>'Buyers: Floor Price Kes/Bag'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000204)
+,p_query_column_id=>1
+,p_column_alias=>'Co-op'
+,p_column_display_sequence=>10
+,p_column_heading=>'Co-Op'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000210)
+,p_query_column_id=>7
+,p_column_alias=>'Insurer: premium rate'
+,p_column_display_sequence=>70
+,p_column_heading=>'Insurer: Premium Rate'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000211)
+,p_query_column_id=>8
+,p_column_alias=>'Lender: loan rate'
+,p_column_display_sequence=>80
+,p_column_heading=>'Lender: Loan Rate'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000206)
+,p_query_column_id=>3
+,p_column_alias=>'P(wet) OND 2026 (real model)'
+,p_column_display_sequence=>30
+,p_column_heading=>'P(Wet) Ond 2026 (Real Model)'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000208)
+,p_query_column_id=>5
+,p_column_alias=>'Seed cos: yield forecast t'
+,p_column_display_sequence=>50
+,p_column_heading=>'Seed Cos: Yield Forecast T'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000205)
+,p_query_column_id=>2
+,p_column_alias=>'Ward'
+,p_column_display_sequence=>20
+,p_column_heading=>'Ward'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(9950000000198)
+,p_name=>'Profit by season (DEMO)'
+,p_static_id=>'profit-by-season-demo'
+,p_title=>'Profit by season (DEMO)'
+,p_region_name=>'profit-by-season'
+,p_template=>4073835273271169698
+,p_display_sequence=>36
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_component_template_options=>'#DEFAULT#:t-Report--stretch:t-Report--altRowsDefault:t-Report--rowHighlight'
+,p_new_grid_row=>false
+,p_grid_column_span=>5
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'SQL'
+,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select r.season "Season", round(sum(r.tonnes)) "Tonnes", to_char(round(sum(r.revenue_kes)/1e6,1),''FM990.0'')||'' M'' "Revenue KES",',
+'       to_char(round(sum(r.profit_kes)/1e6,1),''FM990.0'')||'' M'' "Profit KES"',
+'from v_coop_harvest_kpi r where (:P44_COOP is null or r.coop_id = :P44_COOP)',
+'group by r.season, r.season_start order by r.season_start desc'))
+,p_ajax_enabled=>'Y'
+,p_ajax_items_to_submit=>'P44_COOP'
+,p_lazy_loading=>false
+,p_query_row_template=>2540130677583398057
+,p_query_num_rows=>10
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_query_no_data_found=>'No rows yet.'
+,p_query_num_rows_type=>'NEXT_PREVIOUS_LINKS'
+,p_pagination_display_position=>'BOTTOM_RIGHT'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000202)
+,p_query_column_id=>4
+,p_column_alias=>'Profit KES'
+,p_column_display_sequence=>40
+,p_column_heading=>'Profit Kes'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000201)
+,p_query_column_id=>3
+,p_column_alias=>'Revenue KES'
+,p_column_display_sequence=>30
+,p_column_heading=>'Revenue Kes'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000199)
+,p_query_column_id=>1
+,p_column_alias=>'Season'
+,p_column_display_sequence=>10
+,p_column_heading=>'Season'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000200)
+,p_query_column_id=>2
+,p_column_alias=>'Tonnes'
+,p_column_display_sequence=>20
+,p_column_heading=>'Tonnes'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000183)
+,p_plug_name=>'Seed variety performance (bags/acre, DEMO)'
+,p_static_id=>'seed-variety-performance-bags-acre-demo'
+,p_title=>'Seed variety performance (bags/acre, DEMO)'
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_escape_on_http_output=>'Y'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>30
+,p_plug_new_grid_row=>false
+,p_plug_grid_column_span=>6
+,p_plug_item_display_point=>'ABOVE'
+,p_location=>null
+,p_plug_source_type=>'NATIVE_JET_CHART'
+);
+wwv_flow_imp_page.create_jet_chart(
+ p_id=>wwv_flow_imp.id(9950000000184)
+,p_region_id=>wwv_flow_imp.id(9950000000183)
+,p_chart_type=>'bar'
+,p_animation_on_display=>'auto'
+,p_animation_on_data_change=>'auto'
+,p_orientation=>'vertical'
+,p_data_cursor=>'auto'
+,p_data_cursor_behavior=>'auto'
+,p_hide_and_show_behavior=>'withRescale'
+,p_hover_behavior=>'dim'
+,p_stack=>'off'
+,p_stack_label=>'off'
+,p_connect_nulls=>'Y'
+,p_sorting=>'label-asc'
+,p_fill_multi_series_gaps=>true
+,p_zoom_and_scroll=>'off'
+,p_tooltip_rendered=>'Y'
+,p_show_series_name=>true
+,p_show_group_name=>true
+,p_show_value=>true
+,p_legend_rendered=>'on'
+,p_legend_position=>'auto'
+,p_overview_rendered=>'off'
+);
+wwv_flow_imp_page.create_jet_chart_series(
+ p_id=>wwv_flow_imp.id(9950000000185)
+,p_chart_id=>wwv_flow_imp.id(9950000000184)
+,p_static_id=>'series-1'
+,p_seq=>10
+,p_name=>'Bags per acre'
+,p_data_source_type=>'SQL'
+,p_data_source=>'select variety label, round(avg(bags_per_acre),1) value from coop_seed_trials r where (:P44_COOP is null or r.coop_id = :P44_COOP) group by variety'
+,p_max_row_count=>200
+,p_ajax_items_to_submit=>'P44_COOP'
+,p_series_type=>'bar'
+,p_items_value_column_name=>'VALUE'
+,p_items_label_column_name=>'LABEL'
+,p_color=>'#2a6f97'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_series(
+ p_id=>wwv_flow_imp.id(9950000000186)
+,p_chart_id=>wwv_flow_imp.id(9950000000184)
+,p_static_id=>'series-2'
+,p_seq=>20
+,p_name=>'MLN incidence %'
+,p_data_source_type=>'SQL'
+,p_data_source=>'select variety label, round(avg(greatest(mln_incidence_pct,0)),1) value from coop_seed_trials r where (:P44_COOP is null or r.coop_id = :P44_COOP) group by variety'
+,p_max_row_count=>200
+,p_ajax_items_to_submit=>'P44_COOP'
+,p_series_type=>'bar'
+,p_items_value_column_name=>'VALUE'
+,p_items_label_column_name=>'LABEL'
+,p_color=>'#d7263d'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_axis(
+ p_id=>wwv_flow_imp.id(9950000000187)
+,p_chart_id=>wwv_flow_imp.id(9950000000184)
+,p_static_id=>'x'
+,p_axis=>'x'
+,p_is_rendered=>'on'
+,p_format_scaling=>'auto'
+,p_scaling=>'linear'
+,p_baseline_scaling=>'zero'
+,p_major_tick_rendered=>'auto'
+,p_minor_tick_rendered=>'auto'
+,p_tick_label_rendered=>'on'
+,p_tick_label_rotation=>'auto'
+,p_tick_label_position=>'outside'
+);
+wwv_flow_imp_page.create_jet_chart_axis(
+ p_id=>wwv_flow_imp.id(9950000000188)
+,p_chart_id=>wwv_flow_imp.id(9950000000184)
+,p_static_id=>'y'
+,p_axis=>'y'
+,p_is_rendered=>'on'
+,p_format_type=>'decimal'
+,p_decimal_places=>0
+,p_format_scaling=>'auto'
+,p_scaling=>'linear'
+,p_baseline_scaling=>'zero'
+,p_position=>'auto'
+,p_major_tick_rendered=>'auto'
+,p_minor_tick_rendered=>'auto'
+,p_tick_label_rendered=>'on'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000178)
+,p_plug_name=>'Yield by season (tonnes, DEMO)'
+,p_static_id=>'yield-by-season-tonnes-demo'
+,p_title=>'Yield by season (tonnes, DEMO)'
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_escape_on_http_output=>'Y'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>20
+,p_plug_grid_column_span=>6
+,p_plug_item_display_point=>'ABOVE'
+,p_location=>null
+,p_plug_source_type=>'NATIVE_JET_CHART'
+);
+wwv_flow_imp_page.create_jet_chart(
+ p_id=>wwv_flow_imp.id(9950000000179)
+,p_region_id=>wwv_flow_imp.id(9950000000178)
+,p_chart_type=>'bar'
+,p_animation_on_display=>'auto'
+,p_animation_on_data_change=>'auto'
+,p_orientation=>'vertical'
+,p_data_cursor=>'auto'
+,p_data_cursor_behavior=>'auto'
+,p_hover_behavior=>'dim'
+,p_stack=>'off'
+,p_stack_label=>'off'
+,p_connect_nulls=>'Y'
+,p_sorting=>'label-asc'
+,p_fill_multi_series_gaps=>true
+,p_zoom_and_scroll=>'off'
+,p_tooltip_rendered=>'Y'
+,p_show_series_name=>true
+,p_show_group_name=>true
+,p_show_value=>true
+,p_legend_rendered=>'off'
+,p_legend_position=>'auto'
+,p_overview_rendered=>'off'
+);
+wwv_flow_imp_page.create_jet_chart_series(
+ p_id=>wwv_flow_imp.id(9950000000180)
+,p_chart_id=>wwv_flow_imp.id(9950000000179)
+,p_static_id=>'series-1'
+,p_seq=>10
+,p_name=>'Tonnes'
+,p_data_source_type=>'SQL'
+,p_data_source=>'select season label, sum(tonnes) value, min(season_start) s from v_coop_harvest_kpi r where (:P44_COOP is null or r.coop_id = :P44_COOP) group by season order by 3'
+,p_max_row_count=>200
+,p_ajax_items_to_submit=>'P44_COOP'
+,p_series_type=>'bar'
+,p_items_value_column_name=>'VALUE'
+,p_items_label_column_name=>'LABEL'
+,p_color=>'#1b7f5f'
+,p_assigned_to_y2=>'off'
+,p_items_label_rendered=>false
+,p_items_label_display_as=>'PERCENT'
+,p_threshold_display=>'onIndicator'
+);
+wwv_flow_imp_page.create_jet_chart_axis(
+ p_id=>wwv_flow_imp.id(9950000000181)
+,p_chart_id=>wwv_flow_imp.id(9950000000179)
+,p_static_id=>'x'
+,p_axis=>'x'
+,p_is_rendered=>'on'
+,p_format_scaling=>'auto'
+,p_scaling=>'linear'
+,p_baseline_scaling=>'zero'
+,p_major_tick_rendered=>'auto'
+,p_minor_tick_rendered=>'auto'
+,p_tick_label_rendered=>'on'
+,p_tick_label_rotation=>'auto'
+,p_tick_label_position=>'outside'
+);
+wwv_flow_imp_page.create_jet_chart_axis(
+ p_id=>wwv_flow_imp.id(9950000000182)
+,p_chart_id=>wwv_flow_imp.id(9950000000179)
+,p_static_id=>'y'
+,p_axis=>'y'
+,p_is_rendered=>'on'
+,p_format_type=>'decimal'
+,p_decimal_places=>0
+,p_format_scaling=>'auto'
+,p_scaling=>'linear'
+,p_baseline_scaling=>'zero'
+,p_position=>'auto'
+,p_major_tick_rendered=>'auto'
+,p_minor_tick_rendered=>'auto'
+,p_tick_label_rendered=>'on'
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000174)
+,p_name=>'P44_COOP'
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_imp.id(9950000000173)
+,p_prompt=>'Co-operative'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_SELECT_LIST'
+,p_lov=>'select replace(coop_name,''SYNTHETIC '','''')||'' (demo)'' d, coop_id r from cooperatives order by coop_name'
+,p_lov_display_null=>'YES'
+,p_lov_null_text=>'All co-operatives'
+,p_cHeight=>1
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_lov_display_extra=>'NO'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'page_action_on_selection', 'NONE')).to_clob
+);
+wwv_flow_imp_page.create_page_da_event(
+ p_id=>wwv_flow_imp.id(9950000000212)
+,p_name=>'Refresh on P44_COOP'
+,p_static_id=>'refresh-on-p44-coop'
+,p_event_sequence=>10
+,p_triggering_element_type=>'ITEM'
+,p_triggering_element=>'P44_COOP'
+,p_bind_type=>'bind'
+,p_execution_type=>'IMMEDIATE'
+,p_bind_event_type=>'change'
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000213)
+,p_event_id=>wwv_flow_imp.id(9950000000212)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-0'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000176)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000214)
+,p_event_id=>wwv_flow_imp.id(9950000000212)
+,p_event_result=>'TRUE'
+,p_action_sequence=>20
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-1'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000178)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000215)
+,p_event_id=>wwv_flow_imp.id(9950000000212)
+,p_event_result=>'TRUE'
+,p_action_sequence=>30
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-2'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000183)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000216)
+,p_event_id=>wwv_flow_imp.id(9950000000212)
+,p_event_result=>'TRUE'
+,p_action_sequence=>40
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-3'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000189)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000217)
+,p_event_id=>wwv_flow_imp.id(9950000000212)
+,p_event_result=>'TRUE'
+,p_action_sequence=>50
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-4'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000198)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000218)
+,p_event_id=>wwv_flow_imp.id(9950000000212)
+,p_event_result=>'TRUE'
+,p_action_sequence=>60
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-5'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000203)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+end;
+/
+prompt --application/pages/page_00045
+begin
+wwv_flow_imp_page.create_page(
+ p_id=>45
+,p_name=>'Live Message Feed'
+,p_alias=>'LIVE-FEED'
+,p_step_title=>'Live Message Feed'
+,p_autocomplete_on_off=>'OFF'
+,p_javascript_code_onload=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'(function(){var n=0;function tick(){[''feed-counters'',''live-message-feed''].forEach(function(r){try{apex.region(r).refresh();}catch(e){}});n++;$(''#feed-updated'').text(new Date().toLocaleTimeString(''en-GB'',{timeZone:''Africa/Nairobi''})+'' EAT'');}',
+'setInterval(tick,8000);$(''#feed-updated'').text(new Date().toLocaleTimeString(''en-GB'',{timeZone:''Africa/Nairobi''})+'' EAT'');})();'))
+,p_inline_css=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'.coop-kpi .a-CardView-items{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px}',
+'@media (max-width:900px){.coop-kpi .a-CardView-items{grid-template-columns:repeat(2,1fr)!important}}',
+'.coop-kpi .a-CardView{border-radius:12px;border-top:5px solid #1b7f5f}',
+'.coop-link .a-CardView{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}',
+'.coop-link .a-CardView:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(0,0,0,.16);border-top-color:#0f5c43}',
+'.coop-link .a-CardView:hover .a-CardView-subTitle{text-decoration:underline}',
+'.coop-kpi .a-CardView-title{font-size:2.3rem;font-weight:800;line-height:1.1}',
+'.coop-kpi .a-CardView-subTitle{font-size:1rem;font-weight:600;color:#3d4a46}',
+'.coop-kpi .a-CardView-mainContent{font-size:.85rem;color:#5d6b67}',
+'.coop-banner{padding:10px 14px;border-radius:10px;background:#fff6e0;border:1px solid #f0c36d;font-size:.95rem}',
+'.coop-banner b{color:#8a5a00}',
+'.coop-method{padding:10px 14px;border-radius:10px;background:#eef6f3;border:1px solid #9fd1bf;font-size:.95rem}',
+'.coop-tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;font-weight:700;color:#fff}',
+'.t-Header{position:sticky!important;top:0;z-index:800}',
+'.t-Report-cell,.t-Report-colHead{font-size:.95rem}',
+'',
+'.feed-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.8rem;font-weight:600;color:#fff}',
+'.fb-DELIVERED{background:#1b7f5f}.fb-SENT{background:#2a6f97}.fb-QUEUED{background:#9a6700}.fb-FAILED{background:#c0392b}',
+'.fb-RECEIVED{background:#6c4ab6}.fb-SESSION{background:#5c6b73}.fb-OTHER{background:#777}',
+'.feed-live{color:#1b7f5f;font-weight:600}'))
+,p_step_template=>4073832297226169690
+,p_page_template_options=>'#DEFAULT#'
+,p_protection_level=>'C'
+,p_page_component_map=>'13'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000219)
+,p_plug_name=>'Breadcrumb'
+,p_static_id=>'breadcrumb'
+,p_region_template_options=>'#DEFAULT#:t-BreadcrumbRegion--useBreadcrumbTitle'
+,p_component_template_options=>'#DEFAULT#'
+,p_plug_template=>2532939663579242476
+,p_plug_display_sequence=>1
+,p_plug_display_point=>'REGION_POSITION_01'
+,p_plug_item_display_point=>'ABOVE'
+,p_menu_id=>wwv_flow_imp.id(9427497064154690)
+,p_plug_source_type=>'NATIVE_BREADCRUMB'
+,p_menu_template_id=>4073839682315169711
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000221)
+,p_plug_name=>'Feed counters'
+,p_static_id=>'feed-counters'
+,p_title=>'Feed counters'
+,p_region_name=>'feed-counters'
+,p_region_css_classes=>'coop-kpi'
+,p_region_template_options=>'#DEFAULT#:t-CardsRegion--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>2074200852440250129
+,p_plug_display_sequence=>10
+,p_plug_item_display_point=>'ABOVE'
+,p_query_type=>'SQL'
+,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select ''USSD sessions (24h)'' card_title, to_char(count(*)) card_value, ''dials, latest step per session'' card_note, 1 o from v_live_message_feed where kind=''USSD session'' and event_at > systimestamp - interval ''1'' day',
+'union all select ''Inbound (24h)'', to_char(count(*)), ''USSD reports + SMS received'', 2 from v_live_message_feed where direction=''IN'' and kind<>''USSD session'' and event_at > systimestamp - interval ''1'' day',
+'union all select ''Outbound (24h)'', to_char(count(*)), ''SMS alerts and replies'', 3 from v_live_message_feed where direction=''OUT'' and event_at > systimestamp - interval ''1'' day',
+'union all select ''Delivered / sent (24h)'', to_char(sum(case when status=''DELIVERED'' then 1 else 0 end))||'' / ''||to_char(sum(case when status in (''SENT'',''DELIVERED'') then 1 else 0 end)), ''delivery reports received'', 4 from v_live_message_feed where di'
+||'rection=''OUT'' and event_at > systimestamp - interval ''1'' day',
+'union all select ''Failed (24h)'', to_char(count(*)), ''provider rejected / undelivered'', 5 from v_live_message_feed where status=''FAILED'' and event_at > systimestamp - interval ''1'' day',
+'union all select ''Queued now'', to_char(count(*)), ''approved, not yet sent'', 6 from v_live_message_feed where status=''QUEUED''',
+'order by 4'))
+,p_lazy_loading=>false
+,p_plug_source_type=>'NATIVE_CARDS'
+,p_plug_query_num_rows_type=>'SCROLL'
+,p_show_total_row_count=>false
+);
+wwv_flow_imp_page.create_card(
+ p_id=>wwv_flow_imp.id(9950000000222)
+,p_region_id=>wwv_flow_imp.id(9950000000221)
+,p_layout_type=>'GRID'
+,p_grid_column_count=>6
+,p_title_adv_formatting=>false
+,p_title_column_name=>'CARD_VALUE'
+,p_sub_title_adv_formatting=>false
+,p_sub_title_column_name=>'CARD_TITLE'
+,p_body_adv_formatting=>false
+,p_body_column_name=>'CARD_NOTE'
+,p_second_body_adv_formatting=>false
+,p_media_adv_formatting=>false
+,p_pk1_column_name=>'CARD_TITLE'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000220)
+,p_plug_name=>'Feed note'
+,p_static_id=>'feed-note'
+,p_title=>'Feed note'
+,p_region_template_options=>'#DEFAULT#:t-Region--noUI:t-Region--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>5
+,p_plug_item_display_point=>'ABOVE'
+,p_plug_source=>'<div class="coop-banner"><span class="feed-live">&#9679; LIVE</span> - refreshes every 8 seconds (last: <span id="feed-updated">-</span>). Inbound USSD sessions (latest menu step), USSD reports and inbound SMS, and outbound SMS alerts with their stat'
+||'us from Africa&#39;s Talking (QUEUED = approved, waiting for the sender; SENT = accepted by the provider; DELIVERED / FAILED = delivery report). Phone numbers are masked. Times are EAT. This page is read-only and never sends anything.</div>'
+,p_plug_query_num_rows=>15
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(9950000000223)
+,p_name=>'Live message feed'
+,p_static_id=>'live-message-feed'
+,p_title=>'Live message feed'
+,p_region_name=>'live-message-feed'
+,p_template=>4073835273271169698
+,p_display_sequence=>20
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_component_template_options=>'#DEFAULT#:t-Report--stretch:t-Report--altRowsDefault:t-Report--rowHighlight'
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'SQL'
+,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select to_char(f.event_at at time zone ''Africa/Nairobi'',''DD Mon HH24:MI:SS'') "Time (EAT)",',
+'       case f.direction when ''IN'' then ''&#8595; In'' else ''&#8593; Out'' end "Dir",',
+'       f.channel "Channel", f.kind "Type",',
+'       ''<span class="feed-badge fb-''||case when f.status in (''DELIVERED'',''SENT'',''QUEUED'',''FAILED'',''RECEIVED'',''SESSION'') then f.status else ''OTHER'' end||''">''||f.status||''</span>'' "Status",',
+'       f.phone_masked "Phone", nvl(f.ward_name,''-'') "Ward",',
+'       apex_escape.html(f.detail) "Detail"',
+'from v_live_message_feed f',
+'order by f.event_at desc nulls last'))
+,p_ajax_enabled=>'Y'
+,p_lazy_loading=>false
+,p_query_row_template=>2540130677583398057
+,p_query_num_rows=>25
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_query_no_data_found=>'No rows yet.'
+,p_query_num_rows_type=>'NEXT_PREVIOUS_LINKS'
+,p_pagination_display_position=>'BOTTOM_RIGHT'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000226)
+,p_query_column_id=>3
+,p_column_alias=>'Channel'
+,p_column_display_sequence=>30
+,p_column_heading=>'Channel'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000231)
+,p_query_column_id=>8
+,p_column_alias=>'Detail'
+,p_column_display_sequence=>80
+,p_column_heading=>'Detail'
+,p_heading_alignment=>'LEFT'
+,p_display_as=>'WITHOUT_MODIFICATION'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000225)
+,p_query_column_id=>2
+,p_column_alias=>'Dir'
+,p_column_display_sequence=>20
+,p_column_heading=>'Dir'
+,p_heading_alignment=>'LEFT'
+,p_display_as=>'WITHOUT_MODIFICATION'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000229)
+,p_query_column_id=>6
+,p_column_alias=>'Phone'
+,p_column_display_sequence=>60
+,p_column_heading=>'Phone'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000228)
+,p_query_column_id=>5
+,p_column_alias=>'Status'
+,p_column_display_sequence=>50
+,p_column_heading=>'Status'
+,p_heading_alignment=>'LEFT'
+,p_display_as=>'WITHOUT_MODIFICATION'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000224)
+,p_query_column_id=>1
+,p_column_alias=>'Time (EAT)'
+,p_column_display_sequence=>10
+,p_column_heading=>'Time (EAT)'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000227)
+,p_query_column_id=>4
+,p_column_alias=>'Type'
+,p_column_display_sequence=>40
+,p_column_heading=>'Type'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000230)
+,p_query_column_id=>7
+,p_column_alias=>'Ward'
+,p_column_display_sequence=>70
+,p_column_heading=>'Ward'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+end;
+/
+prompt --application/pages/page_00046
+begin
+wwv_flow_imp_page.create_page(
+ p_id=>46
+,p_name=>'KPI Details'
+,p_alias=>'KPI-DETAILS'
+,p_step_title=>'KPI Details'
+,p_autocomplete_on_off=>'OFF'
+,p_inline_css=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'.coop-kpi .a-CardView-items{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px}',
+'@media (max-width:900px){.coop-kpi .a-CardView-items{grid-template-columns:repeat(2,1fr)!important}}',
+'.coop-kpi .a-CardView{border-radius:12px;border-top:5px solid #1b7f5f}',
+'.coop-link .a-CardView{cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}',
+'.coop-link .a-CardView:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(0,0,0,.16);border-top-color:#0f5c43}',
+'.coop-link .a-CardView:hover .a-CardView-subTitle{text-decoration:underline}',
+'.coop-kpi .a-CardView-title{font-size:2.3rem;font-weight:800;line-height:1.1}',
+'.coop-kpi .a-CardView-subTitle{font-size:1rem;font-weight:600;color:#3d4a46}',
+'.coop-kpi .a-CardView-mainContent{font-size:.85rem;color:#5d6b67}',
+'.coop-banner{padding:10px 14px;border-radius:10px;background:#fff6e0;border:1px solid #f0c36d;font-size:.95rem}',
+'.coop-banner b{color:#8a5a00}',
+'.coop-method{padding:10px 14px;border-radius:10px;background:#eef6f3;border:1px solid #9fd1bf;font-size:.95rem}',
+'.coop-tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;font-weight:700;color:#fff}',
+'.t-Header{position:sticky!important;top:0;z-index:800}',
+'.t-Report-cell,.t-Report-colHead{font-size:.95rem}'))
+,p_step_template=>4073832297226169690
+,p_page_template_options=>'#DEFAULT#'
+,p_protection_level=>'C'
+,p_page_component_map=>'13'
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000232)
+,p_plug_name=>'Breadcrumb'
+,p_static_id=>'breadcrumb'
+,p_region_template_options=>'#DEFAULT#:t-BreadcrumbRegion--useBreadcrumbTitle'
+,p_component_template_options=>'#DEFAULT#'
+,p_plug_template=>2532939663579242476
+,p_plug_display_sequence=>1
+,p_plug_display_point=>'REGION_POSITION_01'
+,p_plug_item_display_point=>'ABOVE'
+,p_menu_id=>wwv_flow_imp.id(9427497064154690)
+,p_plug_source_type=>'NATIVE_BREADCRUMB'
+,p_menu_template_id=>4073839682315169711
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000233)
+,p_plug_name=>'KPI'
+,p_static_id=>'kpi'
+,p_title=>'KPI'
+,p_region_template_options=>'#DEFAULT#:t-Region--noUI:t-Region--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>4073835273271169698
+,p_plug_display_sequence=>5
+,p_plug_item_display_point=>'ABOVE'
+,p_plug_query_num_rows=>15
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9950000000236)
+,p_plug_name=>'KPI total'
+,p_static_id=>'kpi-total'
+,p_title=>'KPI total'
+,p_region_css_classes=>'coop-kpi'
+,p_region_template_options=>'#DEFAULT#:t-CardsRegion--hideHeader js-addHiddenHeadingRoleDesc'
+,p_plug_template=>2074200852440250129
+,p_plug_display_sequence=>10
+,p_plug_item_display_point=>'ABOVE'
+,p_query_type=>'SQL'
+,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select * from (',
+'select ''Wards with HIGH flood/RVF risk'' card_title, to_char(count(distinct ward_id)) card_value, ''Ngao flood and RVF risk scores; hazards field flood, RVF, rain coming'' card_note, 1 o',
+'  from v_ward_risk_latest where risk_level = ''HIGH'' and hazard in (''field_flood'',''rvf'',''rain_coming'') and :P46_KPI = ''HIGHRISK''',
+'union all select ''Members'', to_char(sum(members),''FM999G999''), ''SYNTHETIC co-op registers'', 2 from cooperatives r where (:P46_COOP is null or r.coop_id = :P46_COOP) and :P46_KPI = ''MEMBERS''',
+'union all select ''Wet-season probability OND 2026'', to_char(round(avg(probability)*100))||''%'', ''average over the wards listed; real v3 seasonal model (backtest AUC 0.77)'', 3',
+'  from v_seasonal_outlook_latest o where (:P46_COOP is null or o.ward_id = (select ward_id from cooperatives where coop_id = :P46_COOP)) and :P46_KPI = ''SEASONAL''',
+') where o = decode(:P46_KPI,''HIGHRISK'',1,''MEMBERS'',2,3)'))
+,p_lazy_loading=>false
+,p_plug_source_type=>'NATIVE_CARDS'
+,p_ajax_items_to_submit=>'P46_KPI,P46_COOP'
+,p_plug_query_num_rows_type=>'SCROLL'
+,p_show_total_row_count=>false
+);
+wwv_flow_imp_page.create_card(
+ p_id=>wwv_flow_imp.id(9950000000237)
+,p_region_id=>wwv_flow_imp.id(9950000000236)
+,p_layout_type=>'GRID'
+,p_grid_column_count=>1
+,p_title_adv_formatting=>false
+,p_title_column_name=>'CARD_VALUE'
+,p_sub_title_adv_formatting=>false
+,p_sub_title_column_name=>'CARD_TITLE'
+,p_body_adv_formatting=>false
+,p_body_column_name=>'CARD_NOTE'
+,p_second_body_adv_formatting=>false
+,p_media_adv_formatting=>false
+,p_pk1_column_name=>'CARD_TITLE'
+);
+wwv_flow_imp_page.create_report_region(
+ p_id=>wwv_flow_imp.id(9950000000238)
+,p_name=>'Records behind the number'
+,p_static_id=>'records-behind-the-number'
+,p_title=>'Records behind the number'
+,p_template=>4073835273271169698
+,p_display_sequence=>20
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_component_template_options=>'#DEFAULT#:t-Report--stretch:t-Report--altRowsDefault:t-Report--rowHighlight'
+,p_source_type=>'NATIVE_SQL_REPORT'
+,p_query_type=>'SQL'
+,p_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select w.ward_name "Ward / co-op", w.county "County", v.alert_name||'' (''||v.hazard||'')'' "Detail", v.risk_level "Level / value", to_char(round(v.risk_score,2)) "Score", v.as_of "As of"',
+'  from v_ward_risk_latest v join wards w on w.ward_id = v.ward_id',
+' where :P46_KPI = ''HIGHRISK'' and v.risk_level = ''HIGH'' and v.hazard in (''field_flood'',''rvf'',''rain_coming'')',
+'union all',
+'select replace(r.coop_name,''SYNTHETIC '','''')||'' (synthetic)'', r.county, ''registered members'', to_char(r.members,''FM999G999''), null, null',
+'  from cooperatives r where :P46_KPI = ''MEMBERS'' and (:P46_COOP is null or r.coop_id = :P46_COOP)',
+'union all',
+'select o.ward_name, o.county, o.season||'' - ''||o.category, to_char(round(o.probability*100))||''%'', to_char(round(o.probability,3)), o.issued_at',
+'  from v_seasonal_outlook_latest o where :P46_KPI = ''SEASONAL'' and (:P46_COOP is null or o.ward_id = (select ward_id from cooperatives where coop_id = :P46_COOP))',
+'order by 4 desc, 1'))
+,p_ajax_enabled=>'Y'
+,p_ajax_items_to_submit=>'P46_KPI,P46_COOP'
+,p_lazy_loading=>false
+,p_query_row_template=>2540130677583398057
+,p_query_num_rows=>100
+,p_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_query_no_data_found=>'No rows yet.'
+,p_query_num_rows_type=>'NEXT_PREVIOUS_LINKS'
+,p_pagination_display_position=>'BOTTOM_RIGHT'
+,p_csv_output=>'N'
+,p_prn_output=>'N'
+,p_sort_null=>'L'
+,p_plug_query_strip_html=>'N'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000244)
+,p_query_column_id=>6
+,p_column_alias=>'As of'
+,p_column_display_sequence=>60
+,p_column_heading=>'As Of'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000240)
+,p_query_column_id=>2
+,p_column_alias=>'County'
+,p_column_display_sequence=>20
+,p_column_heading=>'County'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000241)
+,p_query_column_id=>3
+,p_column_alias=>'Detail'
+,p_column_display_sequence=>30
+,p_column_heading=>'Detail'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000242)
+,p_query_column_id=>4
+,p_column_alias=>'Level / value'
+,p_column_display_sequence=>40
+,p_column_heading=>'Level / Value'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000243)
+,p_query_column_id=>5
+,p_column_alias=>'Score'
+,p_column_display_sequence=>50
+,p_column_heading=>'Score'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_report_columns(
+ p_id=>wwv_flow_imp.id(9950000000239)
+,p_query_column_id=>1
+,p_column_alias=>'Ward / co-op'
+,p_column_display_sequence=>10
+,p_column_heading=>'Ward / Co-Op'
+,p_heading_alignment=>'LEFT'
+,p_derived_column=>'N'
+,p_include_in_export=>'Y'
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000235)
+,p_name=>'P46_COOP'
+,p_item_sequence=>20
+,p_item_plug_id=>wwv_flow_imp.id(9950000000233)
+,p_prompt=>'Co-operative'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_SELECT_LIST'
+,p_lov=>'select replace(coop_name,''SYNTHETIC '','''')||'' (demo)'' d, coop_id r from cooperatives order by coop_name'
+,p_lov_display_null=>'YES'
+,p_lov_null_text=>'All co-operatives'
+,p_cHeight=>1
+,p_begin_on_new_line=>'N'
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_lov_display_extra=>'NO'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'page_action_on_selection', 'NONE')).to_clob
+);
+wwv_flow_imp_page.create_page_item(
+ p_id=>wwv_flow_imp.id(9950000000234)
+,p_name=>'P46_KPI'
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_imp.id(9950000000233)
+,p_item_default=>'HIGHRISK'
+,p_prompt=>'Indicator'
+,p_source_type=>'ALWAYS_NULL'
+,p_display_as=>'NATIVE_SELECT_LIST'
+,p_lov=>'STATIC:Wards with HIGH flood/RVF risk;HIGHRISK,Members by co-operative;MEMBERS,Wet-season probability OND 2026 by ward;SEASONAL'
+,p_cHeight=>1
+,p_field_template=>1610598304472262251
+,p_item_template_options=>'#DEFAULT#'
+,p_lov_display_extra=>'NO'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'page_action_on_selection', 'NONE')).to_clob
+);
+wwv_flow_imp_page.create_page_da_event(
+ p_id=>wwv_flow_imp.id(9950000000248)
+,p_name=>'Refresh on P46_COOP'
+,p_static_id=>'refresh-on-p46-coop'
+,p_event_sequence=>10
+,p_triggering_element_type=>'ITEM'
+,p_triggering_element=>'P46_COOP'
+,p_bind_type=>'bind'
+,p_execution_type=>'IMMEDIATE'
+,p_bind_event_type=>'change'
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000249)
+,p_event_id=>wwv_flow_imp.id(9950000000248)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-0'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000236)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000250)
+,p_event_id=>wwv_flow_imp.id(9950000000248)
+,p_event_result=>'TRUE'
+,p_action_sequence=>20
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-1'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000238)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_event(
+ p_id=>wwv_flow_imp.id(9950000000245)
+,p_name=>'Refresh on P46_KPI'
+,p_static_id=>'refresh-on-p46-kpi'
+,p_event_sequence=>10
+,p_triggering_element_type=>'ITEM'
+,p_triggering_element=>'P46_KPI'
+,p_bind_type=>'bind'
+,p_execution_type=>'IMMEDIATE'
+,p_bind_event_type=>'change'
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000246)
+,p_event_id=>wwv_flow_imp.id(9950000000245)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-0'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000236)
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'maintain_pagination', 'N')).to_clob
+);
+wwv_flow_imp_page.create_page_da_action(
+ p_id=>wwv_flow_imp.id(9950000000247)
+,p_event_id=>wwv_flow_imp.id(9950000000245)
+,p_event_result=>'TRUE'
+,p_action_sequence=>20
+,p_execute_on_page_init=>'N'
+,p_static_id=>'native-refresh-1'
+,p_action=>'NATIVE_REFRESH'
+,p_affected_elements_type=>'REGION'
+,p_affected_region_id=>wwv_flow_imp.id(9950000000238)
 ,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
   'maintain_pagination', 'N')).to_clob
 );
@@ -12511,6 +16353,7 @@ wwv_flow_imp_page.create_component_da_action(
 ,p_action_sequence=>10
 ,p_action=>'NATIVE_DIALOG_CANCEL'
 ,p_static_id=>'native-dialog-cancel'
+,p_stop_execution_on_error=>true
 );
 wwv_flow_imp_page.create_page_button(
  p_id=>wwv_flow_imp.id(9633966127157314)
@@ -13901,7 +17744,7 @@ wwv_flow_imp_page.create_worksheet_rpt(
 ,p_report_alias=>'primary'
 ,p_status=>'PUBLIC'
 ,p_is_default=>'Y'
-,p_report_columns=>'STEP_ID:USERID:ERR_TIME:SQLERRM:SQLERRM_COMPONENT_TYPE:SQLERRM_COMPONENT_NAME:'
+,p_report_columns=>'STEP_ID:USERID:ERR_TIME:SQLERRM:SQLERRM_COMPONENT_TYPE:SQLERRM_COMPONENT_NAME'
 ,p_sort_column_1=>'ERROR_TIME'
 ,p_sort_direction_1=>'DESC'
 );
@@ -15115,6 +18958,7 @@ wwv_flow_imp_page.create_component_da_action(
 ,p_action_sequence=>10
 ,p_action=>'NATIVE_DIALOG_CANCEL'
 ,p_static_id=>'native-dialog-cancel'
+,p_stop_execution_on_error=>true
 );
 wwv_flow_imp_page.create_page_branch(
  p_id=>wwv_flow_imp.id(9722887897157802)
@@ -15282,6 +19126,7 @@ wwv_flow_imp_page.create_worksheet_column(
 ,p_column_type=>'NUMBER'
 ,p_display_text_as=>'HIDDEN_ESCAPE_SC'
 ,p_heading_alignment=>'LEFT'
+,p_use_as_row_header=>'N'
 );
 wwv_flow_imp_page.create_worksheet_column(
  p_id=>wwv_flow_imp.id(9726449973157822)
@@ -15460,6 +19305,7 @@ wwv_flow_imp_page.create_component_da_action(
 ,p_action_sequence=>10
 ,p_action=>'NATIVE_DIALOG_CANCEL'
 ,p_static_id=>'native-dialog-cancel'
+,p_stop_execution_on_error=>true
 );
 wwv_flow_imp_page.create_page_button(
  p_id=>wwv_flow_imp.id(9734000941157850)
@@ -15733,6 +19579,7 @@ wwv_flow_imp_page.create_component_da_action(
 ,p_action_sequence=>10
 ,p_action=>'NATIVE_DIALOG_CANCEL'
 ,p_static_id=>'native-dialog-cancel'
+,p_stop_execution_on_error=>true
 );
 wwv_flow_imp_page.create_page_button(
  p_id=>wwv_flow_imp.id(9738609688157871)
@@ -16187,6 +20034,7 @@ wwv_flow_imp_page.create_component_da_action(
 ,p_action_sequence=>10
 ,p_action=>'NATIVE_DIALOG_CANCEL'
 ,p_static_id=>'native-dialog-cancel'
+,p_stop_execution_on_error=>true
 );
 wwv_flow_imp_page.create_page_button(
  p_id=>wwv_flow_imp.id(9749757114157925)
