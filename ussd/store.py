@@ -13,7 +13,7 @@ import logging
 import os
 import threading
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 log = logging.getLogger(__name__)
 
@@ -39,6 +39,8 @@ class SessionMeta:
     """What we knew about the number when the session started."""
     start_lang: str | None  # None = new number, show the language prompt first
     created: float
+    phone: str = ""  # a reused session id with another phone starts fresh
+    cache: dict = field(default_factory=dict)  # mid-session backend reads, e.g. the drying offer
 
 
 class SessionCache:
