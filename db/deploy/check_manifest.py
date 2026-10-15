@@ -241,6 +241,7 @@ def self_test() -> None:
         "db/deploy/010_climate_seasonal.sql",
         "db/deploy/020_backend_bridge.sql",
         "db/deploy/030_seasonal_alert.sql",
+        "db/deploy/040_cooperatives_registry.sql",
     ]:
         raise AssertionError(live)
     print("check_manifest self-test ok")
