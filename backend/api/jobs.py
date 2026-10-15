@@ -86,6 +86,12 @@ def job_grade_outcomes(p):
     return grade_outcomes(p.get("as_of") or today_eat())
 
 
+def job_seasonal_outlook(p):
+    from seasonal.service import issue_outlook
+
+    return issue_outlook(p.get("year"), source=p.get("source"), dry_run=p.get("dry_run", False))
+
+
 JOBS = {
     "score": job_score,
     "send-alerts": job_send_alerts,
@@ -94,6 +100,7 @@ JOBS = {
     "reset-demo": job_reset_demo,
     "dispatch": job_dispatch,
     "grade-outcomes": job_grade_outcomes,
+    "seasonal-outlook": job_seasonal_outlook,
 }
 
 

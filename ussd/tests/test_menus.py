@@ -1,5 +1,6 @@
 import pytest
 
+import menus
 from backend import BackendError, DevBackend
 from callback import create_app
 from store import MemoryStore
@@ -169,7 +170,9 @@ def test_elnino_topics_and_tips(env):
     assert hop("2*6*2*1").startswith("CON Dry grain fully")
     last = hop("2*6*2*1*1*1")
     assert "Main menu > 7" in last and "1. More" not in last
-    assert backend.calls == [("language", {"phone": PHONE, "preferred_lang": "en"})]  # advice is static
+    # The tips are static; menu 6 asks the backend for the ward outlook once per session.
+    assert backend.calls == [("language", {"phone": PHONE, "preferred_lang": "en"}),
+                             ("seasonal-outlook", {"phone": PHONE})]
 
 
 def test_elnino_back_navigation(env):
@@ -178,6 +181,33 @@ def test_elnino_back_navigation(env):
     assert hop("1*6*4*0").startswith("CON El Niño: mvua kubwa")       # tip -> topics
     assert hop("1*6*4*0*0").startswith("CON MvuaSmart\n1. Jiandikishe")  # topics -> main menu
     assert hop("1*6*4*0*0*3").startswith("END")                         # main menu still works
+
+
+def test_elnino_title_shows_the_ward_outlook(env):
+    hop, backend, _ = env
+    backend.outlooks[PHONE] = {"registered": True, "season": "OND 2026", "probability": 0.656, "category": "HIGH"}
+    screen = walk(hop, "2", "6")
+    assert screen.startswith("CON Oct-Dec 2026: 66% chance of very heavy rains. Choose:\n1. Planting")
+    assert len(screen) <= menus.MAX_SCREEN
+    assert hop("2*6*2").startswith("CON If your crop is mature")  # topic numbers unchanged
+
+
+def test_elnino_outlook_title_fits_in_swahili(env):
+    hop, backend, _ = env
+    backend.outlooks[PHONE] = {"registered": True, "season": "OND 2026", "probability": 1.0, "category": "HIGH"}
+    screen = walk(hop, "1", "6")
+    assert screen.startswith("CON Okt-Des 2026: 100% uwezekano wa mvua kubwa sana. Chagua:")
+    assert len(screen) <= menus.MAX_SCREEN
+
+
+def test_elnino_backend_error_keeps_static_title(env):
+    hop, backend, _ = env
+
+    def broken(phone):
+        raise BackendError("timeout")
+
+    backend.seasonal_outlook = broken
+    assert walk(hop, "2", "6").startswith("CON El Niño: heavy rain is coming. Choose:")
 
 
 # --- Drying booking (menu 7) ---

@@ -266,7 +266,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"job_id\": 1,\n  \"job\": \"reset-demo\",\n  \"status\": \"DONE\",\n  \"summary\": {\n    \"phones\": 1,\n    \"reports\": 0,\n    \"outcomes\": 0,\n    \"bookings\": 0,\n    \"routes\": 0,\n    \"messages\": 0,\n    \"alerts\": 0,\n    \"subscribers\": 0\n  }\n}"
+              "body": "{\n  \"job_id\": 1,\n  \"job\": \"reset-demo\",\n  \"status\": \"DONE\",\n  \"summary\": {\n    \"phones\": 1,\n    \"reports\": 0,\n    \"outcomes\": 0,\n    \"bookings\": 0,\n    \"routes\": 0,\n    \"alerts\": 0,\n    \"messages\": 0,\n    \"subscribers\": 0\n  }\n}"
             },
             {
               "name": "202 done",
@@ -1200,7 +1200,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"job_id\": 2,\n  \"job\": \"score\",\n  \"status\": \"DONE\",\n  \"summary\": {\n    \"as_of\": \"2026-10-14\",\n    \"county\": null,\n    \"model_version\": \"heuristic-v0-backend\",\n    \"wards\": 9,\n    \"scores_written\": 4,\n    \"act\": 2,\n    \"watch\": 1,\n    \"abstain\": 1,\n    \"below_watch\": 26,\n    \"no_data\": 60,\n    \"kept_existing\": 0,\n    \"act_wards\": [\n      \"A2:Kapseret\",\n      \"A1:Moiben\"\n    ]\n  }\n}"
+              "body": "{\n  \"job_id\": 2,\n  \"job\": \"score\",\n  \"status\": \"DONE\",\n  \"summary\": {\n    \"as_of\": \"2026-10-15\",\n    \"county\": null,\n    \"model_version\": \"heuristic-v0-backend\",\n    \"wards\": 9,\n    \"scores_written\": 4,\n    \"act\": 2,\n    \"watch\": 1,\n    \"abstain\": 1,\n    \"below_watch\": 26,\n    \"no_data\": 60,\n    \"kept_existing\": 0,\n    \"act_wards\": [\n      \"A2:Kapseret\",\n      \"A1:Moiben\"\n    ]\n  }\n}"
             },
             {
               "name": "202 done",
@@ -1511,7 +1511,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"job_id\": 3,\n  \"job\": \"send-alerts\",\n  \"status\": \"DONE\",\n  \"summary\": {\n    \"as_of\": \"2026-10-14\",\n    \"dry_run\": false,\n    \"approval_required\": true,\n    \"act_scores\": 2,\n    \"alerts_created\": 4,\n    \"pending_approval\": 4,\n    \"messages_queued\": 0,\n    \"suppressed_cooldown\": 0,\n    \"suppressed_cap\": 0,\n    \"already_drafted\": 0,\n    \"no_subscribers\": 0,\n    \"approved_dispatch\": {\n      \"alerts_dispatched\": 0,\n      \"messages_queued\": 0,\n      \"suppressed_cooldown\": 0,\n      \"suppressed_cap\": 0,\n      \"skipped_replay\": 0,\n      \"skipped_stale\": 0\n    }\n  }\n}"
+              "body": "{\n  \"job_id\": 3,\n  \"job\": \"send-alerts\",\n  \"status\": \"DONE\",\n  \"summary\": {\n    \"as_of\": \"2026-10-15\",\n    \"dry_run\": false,\n    \"approval_required\": true,\n    \"act_scores\": 2,\n    \"alerts_created\": 6,\n    \"pending_approval\": 6,\n    \"messages_queued\": 0,\n    \"suppressed_cooldown\": 0,\n    \"suppressed_cap\": 0,\n    \"already_drafted\": 0,\n    \"no_subscribers\": 0,\n    \"approved_dispatch\": {\n      \"alerts_dispatched\": 0,\n      \"messages_queued\": 0,\n      \"suppressed_cooldown\": 0,\n      \"suppressed_cap\": 0,\n      \"skipped_replay\": 0,\n      \"skipped_stale\": 0\n    }\n  }\n}"
             },
             {
               "name": "202 done",
@@ -1852,7 +1852,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"items\": [\n    {\n      \"alert_id\": 4,\n      \"score_id\": 3,\n      \"alert_type_id\": \"A1\",\n      \"ward_id\": 12,\n      \"ward_name\": \"Moiben\",\n      \"county\": \"Uasin Gishu\",\n      \"hazard\": \"dry_window\",\n      \"severity\": \"warning\",\n      \"lang\": \"sw\",\n      \"body\": \"MvuaSmart: Siku 3 za jua zinatarajiwa kuanzia Alhamisi katika kata yako (uhakika 99%). Vuna mahindi sasa na uyakaushe. Jibu NDIYO ukivuna.\",\n      \"status\": \"PENDING_APPROVAL\",\n      \"probability\": 0.99,\n      \"confidence_pct\": 99,\n      \"score_date\": \"2026-10-14\",\n      \"created_at\": \"2026-10-14T23:03:08.521507+03:00\",\n      \"approved_by\": null,\n      \"approved_at\": null,\n      \"sent_at\": null,\n      \"messages\": {}\n    }\n  ]\n}"
+              "body": "{\n  \"items\": [\n    {\n      \"alert_id\": 6,\n      \"score_id\": 3,\n      \"subscriber_id\": 12,\n      \"phone\": \"+254711000001\",\n      \"alert_type_id\": \"A1\",\n      \"ward_id\": 12,\n      \"ward_name\": \"Moiben\",\n      \"county\": \"Uasin Gishu\",\n      \"hazard\": \"dry_window\",\n      \"severity\": \"warning\",\n      \"lang\": \"sw\",\n      \"body\": \"MvuaSmart: Siku 3 za jua zinatarajiwa kuanzia Ijumaa katika kata yako (uhakika 99%). Vuna mahindi sasa na uyakaushe. Jibu NDIYO ukivuna.\",\n      \"status\": \"PENDING_APPROVAL\",\n      \"probability\": 0.99,\n      \"confidence_pct\": 99,\n      \"score_date\": \"2026-10-15\",\n      \"created_at\": \"2026-10-15T15:13:20.858707+03:00\",\n      \"approved_by\": null,\n      \"approved_at\": null,\n      \"sent_at\": null,\n      \"messages\": {}\n    },\n    {\n      \"alert_id\": 5,\n      \"score_id\": 3,\n      \"subscriber_id\": 3,\n      \"phone\": \"+254700000103\",\n      \"alert_type_id\": \"A1\",\n      \"ward_id\": 12,\n      \"ward_name\": \"Moiben\",\n      \"county\": \"Uasin Gishu\",\n      \"hazard\": \"dry_window\",\n      \"severity\": \"warning\",\n      \"lang\": \"sw\",\n      \"body\": \"MvuaSmart: Siku 3 za jua zinatarajiwa kuanzia Ijumaa katika kata yako (uhakika 99%). Vuna mahindi sasa na uyakaushe. Jibu NDIYO ukivuna.\",\n      \"status\": \"PENDING_APPROVAL\",\n      \"probability\": 0.99,\n      \"confidence_pct\": 99,\n      \"score_date\": \"2026-10-15\",\n      \"created_at\": \"2026-10-15T15:13:20.851931+03:00\",\n      \"approved_by\": null,\n      \"approved_at\": null,\n      \"sent_at\": null,\n      \"messages\": {}\n    },\n    {\n      \"alert_id\": 3,\n      \"score_id\": 3,\n      \"subscriber_id\": 1,\n      \"phone\": \"+254700000101\",\n      \"alert_type_id\": \"A1\",\n      \"ward_id\": 12,\n      \"ward_name\": \"Moiben\",\n      \"county\": \"Uasin Gishu\",\n      \"hazard\": \"dry_window\",\n      \"severity\": \"warning\",\n      \"lang\": \"sw\",\n      \"body\": \"MvuaSmart: Siku 3 za jua zinatarajiwa kuanzia Ijumaa katika kata yako (uhakika 99%). Vuna mahindi sasa na uyakaushe. Jibu NDIYO ukivuna.\",\n      \"status\": \"PENDING_APPROVAL\",\n      \"probability\": 0.99,\n      \"confidence_pct\": 99,\n      \"score_date\": \"2026-10-15\",\n      \"created_at\": \"2026-10-15T15:13:20.840072+03:00\",\n      \"approved_by\": null,\n      \"approved_at\": null,\n      \"sent_at\": null,\n      \"messages\": {}\n    }\n  ]\n}"
             },
             {
               "name": "200 pending",
@@ -1917,7 +1917,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"items\": [\n    {\n      \"alert_id\": 42,\n      \"score_id\": 1301,\n      \"alert_type_id\": \"A1\",\n      \"ward_id\": 12,\n      \"ward_name\": \"Moiben\",\n      \"county\": \"Uasin Gishu\",\n      \"hazard\": \"dry_window\",\n      \"severity\": \"warning\",\n      \"lang\": \"sw\",\n      \"body\": \"MvuaSmart: Siku 3 za jua zinatarajiwa kuanzia Alhamisi katika kata yako (uhakika 75%). Vuna mahindi sasa na uyakaushe. Jibu NDIYO ukivuna.\",\n      \"status\": \"PENDING_APPROVAL\",\n      \"probability\": 0.75,\n      \"confidence_pct\": 75,\n      \"score_date\": \"2026-10-15\",\n      \"created_at\": \"2026-10-15T06:00:04+03:00\",\n      \"approved_by\": null,\n      \"approved_at\": null,\n      \"sent_at\": null,\n      \"messages\": {}\n    }\n  ]\n}"
+              "body": "{\n  \"items\": [\n    {\n      \"alert_id\": 42,\n      \"score_id\": 1301,\n      \"alert_type_id\": \"A1\",\n      \"ward_id\": 12,\n      \"ward_name\": \"Moiben\",\n      \"county\": \"Uasin Gishu\",\n      \"hazard\": \"dry_window\",\n      \"severity\": \"warning\",\n      \"lang\": \"sw\",\n      \"subscriber_id\": 7,\n      \"phone\": \"+254700000101\",\n      \"body\": \"MvuaSmart: Siku 3 za jua zinatarajiwa kuanzia Alhamisi katika kata yako (uhakika 75%). Vuna mahindi sasa na uyakaushe. Jibu NDIYO ukivuna.\",\n      \"status\": \"PENDING_APPROVAL\",\n      \"probability\": 0.75,\n      \"confidence_pct\": 75,\n      \"score_date\": \"2026-10-15\",\n      \"created_at\": \"2026-10-15T06:00:04+03:00\",\n      \"approved_by\": null,\n      \"approved_at\": null,\n      \"sent_at\": null,\n      \"messages\": {}\n    }\n  ]\n}"
             },
             {
               "name": "400 VALIDATION_ERROR",
@@ -2156,7 +2156,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"alert_id\": 4,\n  \"status\": \"APPROVED\",\n  \"dispatch\": {\n    \"messages_queued\": 3,\n    \"suppressed_cooldown\": 0,\n    \"suppressed_cap\": 0\n  }\n}"
+              "body": "{\n  \"alert_id\": 6,\n  \"status\": \"APPROVED\",\n  \"dispatch\": {\n    \"messages_queued\": 1,\n    \"suppressed_cooldown\": 0,\n    \"suppressed_cap\": 0\n  }\n}"
             },
             {
               "name": "200 approved",
@@ -2208,7 +2208,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"alert_id\": 42,\n  \"status\": \"SENT\",\n  \"dispatch\": {\n    \"messages_queued\": 3,\n    \"suppressed_cooldown\": 0,\n    \"suppressed_cap\": 0\n  }\n}"
+              "body": "{\n  \"alert_id\": 42,\n  \"status\": \"SENT\",\n  \"dispatch\": {\n    \"messages_queued\": 1,\n    \"suppressed_cooldown\": 0,\n    \"suppressed_cap\": 0\n  }\n}"
             },
             {
               "name": "400 VALIDATION_ERROR",
@@ -2880,7 +2880,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"message_id\": 5,\n  \"report\": {\n    \"report_id\": 1,\n    \"report_type\": \"wet_bags\",\n    \"report_count\": 20.0,\n    \"review_status\": \"AUTO_ACCEPTED\",\n    \"ai_confidence\": 0.8,\n    \"source\": \"SMS_KEYWORD\"\n  }\n}"
+              "body": "{\n  \"message_id\": 3,\n  \"report\": {\n    \"report_id\": 1,\n    \"report_type\": \"wet_bags\",\n    \"report_count\": 20.0,\n    \"review_status\": \"AUTO_ACCEPTED\",\n    \"ai_confidence\": 0.8,\n    \"source\": \"SMS_KEYWORD\"\n  }\n}"
             },
             {
               "name": "201 parsed",
@@ -3210,7 +3210,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"items\": [\n    {\n      \"report_id\": 1,\n      \"ward_id\": 12,\n      \"report_type\": \"wet_bags\",\n      \"report_count\": 20.0,\n      \"unit\": \"bags\",\n      \"ai_confidence\": 0.8,\n      \"review_status\": \"AUTO_ACCEPTED\",\n      \"raw_text\": \"Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu\",\n      \"source\": \"SMS_KEYWORD\",\n      \"payload\": {\n        \"report_type\": \"wet_bags\",\n        \"count\": 20,\n        \"unit\": \"bags\",\n        \"crop\": \"maize\",\n        \"species\": null,\n        \"rain_reported\": true,\n        \"moisture_pct\": null,\n        \"language\": \"sw\",\n        \"confidence\": 0.8\n      },\n      \"received_at\": \"2026-10-14T23:03:08.589210+03:00\",\n      \"reviewed_by_id\": null\n    }\n  ]\n}"
+              "body": "{\n  \"items\": [\n    {\n      \"report_id\": 1,\n      \"ward_id\": 12,\n      \"report_type\": \"wet_bags\",\n      \"report_count\": 20.0,\n      \"unit\": \"bags\",\n      \"ai_confidence\": 0.8,\n      \"review_status\": \"AUTO_ACCEPTED\",\n      \"raw_text\": \"Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu\",\n      \"source\": \"SMS_KEYWORD\",\n      \"payload\": {\n        \"report_type\": \"wet_bags\",\n        \"count\": 20,\n        \"unit\": \"bags\",\n        \"crop\": \"maize\",\n        \"species\": null,\n        \"rain_reported\": true,\n        \"moisture_pct\": null,\n        \"language\": \"sw\",\n        \"confidence\": 0.8\n      },\n      \"received_at\": \"2026-10-15T15:13:20.890730+03:00\",\n      \"reviewed_by_id\": null\n    }\n  ]\n}"
             },
             {
               "name": "200 contract",
@@ -3497,7 +3497,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"report_id\": 1,\n  \"ward_id\": 12,\n  \"report_type\": \"wet_bags\",\n  \"report_count\": 25.0,\n  \"unit\": \"bags\",\n  \"ai_confidence\": 0.8,\n  \"review_status\": \"CORRECTED\",\n  \"raw_text\": \"Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu\",\n  \"source\": \"SMS_KEYWORD\",\n  \"payload\": {\n    \"report_type\": \"wet_bags\",\n    \"count\": 25,\n    \"unit\": \"bags\",\n    \"crop\": \"maize\",\n    \"species\": null,\n    \"rain_reported\": true,\n    \"moisture_pct\": null,\n    \"language\": \"sw\",\n    \"confidence\": 0.8\n  },\n  \"received_at\": \"2026-10-14T23:03:08.589210+03:00\",\n  \"reviewed_by_id\": null\n}"
+              "body": "{\n  \"report_id\": 1,\n  \"ward_id\": 12,\n  \"report_type\": \"wet_bags\",\n  \"report_count\": 25.0,\n  \"unit\": \"bags\",\n  \"ai_confidence\": 0.8,\n  \"review_status\": \"CORRECTED\",\n  \"raw_text\": \"Nimevuna magunia 20, mvua imenyesha, mahindi yana unyevu\",\n  \"source\": \"SMS_KEYWORD\",\n  \"payload\": {\n    \"report_type\": \"wet_bags\",\n    \"count\": 25,\n    \"unit\": \"bags\",\n    \"crop\": \"maize\",\n    \"species\": null,\n    \"rain_reported\": true,\n    \"moisture_pct\": null,\n    \"language\": \"sw\",\n    \"confidence\": 0.8\n  },\n  \"received_at\": \"2026-10-15T15:13:20.890730+03:00\",\n  \"reviewed_by_id\": null\n}"
             },
             {
               "name": "400 VALIDATION_ERROR",
@@ -3758,7 +3758,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"job_id\": 4,\n  \"job\": \"plan-routes\",\n  \"status\": \"DONE\",\n  \"summary\": {\n    \"route_date\": \"2026-10-15\",\n    \"dryers\": 2,\n    \"points_with_demand\": 1,\n    \"routes\": 1,\n    \"stops\": 1,\n    \"planned_bags\": 25.0,\n    \"unserved_bags\": 0.0,\n    \"bookings\": 1,\n    \"messages_queued\": 2,\n    \"replaced_routes\": 0,\n    \"placeholder_dryers\": 2\n  }\n}"
+              "body": "{\n  \"job_id\": 4,\n  \"job\": \"plan-routes\",\n  \"status\": \"DONE\",\n  \"summary\": {\n    \"route_date\": \"2026-10-16\",\n    \"dryers\": 2,\n    \"points_with_demand\": 1,\n    \"routes\": 1,\n    \"stops\": 1,\n    \"planned_bags\": 25.0,\n    \"unserved_bags\": 0.0,\n    \"bookings\": 1,\n    \"messages_queued\": 2,\n    \"replaced_routes\": 0,\n    \"placeholder_dryers\": 2\n  }\n}"
             },
             {
               "name": "202 done",
@@ -4109,7 +4109,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"route_date\": \"2026-10-15\",\n  \"routes\": [\n    {\n      \"route_id\": 1,\n      \"dryer_id\": 1,\n      \"dryer_name\": \"Mobile dryer 1 (placeholder)\",\n      \"is_placeholder\": true,\n      \"status\": \"NOTIFIED\",\n      \"stops\": [\n        {\n          \"stop_order\": 1,\n          \"stop_id\": 1,\n          \"point_id\": 1,\n          \"point_name\": \"Moiben market\",\n          \"ward_id\": 12,\n          \"eta\": \"2026-10-15T08:00:00+03:00\",\n          \"planned_bags\": 25.0,\n          \"urgency\": 12.5,\n          \"bookings_offered\": 1,\n          \"bookings_confirmed\": 0,\n          \"bookings\": [\n            {\n              \"booking_id\": 1,\n              \"subscriber_id\": 12,\n              \"bags\": 25.0,\n              \"fee_kes\": 5250.0,\n              \"status\": \"OFFERED\"\n            }\n          ]\n        }\n      ]\n    }\n  ]\n}"
+              "body": "{\n  \"route_date\": \"2026-10-16\",\n  \"routes\": [\n    {\n      \"route_id\": 1,\n      \"dryer_id\": 1,\n      \"dryer_name\": \"Mobile dryer 1 (placeholder)\",\n      \"is_placeholder\": true,\n      \"status\": \"NOTIFIED\",\n      \"stops\": [\n        {\n          \"stop_order\": 1,\n          \"stop_id\": 1,\n          \"point_id\": 1,\n          \"point_name\": \"Moiben market\",\n          \"ward_id\": 12,\n          \"eta\": \"2026-10-16T08:00:00+03:00\",\n          \"planned_bags\": 25.0,\n          \"urgency\": 12.5,\n          \"bookings_offered\": 1,\n          \"bookings_confirmed\": 0,\n          \"bookings\": [\n            {\n              \"booking_id\": 1,\n              \"subscriber_id\": 12,\n              \"bags\": 25.0,\n              \"fee_kes\": 5250.0,\n              \"status\": \"OFFERED\"\n            }\n          ]\n        }\n      ]\n    }\n  ]\n}"
             },
             {
               "name": "200 contract",
@@ -5079,7 +5079,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"job_id\": 5,\n  \"job\": \"replay\",\n  \"status\": \"DONE\",\n  \"params\": {\n    \"scenario\": \"garissa_rvf_2006\",\n    \"from\": \"2006-09-01\",\n    \"to\": \"2007-01-15\",\n    \"overwrite\": false\n  },\n  \"summary\": {\n    \"scenario\": \"garissa_rvf_2006\",\n    \"county\": \"Garissa\",\n    \"from\": \"2006-09-01\",\n    \"to\": \"2007-01-15\",\n    \"weeks\": 20,\n    \"scores_written\": 90,\n    \"kept_existing\": 0,\n    \"first_act_date\": \"2006-11-03\",\n    \"index_case_date\": \"2006-11-30\",\n    \"lead_days_before_index_case\": 27\n  },\n  \"error\": null,\n  \"started_at\": \"2026-10-14T23:03:08.688417+03:00\",\n  \"finished_at\": \"2026-10-14T23:03:09.078048+03:00\"\n}"
+              "body": "{\n  \"job_id\": 5,\n  \"job\": \"replay\",\n  \"status\": \"DONE\",\n  \"params\": {\n    \"scenario\": \"garissa_rvf_2006\",\n    \"from\": \"2006-09-01\",\n    \"to\": \"2007-01-15\",\n    \"overwrite\": false\n  },\n  \"summary\": {\n    \"scenario\": \"garissa_rvf_2006\",\n    \"county\": \"Garissa\",\n    \"from\": \"2006-09-01\",\n    \"to\": \"2007-01-15\",\n    \"weeks\": 20,\n    \"scores_written\": 90,\n    \"kept_existing\": 0,\n    \"first_act_date\": \"2006-11-03\",\n    \"index_case_date\": \"2006-11-30\",\n    \"lead_days_before_index_case\": 27\n  },\n  \"error\": null,\n  \"started_at\": \"2026-10-15T15:13:20.955931+03:00\",\n  \"finished_at\": \"2026-10-15T15:13:21.110207+03:00\"\n}"
             },
             {
               "name": "401 UNAUTHORIZED",
@@ -5262,7 +5262,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"job_id\": 6,\n  \"job\": \"grade-outcomes\",\n  \"status\": \"DONE\",\n  \"summary\": {\n    \"as_of\": \"2026-10-14\",\n    \"graded\": 0,\n    \"hits\": 0,\n    \"misses\": 0,\n    \"waiting_for_data\": 0\n  }\n}"
+              "body": "{\n  \"job_id\": 6,\n  \"job\": \"grade-outcomes\",\n  \"status\": \"DONE\",\n  \"summary\": {\n    \"as_of\": \"2026-10-15\",\n    \"graded\": 0,\n    \"hits\": 0,\n    \"misses\": 0,\n    \"waiting_for_data\": 0\n  }\n}"
             },
             {
               "name": "202 done",
@@ -6028,7 +6028,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"job_id\": 7,\n  \"job\": \"reset-demo\",\n  \"status\": \"DONE\",\n  \"summary\": {\n    \"phones\": 1,\n    \"reports\": 1,\n    \"outcomes\": 0,\n    \"bookings\": 1,\n    \"routes\": 1,\n    \"messages\": 10,\n    \"alerts\": 4,\n    \"subscribers\": 1\n  }\n}"
+              "body": "{\n  \"job_id\": 7,\n  \"job\": \"reset-demo\",\n  \"status\": \"DONE\",\n  \"summary\": {\n    \"phones\": 1,\n    \"reports\": 1,\n    \"outcomes\": 0,\n    \"bookings\": 1,\n    \"routes\": 1,\n    \"alerts\": 6,\n    \"messages\": 8,\n    \"subscribers\": 1\n  }\n}"
             },
             {
               "name": "202 done",
@@ -8042,6 +8042,266 @@
           ]
         },
         {
+          "name": "Issue the Oct-Dec outlook → SEASONAL_OUTLOOK",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jobs/seasonal-outlook",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jobs",
+                "seasonal-outlook"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{api_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "The v3 El Niño / Indian Ocean model (`docs/SEASONAL_MODEL.md`). Reads August-September SST from NOAA ERSSTv5 (and July-September wind and pressure from ERA5 when `CDSAPI_KEY` is set), scores every ward and writes `SEASONAL_OUTLOOK`: P(OND rain > 125% of the 1991-2020 mean), category HIGH (≥ 0.5), MEDIUM (≥ the model threshold) or LOW. Wards at WATCH/ACT also get an `S1` row in `RISK_SCORES`, so `send-alerts` drafts SMS alerts that an officer approves in APEX.\n\nBefore the September SST is published (early October) the answer is `waiting_for_data` and nothing is written. The scheduler issues the season's outlook once, from October.\n\nAnswers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is kept for this process.\n\n**Responses:** `202`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('no server error', () => pm.expect(pm.response.code).to.be.below(500));",
+                  "if (pm.response.code >= 400) pm.test('§2.1 error envelope', () => pm.expect(pm.response.json().error).to.have.keys('code','message','details','request_id'));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "202 done",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/jobs/seasonal-outlook",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "jobs",
+                    "seasonal-outlook"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{api_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "",
+              "code": 202,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"job_id\": 1042,\n  \"job\": \"seasonal-outlook\",\n  \"status\": \"DONE\",\n  \"summary\": {\n    \"season\": \"OND 2026\",\n    \"status\": \"ISSUED\",\n    \"dry_run\": false,\n    \"source\": \"auto\",\n    \"model_version\": \"ngao-seasonal-v3-sst4\",\n    \"variant\": \"sst4\",\n    \"features\": {\n      \"wio\": 27.41,\n      \"eio\": 28.12,\n      \"dmi\": -0.71,\n      \"nino34\": 26.95\n    },\n    \"threshold\": 0.31,\n    \"wards\": 61,\n    \"high\": 0,\n    \"medium\": 12,\n    \"low\": 49,\n    \"probability_by_region\": {\n      \"0\": 0.21,\n      \"3\": 0.34\n    },\n    \"s1_act\": 0,\n    \"s1_watch\": 12,\n    \"s1_alert_type\": \"present\",\n    \"model_card_rows\": 4,\n    \"notes\": []\n  }\n}"
+            },
+            {
+              "name": "400 VALIDATION_ERROR",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/jobs/seasonal-outlook",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "jobs",
+                    "seasonal-outlook"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{api_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Validation error",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"ward_id is required\",\n    \"details\": {\n      \"field\": \"ward_id\"\n    },\n    \"request_id\": \"8f2c4e0b9a7d4c1e\"\n  }\n}"
+            },
+            {
+              "name": "401 UNAUTHORIZED",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/jobs/seasonal-outlook",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "jobs",
+                    "seasonal-outlook"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{api_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Missing or invalid bearer token",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"UNAUTHORIZED\",\n    \"message\": \"Authentication credentials were not provided.\",\n    \"details\": {},\n    \"request_id\": \"8f2c4e0b9a7d4c1e\"\n  }\n}"
+            },
+            {
+              "name": "403 FORBIDDEN",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/jobs/seasonal-outlook",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "jobs",
+                    "seasonal-outlook"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{api_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Token not allowed here",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"FORBIDDEN\",\n    \"message\": \"This token may not call this endpoint\",\n    \"details\": {},\n    \"request_id\": \"8f2c4e0b9a7d4c1e\"\n  }\n}"
+            }
+          ]
+        },
+        {
           "name": "Draft alerts from ACT scores (and send approved ones)",
           "request": {
             "method": "POST",
@@ -8444,7 +8704,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"items\": [\n    {\n      \"alert_id\": 42,\n      \"score_id\": 1301,\n      \"alert_type_id\": \"A1\",\n      \"ward_id\": 12,\n      \"ward_name\": \"Moiben\",\n      \"county\": \"Uasin Gishu\",\n      \"hazard\": \"dry_window\",\n      \"severity\": \"warning\",\n      \"lang\": \"sw\",\n      \"body\": \"MvuaSmart: Siku 3 za jua zinatarajiwa kuanzia Alhamisi katika kata yako (uhakika 75%). Vuna mahindi sasa na uyakaushe. Jibu NDIYO ukivuna.\",\n      \"status\": \"PENDING_APPROVAL\",\n      \"probability\": 0.75,\n      \"confidence_pct\": 75,\n      \"score_date\": \"2026-10-15\",\n      \"created_at\": \"2026-10-15T06:00:04+03:00\",\n      \"approved_by\": null,\n      \"approved_at\": null,\n      \"sent_at\": null,\n      \"messages\": {}\n    }\n  ]\n}"
+              "body": "{\n  \"items\": [\n    {\n      \"alert_id\": 42,\n      \"score_id\": 1301,\n      \"alert_type_id\": \"A1\",\n      \"ward_id\": 12,\n      \"ward_name\": \"Moiben\",\n      \"county\": \"Uasin Gishu\",\n      \"hazard\": \"dry_window\",\n      \"severity\": \"warning\",\n      \"lang\": \"sw\",\n      \"subscriber_id\": 7,\n      \"phone\": \"+254700000101\",\n      \"body\": \"MvuaSmart: Siku 3 za jua zinatarajiwa kuanzia Alhamisi katika kata yako (uhakika 75%). Vuna mahindi sasa na uyakaushe. Jibu NDIYO ukivuna.\",\n      \"status\": \"PENDING_APPROVAL\",\n      \"probability\": 0.75,\n      \"confidence_pct\": 75,\n      \"score_date\": \"2026-10-15\",\n      \"created_at\": \"2026-10-15T06:00:04+03:00\",\n      \"approved_by\": null,\n      \"approved_at\": null,\n      \"sent_at\": null,\n      \"messages\": {}\n    }\n  ]\n}"
             },
             {
               "name": "400 VALIDATION_ERROR",
@@ -8689,7 +8949,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"alert_id\": 42,\n  \"status\": \"SENT\",\n  \"dispatch\": {\n    \"messages_queued\": 3,\n    \"suppressed_cooldown\": 0,\n    \"suppressed_cap\": 0\n  }\n}"
+              "body": "{\n  \"alert_id\": 42,\n  \"status\": \"SENT\",\n  \"dispatch\": {\n    \"messages_queued\": 1,\n    \"suppressed_cooldown\": 0,\n    \"suppressed_cap\": 0\n  }\n}"
             },
             {
               "name": "400 VALIDATION_ERROR",
@@ -10547,6 +10807,644 @@
       "description": "§5 endpoints called by Louisa's `ussd/` service. Database only, no AI; well under 2 s.",
       "item": [
         {
+          "name": "Drying state (menu 7)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/ussd/drying?phone=+254712345678",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "ussd",
+                "drying"
+              ],
+              "query": [
+                {
+                  "key": "phone",
+                  "value": "+254712345678",
+                  "description": "URL-encode the `+` as `%2B`"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ussd_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "`booking` is the subscriber's next `BOOKINGS` row that is `OFFERED` or `CONFIRMED` and whose stop is still ahead (null if none). `points` are the `COLLECTION_POINTS` in their ward, best first (market, coop store, depot, school). Unknown or unregistered phones get `registered: false` and empty lists. Always `200`.\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('no server error', () => pm.expect(pm.response.code).to.be.below(500));",
+                  "if (pm.response.code >= 400) pm.test('§2.1 error envelope', () => pm.expect(pm.response.json().error).to.have.keys('code','message','details','request_id'));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 offered slot",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/ussd/drying?phone=+254712345678",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "ussd",
+                    "drying"
+                  ],
+                  "query": [
+                    {
+                      "key": "phone",
+                      "value": "+254712345678",
+                      "description": "URL-encode the `+` as `%2B`"
+                    }
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{ussd_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "status": "",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"registered\": true,\n  \"booking\": {\n    \"booking_id\": 91,\n    \"status\": \"OFFERED\",\n    \"point_name\": \"Moiben market\",\n    \"eta\": \"2026-10-16T08:00:00+03:00\",\n    \"route_date\": \"2026-10-16\",\n    \"bags\": 20,\n    \"fee_kes\": 4200\n  },\n  \"points\": [\n    {\n      \"point_id\": 3,\n      \"point_name\": \"Moiben market\"\n    }\n  ]\n}"
+            },
+            {
+              "name": "200 unregistered",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/ussd/drying?phone=+254712345678",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "ussd",
+                    "drying"
+                  ],
+                  "query": [
+                    {
+                      "key": "phone",
+                      "value": "+254712345678",
+                      "description": "URL-encode the `+` as `%2B`"
+                    }
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{ussd_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "status": "",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"registered\": false,\n  \"booking\": null,\n  \"points\": []\n}"
+            },
+            {
+              "name": "400 VALIDATION_ERROR",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/ussd/drying?phone=+254712345678",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "ussd",
+                    "drying"
+                  ],
+                  "query": [
+                    {
+                      "key": "phone",
+                      "value": "+254712345678",
+                      "description": "URL-encode the `+` as `%2B`"
+                    }
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{ussd_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "status": "Validation error",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"ward_id is required\",\n    \"details\": {\n      \"field\": \"ward_id\"\n    },\n    \"request_id\": \"8f2c4e0b9a7d4c1e\"\n  }\n}"
+            },
+            {
+              "name": "401 UNAUTHORIZED",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/ussd/drying?phone=+254712345678",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "ussd",
+                    "drying"
+                  ],
+                  "query": [
+                    {
+                      "key": "phone",
+                      "value": "+254712345678",
+                      "description": "URL-encode the `+` as `%2B`"
+                    }
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{ussd_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "status": "Missing or invalid bearer token",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"UNAUTHORIZED\",\n    \"message\": \"Authentication credentials were not provided.\",\n    \"details\": {},\n    \"request_id\": \"8f2c4e0b9a7d4c1e\"\n  }\n}"
+            },
+            {
+              "name": "403 FORBIDDEN",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/ussd/drying?phone=+254712345678",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "ussd",
+                    "drying"
+                  ],
+                  "query": [
+                    {
+                      "key": "phone",
+                      "value": "+254712345678",
+                      "description": "URL-encode the `+` as `%2B`"
+                    }
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{ussd_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "status": "Token not allowed here",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"FORBIDDEN\",\n    \"message\": \"This token may not call this endpoint\",\n    \"details\": {},\n    \"request_id\": \"8f2c4e0b9a7d4c1e\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Confirm a drying slot (menu 7)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ussd/drying/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "ussd",
+                "drying",
+                "confirm"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ussd_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Same effect as `POST /bookings/{id}/confirm` (and an SMS reply of `1`): `OFFERED` → `CONFIRMED` plus a confirmation SMS. `404` when the booking does not belong to this phone; `409` when it is already `DRIED` or `NO_SHOW`. Confirming twice is harmless.\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here, `404` Not found, `409` Conflict with the current state",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+254712345678\",\n  \"booking_id\": 91\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('no server error', () => pm.expect(pm.response.code).to.be.below(500));",
+                  "if (pm.response.code >= 400) pm.test('§2.1 error envelope', () => pm.expect(pm.response.json().error).to.have.keys('code','message','details','request_id'));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 confirmed",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/ussd/drying/confirm",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "ussd",
+                    "drying",
+                    "confirm"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{ussd_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone\": \"+254712345678\",\n  \"booking_id\": 91\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"booking_id\": 91,\n  \"status\": \"CONFIRMED\"\n}"
+            },
+            {
+              "name": "400 VALIDATION_ERROR",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/ussd/drying/confirm",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "ussd",
+                    "drying",
+                    "confirm"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{ussd_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone\": \"+254712345678\",\n  \"booking_id\": 91\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Validation error",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"ward_id is required\",\n    \"details\": {\n      \"field\": \"ward_id\"\n    },\n    \"request_id\": \"8f2c4e0b9a7d4c1e\"\n  }\n}"
+            },
+            {
+              "name": "401 UNAUTHORIZED",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/ussd/drying/confirm",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "ussd",
+                    "drying",
+                    "confirm"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{ussd_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone\": \"+254712345678\",\n  \"booking_id\": 91\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Missing or invalid bearer token",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"UNAUTHORIZED\",\n    \"message\": \"Authentication credentials were not provided.\",\n    \"details\": {},\n    \"request_id\": \"8f2c4e0b9a7d4c1e\"\n  }\n}"
+            },
+            {
+              "name": "403 FORBIDDEN",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/ussd/drying/confirm",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "ussd",
+                    "drying",
+                    "confirm"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{ussd_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone\": \"+254712345678\",\n  \"booking_id\": 91\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Token not allowed here",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"FORBIDDEN\",\n    \"message\": \"This token may not call this endpoint\",\n    \"details\": {},\n    \"request_id\": \"8f2c4e0b9a7d4c1e\"\n  }\n}"
+            },
+            {
+              "name": "404 NOT_FOUND",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/ussd/drying/confirm",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "ussd",
+                    "drying",
+                    "confirm"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{ussd_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone\": \"+254712345678\",\n  \"booking_id\": 91\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"NOT_FOUND\",\n    \"message\": \"ward 999 not found\",\n    \"details\": {},\n    \"request_id\": \"8f2c4e0b9a7d4c1e\"\n  }\n}"
+            },
+            {
+              "name": "409 CONFLICT",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/ussd/drying/confirm",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "ussd",
+                    "drying",
+                    "confirm"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{ussd_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone\": \"+254712345678\",\n  \"booking_id\": 91\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Conflict with the current state",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"CONFLICT\",\n    \"message\": \"alert 42 is SENT, not PENDING_APPROVAL\",\n    \"details\": {},\n    \"request_id\": \"8f2c4e0b9a7d4c1e\"\n  }\n}"
+            }
+          ]
+        },
+        {
           "name": "Save the language choice",
           "request": {
             "method": "POST",
@@ -11311,6 +12209,231 @@
                       "language": "json"
                     }
                   }
+                }
+              },
+              "status": "Token not allowed here",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"FORBIDDEN\",\n    \"message\": \"This token may not call this endpoint\",\n    \"details\": {},\n    \"request_id\": \"8f2c4e0b9a7d4c1e\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Season outlook line (menu 6)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/ussd/seasonal-outlook?phone=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "ussd",
+                "seasonal-outlook"
+              ],
+              "query": [
+                {
+                  "key": "phone",
+                  "value": "",
+                  "description": "URL-encode the `+` as `%2B`"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ussd_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "The newest outlook for the subscriber's ward as one short line in their language, shown above the El Niño advice topics. Unregistered phones and wards without an outlook get a neutral line with `probability: null`. Always `200`.\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token, `403` Token not allowed here"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('no server error', () => pm.expect(pm.response.code).to.be.below(500));",
+                  "if (pm.response.code >= 400) pm.test('§2.1 error envelope', () => pm.expect(pm.response.json().error).to.have.keys('code','message','details','request_id'));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 English",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/ussd/seasonal-outlook?phone=",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "ussd",
+                    "seasonal-outlook"
+                  ],
+                  "query": [
+                    {
+                      "key": "phone",
+                      "value": "",
+                      "description": "URL-encode the `+` as `%2B`"
+                    }
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{ussd_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "status": "",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"text\": \"Kapseret: 34% chance Oct-Dec 2026 rain is far above normal.\",\n  \"registered\": true,\n  \"season\": \"OND 2026\",\n  \"probability\": 0.34,\n  \"category\": \"MEDIUM\"\n}"
+            },
+            {
+              "name": "400 VALIDATION_ERROR",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/ussd/seasonal-outlook?phone=",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "ussd",
+                    "seasonal-outlook"
+                  ],
+                  "query": [
+                    {
+                      "key": "phone",
+                      "value": "",
+                      "description": "URL-encode the `+` as `%2B`"
+                    }
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{ussd_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "status": "Validation error",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"ward_id is required\",\n    \"details\": {\n      \"field\": \"ward_id\"\n    },\n    \"request_id\": \"8f2c4e0b9a7d4c1e\"\n  }\n}"
+            },
+            {
+              "name": "401 UNAUTHORIZED",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/ussd/seasonal-outlook?phone=",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "ussd",
+                    "seasonal-outlook"
+                  ],
+                  "query": [
+                    {
+                      "key": "phone",
+                      "value": "",
+                      "description": "URL-encode the `+` as `%2B`"
+                    }
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{ussd_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "status": "Missing or invalid bearer token",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"UNAUTHORIZED\",\n    \"message\": \"Authentication credentials were not provided.\",\n    \"details\": {},\n    \"request_id\": \"8f2c4e0b9a7d4c1e\"\n  }\n}"
+            },
+            {
+              "name": "403 FORBIDDEN",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/ussd/seasonal-outlook?phone=",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "ussd",
+                    "seasonal-outlook"
+                  ],
+                  "query": [
+                    {
+                      "key": "phone",
+                      "value": "",
+                      "description": "URL-encode the `+` as `%2B`"
+                    }
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{ussd_token}}",
+                      "type": "string"
+                    }
+                  ]
                 }
               },
               "status": "Token not allowed here",
@@ -12420,6 +13543,222 @@
       ]
     },
     {
+      "name": "Seasonal outlook",
+      "description": "",
+      "item": [
+        {
+          "name": "Seasonal model card (public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/public/seasonal-model-card",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "public",
+                "seasonal-model-card"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Honest test scores of each model variant on unseen seasons 2016-2025, with the per-year backtest and the caveats. From the model artifact the backend runs.\n\n**Responses:** `200`"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('no server error', () => pm.expect(pm.response.code).to.be.below(500));",
+                  "if (pm.response.code >= 400) pm.test('§2.1 error envelope', () => pm.expect(pm.response.json().error).to.have.keys('code','message','details','request_id'));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Per-ward outlook (latest issue)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/seasonal/outlook?",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "seasonal",
+                "outlook"
+              ],
+              "query": [
+                {
+                  "key": "county",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "season",
+                  "value": "",
+                  "disabled": true,
+                  "description": "e.g. `OND 2026`. Default: the newest season"
+                },
+                {
+                  "key": "ward_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{api_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "The newest `SEASONAL_OUTLOOK` row per ward (and per season when `season` is given). APEX reads the same data from `V_SEASONAL_OUTLOOK_LATEST`.\n\n**Responses:** `200`, `400` Validation error, `401` Missing or invalid bearer token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('no server error', () => pm.expect(pm.response.code).to.be.below(500));",
+                  "if (pm.response.code >= 400) pm.test('§2.1 error envelope', () => pm.expect(pm.response.json().error).to.have.keys('code','message','details','request_id'));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "400 VALIDATION_ERROR",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/seasonal/outlook?",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "seasonal",
+                    "outlook"
+                  ],
+                  "query": [
+                    {
+                      "key": "county",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "season",
+                      "value": "",
+                      "disabled": true,
+                      "description": "e.g. `OND 2026`. Default: the newest season"
+                    },
+                    {
+                      "key": "ward_id",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    }
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{api_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "status": "Validation error",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"ward_id is required\",\n    \"details\": {\n      \"field\": \"ward_id\"\n    },\n    \"request_id\": \"8f2c4e0b9a7d4c1e\"\n  }\n}"
+            },
+            {
+              "name": "401 UNAUTHORIZED",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/seasonal/outlook?",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "seasonal",
+                    "outlook"
+                  ],
+                  "query": [
+                    {
+                      "key": "county",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "season",
+                      "value": "",
+                      "disabled": true,
+                      "description": "e.g. `OND 2026`. Default: the newest season"
+                    },
+                    {
+                      "key": "ward_id",
+                      "value": "",
+                      "disabled": true,
+                      "description": ""
+                    }
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{api_token}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "status": "Missing or invalid bearer token",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"UNAUTHORIZED\",\n    \"message\": \"Authentication credentials were not provided.\",\n    \"details\": {},\n    \"request_id\": \"8f2c4e0b9a7d4c1e\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Error examples",
       "description": "The §2.1 error envelope for each status.",
       "item": [
@@ -13429,7 +14768,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"alert_id\": 42,\n  \"status\": \"SENT\",\n  \"dispatch\": {\n    \"messages_queued\": 3,\n    \"suppressed_cooldown\": 0,\n    \"suppressed_cap\": 0\n  }\n}"
+              "body": "{\n  \"alert_id\": 42,\n  \"status\": \"SENT\",\n  \"dispatch\": {\n    \"messages_queued\": 1,\n    \"suppressed_cooldown\": 0,\n    \"suppressed_cap\": 0\n  }\n}"
             },
             {
               "name": "400 VALIDATION_ERROR",

@@ -60,6 +60,7 @@ TEXT = {
         "dry_point": "Chagua mahali pa kupeleka magunia:",
         "dry_ask": "Omba kukausha magunia {bags}{at}?\n1. Ndiyo\n2. Hapana",
         "dry_at": " kwenye {point}",
+        "outlook_title": "Okt-Des {year}: {pct}% uwezekano wa mvua kubwa sana. Chagua:",
         "dry_requested": "Ombi limepokelewa! Utapata SMS mashine ikipangwa. Sasa funika magunia na uyaweke juu ya mbao.",
         "dry_cancel": "Sawa, ombi halijatumwa.",
         "other": "Tafadhali tutumie SMS ukieleza unachoona shambani.",
@@ -99,6 +100,7 @@ TEXT = {
         "dry_point": "Choose where to bring your bags:",
         "dry_ask": "Request drying for {bags} bags{at}?\n1. Yes\n2. No",
         "dry_at": " at {point}",
+        "outlook_title": "Oct-Dec {year}: {pct}% chance of very heavy rains. Choose:",
         "dry_requested": "Request received! You will get an SMS when a dryer is scheduled. Meanwhile cover the bags and keep them off the ground.",
         "dry_cancel": "OK, request not sent.",
         "other": "Please send us an SMS describing what you see on your farm.",
@@ -345,11 +347,30 @@ def _drying(path: Path, ctx: Ctx) -> str:
     return end(t["dry_requested"])
 
 
+def _outlook_title(ctx: Ctx) -> str | None:
+    """The ward's seasonal outlook as the menu-6 title (backend GET /ussd/seasonal-outlook), or None.
+
+    Fetched once per session. No outlook, an unregistered phone or a backend error falls back to the
+    static El Niño title, so the advice menu always works.
+    """
+    info = ctx.cache.get("seasonal")
+    if info is None:
+        try:
+            info = ctx.backend.seasonal_outlook(ctx.phone)
+        except BackendError:
+            info = {}
+        ctx.cache["seasonal"] = info
+    probability, season = info.get("probability"), info.get("season")
+    if probability is None or not season:
+        return None
+    return TEXT[ctx.lang]["outlook_title"].format(year=season.split()[-1], pct=round(probability * 100))
+
+
 def _elnino(path: Path, ctx: Ctx) -> None:
     """Topic list -> tips, one per screen. Returns when the user picks 0 (main menu)."""
     t, content = TEXT[ctx.lang], ELNINO[ctx.lang]
     topics = content["topics"]
-    menu = content["title"] + "".join(f"\n{n}. {label}" for n, (label, _) in enumerate(topics, 1))
+    menu = (_outlook_title(ctx) or content["title"]) + "".join(f"\n{n}. {label}" for n, (label, _) in enumerate(topics, 1))
     menu += f"\n0. {t['main_menu']}"
     valid = {"0"} | {str(n) for n in range(1, len(topics) + 1)}
     while True:

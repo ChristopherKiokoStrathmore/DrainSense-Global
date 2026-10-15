@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "reply_reader",
     "ussd_api",
     "routing",
+    "seasonal",
     "api",
 ]
 
@@ -211,6 +212,14 @@ NGAO_ROUTER_DEFAULT_RAIN_PROB = env_float("ROUTER_DEFAULT_RAIN_PROB", 0.5)
 NGAO_ROUTER_DEFAULT_MOISTURE_PCT = env_float("ROUTER_DEFAULT_MOISTURE_PCT", 20.0)
 NGAO_ROUTER_TARGET_MOISTURE_PCT = env_float("ROUTER_TARGET_MOISTURE_PCT", 13.0)
 NGAO_ROUTER_KES_PER_POINT = env_float("ROUTER_KES_PER_MOISTURE_POINT", 30.0)
+
+# Seasonal outlook (seasonal/, the v3 El Niño / Indian Ocean model; docs/SEASONAL_MODEL.md).
+NGAO_SEASONAL_ARTIFACT = env_str("SEASONAL_ARTIFACT", str(BASE_DIR / "seasonal" / "model" / "ngao_seasonal_v3.json"))
+NGAO_SEASONAL_CACHE_DIR = env_str("SEASONAL_CACHE_DIR", str(BASE_DIR / ".cache" / "seasonal"))
+# auto: the full 6-index model when ERA5 is configured, else the SST-only variant. sst | era5 force one.
+NGAO_SEASONAL_FEATURE_SOURCE = env_str("SEASONAL_FEATURE_SOURCE", "auto")
+NGAO_CDSAPI_URL = env_str("CDSAPI_URL", "https://cds.climate.copernicus.eu/api")
+NGAO_CDSAPI_KEY = env_str("CDSAPI_KEY")
 
 # Demo (§2.2 reset-demo). Presenter phones are wiped by reset-demo and flagged is_demo on register.
 NGAO_DEMO_PHONES = env_list("DEMO_PHONES")

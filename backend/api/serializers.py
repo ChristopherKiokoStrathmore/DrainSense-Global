@@ -59,6 +59,15 @@ class GradeJobIn(serializers.Serializer):
     as_of = serializers.DateField(required=False, help_text="Grade windows that ended before this date")
 
 
+class SeasonalOutlookJobIn(serializers.Serializer):
+    year = serializers.IntegerField(required=False, min_value=1982, max_value=2100,
+                                    help_text="Season year (OND <year>). Default: this year from October, else last year")
+    source = serializers.ChoiceField(choices=["auto", "sst", "era5"], required=False,
+                                     help_text="auto: full 6-index model when ERA5 (CDSAPI_KEY) is configured, else "
+                                               "SST-only. Default: SEASONAL_FEATURE_SOURCE")
+    dry_run = serializers.BooleanField(required=False, default=False, help_text="Compute, write nothing")
+
+
 JOB_INPUTS = {
     "score": ScoreJobIn,
     "send-alerts": SendAlertsJobIn,
@@ -67,6 +76,7 @@ JOB_INPUTS = {
     "reset-demo": ResetDemoJobIn,
     "dispatch": DispatchJobIn,
     "grade-outcomes": GradeJobIn,
+    "seasonal-outlook": SeasonalOutlookJobIn,
 }
 
 

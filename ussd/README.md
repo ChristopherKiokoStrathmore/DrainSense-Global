@@ -12,8 +12,8 @@ It does **not** send SMS and it does **not** write `SUBSCRIBERS`, `MESSAGES`, or
 | `POST /ngao/v1/ussd/report` | Menu 2 collects a structured report |
 | `GET /ngao/v1/ussd/ward-status` | Menu 3, "Hali ya kata yangu" |
 | `POST /ngao/v1/ussd/unsubscribe` | The farmer stops |
-| `GET /ngao/v1/ussd/drying` | Menu 7: registered? offered/confirmed slot? collection points **(proposed)** |
-| `POST /ngao/v1/ussd/drying/confirm` | Menu 7: farmer confirms an offered slot **(proposed)** |
+| `GET /ngao/v1/ussd/drying` | Menu 7: registered? offered/confirmed slot? collection points |
+| `POST /ngao/v1/ussd/drying/confirm` | Menu 7: farmer confirms an offered slot |
 
 Auth: `Authorization: Bearer <USSD_SERVICE_TOKEN>`. Each hop also upserts `USSD_SESSIONS` (`session_id`, `phone`, `last_text`, `updated_at`).
 

@@ -23,6 +23,8 @@ ALERT_TYPES = [
     ("C1", "HEALTH", "Cholera risk after floods", 0.60, 0.40, 72, True, "health_promoter"),
     ("C2", "HEALTH", "RVF human risk", 0.60, 0.35, 168, True, "health_promoter"),
     ("C3", "HEALTH", "Aflatoxin food-safety risk", 0.70, 0.50, 168, False, "health_promoter"),
+    # Seasonal outlook (seasonal/, v3 model). Watch threshold left empty: the model's own threshold applies.
+    ("S1", "FARM", "Seasonal outlook: very wet short rains", 0.50, None, 1440, False, "farmer,both"),
 ]
 
 DEFAULT_AUDIENCE = {
@@ -46,6 +48,7 @@ DEFAULT_HAZARDS = {
     "C1": "cholera",
     "C2": "rvf_human",
     "C3": "aflatoxin_food",
+    "S1": "seasonal_wet",
 }
 
 DEFAULT_ALERT_COPY = {
@@ -96,6 +99,10 @@ DEFAULT_ALERT_COPY = {
     "C3": {
         "sw": "Ngao Afya: Hatari ya sumukuvu kwenye chakula kata ya {ward} (uhakika {confidence}%). Kagua mahindi kwenye masoko na maghala.",
         "en": "Ngao Afya: Aflatoxin food-safety risk in {ward} ({confidence}% sure). Inspect maize in markets and stores.",
+    },
+    "S1": {
+        "sw": "MvuaSmart: Mvua za Okt-Des kata ya {ward} huenda zikazidi kawaida sana (uwezekano {confidence}%). Chimba mitaro, panda kwenye matuta, hifadhi nafaka pakavu.",
+        "en": "MvuaSmart: Oct-Dec rains in {ward} may be far above normal ({confidence}% chance). Dig drainage, plant on raised beds, keep stored grain dry.",
     },
 }
 
@@ -149,6 +156,7 @@ WARD_STATUS_PHRASES = {
     "C1": {"sw": "hatari ya kipindupindu", "en": "cholera risk"},
     "C2": {"sw": "hatari ya RVF kwa binadamu", "en": "human RVF risk"},
     "C3": {"sw": "sumukuvu kwenye chakula", "en": "food aflatoxin risk"},
+    "S1": {"sw": "msimu wa mvua nyingi sana", "en": "a very wet season"},
 }
 
 WARD_STATUS_LINES = {

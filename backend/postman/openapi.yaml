@@ -1259,6 +1259,134 @@ paths:
                       details: {}
                       request_id: 8f2c4e0b9a7d4c1e
           description: Token not allowed here
+  /jobs/seasonal-outlook:
+    post:
+      operationId: job_seasonal_outlook
+      description: 'The v3 El Niño / Indian Ocean model (`docs/SEASONAL_MODEL.md`). Reads August-September SST from NOAA ERSSTv5
+        (and July-September wind and pressure from ERA5 when `CDSAPI_KEY` is set), scores every ward and writes `SEASONAL_OUTLOOK`:
+        P(OND rain > 125% of the 1991-2020 mean), category HIGH (≥ 0.5), MEDIUM (≥ the model threshold) or LOW. Wards at WATCH/ACT
+        also get an `S1` row in `RISK_SCORES`, so `send-alerts` drafts SMS alerts that an officer approves in APEX.
+
+
+        Before the September SST is published (early October) the answer is `waiting_for_data` and nothing is written. The
+        scheduler issues the season''s outlook once, from October.
+
+
+        Answers `202` once the job has **finished** (`status: DONE`). The run is stored in `JOB_RUNS` when that table exists
+        (see `GET /jobs/{job_id}/status`). The live database has no `JOB_RUNS` table; the job still runs and the status is
+        kept for this process.'
+      summary: Issue the Oct-Dec outlook → SEASONAL_OUTLOOK
+      tags:
+      - Jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SeasonalOutlookJobInRequest'
+            examples:
+              ThisSeason:
+                value: {}
+                summary: this season
+              Re-issue2023AsACheck:
+                value:
+                  year: 2023
+                  source: sst
+                summary: re-issue 2023 as a check
+              Preview:
+                value:
+                  dry_run: true
+                summary: preview
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SeasonalOutlookJobInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SeasonalOutlookJobInRequest'
+      security:
+      - ApiToken: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeasonalOutlookJobAccepted'
+              examples:
+                Done:
+                  value:
+                    job_id: 1042
+                    job: seasonal-outlook
+                    status: DONE
+                    summary:
+                      season: OND 2026
+                      status: ISSUED
+                      dry_run: false
+                      source: auto
+                      model_version: ngao-seasonal-v3-sst4
+                      variant: sst4
+                      features:
+                        wio: 27.41
+                        eio: 28.12
+                        dmi: -0.71
+                        nino34: 26.95
+                      threshold: 0.31
+                      wards: 61
+                      high: 0
+                      medium: 12
+                      low: 49
+                      probability_by_region:
+                        '0': 0.21
+                        '3': 0.34
+                      s1_act: 0
+                      s1_watch: 12
+                      s1_alert_type: present
+                      model_card_rows: 4
+                      notes: []
+                  summary: done
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
   /jobs/send-alerts:
     post:
       operationId: job_send_alerts
@@ -1428,6 +1556,23 @@ paths:
                       avg_lead_days: 1.3
                       brier_skill: 0.21
                   summary: graded week
+          description: ''
+  /public/seasonal-model-card:
+    get:
+      operationId: public_seasonal_model_card
+      description: Honest test scores of each model variant on unseen seasons 2016-2025, with the per-year backtest and the
+        caveats. From the model artifact the backend runs.
+      summary: Seasonal model card (public)
+      tags:
+      - Seasonal outlook
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeasonalModelCard'
           description: ''
   /reports:
     get:
@@ -1754,6 +1899,67 @@ paths:
                       details: {}
                       request_id: 8f2c4e0b9a7d4c1e
           description: Missing or invalid bearer token
+  /seasonal/outlook:
+    get:
+      operationId: seasonal_outlook
+      description: The newest `SEASONAL_OUTLOOK` row per ward (and per season when `season` is given). APEX reads the same
+        data from `V_SEASONAL_OUTLOOK_LATEST`.
+      summary: Per-ward outlook (latest issue)
+      parameters:
+      - in: query
+        name: county
+        schema:
+          type: string
+      - in: query
+        name: season
+        schema:
+          type: string
+        description: 'e.g. `OND 2026`. Default: the newest season'
+      - in: query
+        name: ward_id
+        schema:
+          type: integer
+      tags:
+      - Seasonal outlook
+      security:
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeasonalOutlookList'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
   /sms/delivery:
     post:
       operationId: sms_delivery_report
@@ -1866,6 +2072,217 @@ paths:
       responses:
         '200':
           description: Empty body, always
+  /ussd/drying:
+    get:
+      operationId: ussd_drying
+      description: '`booking` is the subscriber''s next `BOOKINGS` row that is `OFFERED` or `CONFIRMED` and whose stop is
+        still ahead (null if none). `points` are the `COLLECTION_POINTS` in their ward, best first (market, coop store, depot,
+        school). Unknown or unregistered phones get `registered: false` and empty lists. Always `200`.'
+      summary: Drying state (menu 7)
+      parameters:
+      - in: query
+        name: phone
+        schema:
+          type: string
+        description: URL-encode the `+` as `%2B`
+        required: true
+        examples:
+          E.164:
+            value: '+254712345678'
+      tags:
+      - USSD contract
+      security:
+      - UssdToken: []
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DryingState'
+              examples:
+                OfferedSlot:
+                  value:
+                    registered: true
+                    booking:
+                      booking_id: 91
+                      status: OFFERED
+                      point_name: Moiben market
+                      eta: '2026-10-16T08:00:00+03:00'
+                      route_date: '2026-10-16'
+                      bags: 20
+                      fee_kes: 4200
+                    points:
+                    - point_id: 3
+                      point_name: Moiben market
+                  summary: offered slot
+                Unregistered:
+                  value:
+                    registered: false
+                    booking: null
+                    points: []
+                  summary: unregistered
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+  /ussd/drying/confirm:
+    post:
+      operationId: ussd_drying_confirm
+      description: 'Same effect as `POST /bookings/{id}/confirm` (and an SMS reply of `1`): `OFFERED` → `CONFIRMED` plus a
+        confirmation SMS. `404` when the booking does not belong to this phone; `409` when it is already `DRIED` or `NO_SHOW`.
+        Confirming twice is harmless.'
+      summary: Confirm a drying slot (menu 7)
+      tags:
+      - USSD contract
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DryingConfirmInRequest'
+            examples:
+              Contract:
+                value:
+                  phone: '+254712345678'
+                  booking_id: 91
+                summary: contract
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DryingConfirmInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DryingConfirmInRequest'
+        required: true
+      security:
+      - UssdToken: []
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingConfirmed'
+              examples:
+                Confirmed:
+                  value:
+                    booking_id: 91
+                    status: CONFIRMED
+                  summary: confirmed
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                NOTFOUND:
+                  value:
+                    error:
+                      code: NOT_FOUND
+                      message: ward 999 not found
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: NOT_FOUND
+          description: Not found
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                CONFLICT:
+                  value:
+                    error:
+                      code: CONFLICT
+                      message: alert 42 is SENT, not PENDING_APPROVAL
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Conflict with the current state
   /ussd/language:
     post:
       operationId: ussd_language
@@ -2093,6 +2510,15 @@ paths:
                   phone: '+254712345678'
                   report_type: flooding
                 summary: flooding
+              DryingRequest(menu7):
+                value:
+                  phone: '+254712345678'
+                  session_id: s9
+                  report_type: wet_bags
+                  count: 20
+                  unit: bags
+                  point_id: 3
+                summary: drying request (menu 7)
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/ReportInRequest'
@@ -2114,6 +2540,84 @@ paths:
                   value:
                     report_id: 77
                   summary: created
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                VALIDATIONERROR:
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: ward_id is required
+                      details:
+                        field: ward_id
+                      request_id: 8f2c4e0b9a7d4c1e
+                  summary: VALIDATION_ERROR
+          description: Validation error
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                UNAUTHORIZED:
+                  value:
+                    error:
+                      code: UNAUTHORIZED
+                      message: Authentication credentials were not provided.
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Missing or invalid bearer token
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                FORBIDDEN:
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: This token may not call this endpoint
+                      details: {}
+                      request_id: 8f2c4e0b9a7d4c1e
+          description: Token not allowed here
+  /ussd/seasonal-outlook:
+    get:
+      operationId: ussd_seasonal_outlook
+      description: 'The newest outlook for the subscriber''s ward as one short line in their language, shown above the El
+        Niño advice topics. Unregistered phones and wards without an outlook get a neutral line with `probability: null`.
+        Always `200`.'
+      summary: Season outlook line (menu 6)
+      parameters:
+      - in: query
+        name: phone
+        schema:
+          type: string
+        description: URL-encode the `+` as `%2B`
+        required: true
+      tags:
+      - USSD contract
+      security:
+      - UssdToken: []
+      - ApiToken: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeasonalLine'
+              examples:
+                English:
+                  value:
+                    text: 'Kapseret: 34% chance Oct-Dec 2026 rain is far above normal.'
+                    registered: true
+                    season: OND 2026
+                    probability: 0.34
+                    category: MEDIUM
           description: ''
         '400':
           content:
@@ -2782,6 +3286,17 @@ components:
       - observed
       - predicted
       - prob_bin
+    CategoryEnum:
+      enum:
+      - HIGH
+      - MEDIUM
+      - LOW
+      type: string
+      description: '* `HIGH` - HIGH
+
+        * `MEDIUM` - MEDIUM
+
+        * `LOW` - LOW'
     Centroid:
       type: object
       properties:
@@ -2948,6 +3463,84 @@ components:
       required:
       - approved_dispatch
       - sms
+    DryingBooking:
+      type: object
+      properties:
+        booking_id:
+          type: integer
+        status:
+          $ref: '#/components/schemas/DryingBookingStatusEnum'
+        point_name:
+          type: string
+        eta:
+          type: string
+          format: date-time
+          nullable: true
+        route_date:
+          type: string
+          format: date
+        bags:
+          type: integer
+          nullable: true
+        fee_kes:
+          type: integer
+          nullable: true
+          description: Total drying fee for the booking (bags x fee per bag)
+      required:
+      - bags
+      - booking_id
+      - eta
+      - fee_kes
+      - point_name
+      - route_date
+      - status
+    DryingBookingStatusEnum:
+      enum:
+      - OFFERED
+      - CONFIRMED
+      type: string
+      description: '* `OFFERED` - OFFERED
+
+        * `CONFIRMED` - CONFIRMED'
+    DryingConfirmInRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          minLength: 1
+          description: 'Kenyan mobile: +2547XXXXXXXX, 2547XXXXXXXX or 07XXXXXXXX (stored as E.164)'
+        booking_id:
+          type: integer
+      required:
+      - booking_id
+      - phone
+    DryingPoint:
+      type: object
+      properties:
+        point_id:
+          type: integer
+        point_name:
+          type: string
+      required:
+      - point_id
+      - point_name
+    DryingState:
+      type: object
+      properties:
+        registered:
+          type: boolean
+        booking:
+          allOf:
+          - $ref: '#/components/schemas/DryingBooking'
+          nullable: true
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/DryingPoint'
+      required:
+      - booking
+      - points
+      - registered
     ErrorBody:
       type: object
       properties:
@@ -3437,6 +4030,11 @@ components:
         ward_id:
           type: integer
           description: 'Default: the subscriber''s registered ward'
+        point_id:
+          type: integer
+          nullable: true
+          description: 'Menu 7: a wet_bags report asking for drying at this collection point (stored in the payload; the 18:00
+            router books it there)'
       required:
       - phone
       - report_type
@@ -3905,6 +4503,271 @@ components:
       - hit_rate
       - hits
       - period
+    SeasonalLine:
+      type: object
+      properties:
+        text:
+          type: string
+          description: One line for the USSD screen, in the subscriber's language
+        registered:
+          type: boolean
+        season:
+          type: string
+          nullable: true
+        probability:
+          type: number
+          format: double
+          nullable: true
+        category:
+          type: string
+          nullable: true
+      required:
+      - category
+      - probability
+      - registered
+      - season
+      - text
+    SeasonalModelCard:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeasonalModelCardRow'
+        caveats:
+          type: string
+      required:
+      - caveats
+      - items
+    SeasonalModelCardRow:
+      type: object
+      properties:
+        model_version:
+          type: string
+        role:
+          type: string
+        target:
+          type: string
+        target_desc:
+          type: string
+        train_period:
+          type: string
+        test_period:
+          type: string
+        features:
+          type: string
+        auc:
+          type: number
+          format: double
+        auc_ci90:
+          type: array
+          items:
+            type: number
+            format: double
+        f1:
+          type: number
+          format: double
+        brier:
+          type: number
+          format: double
+        decision_threshold:
+          type: number
+          format: double
+        backtest:
+          type: object
+          additionalProperties: {}
+          description: '{year: [observed share of wet wards, mean predicted probability]}'
+      required:
+      - auc
+      - auc_ci90
+      - backtest
+      - brier
+      - decision_threshold
+      - f1
+      - features
+      - model_version
+      - role
+      - target
+      - target_desc
+      - test_period
+      - train_period
+    SeasonalOutlookItem:
+      type: object
+      properties:
+        ward_id:
+          type: integer
+        ward_name:
+          type: string
+        county:
+          type: string
+        season:
+          type: string
+        probability:
+          type: number
+          format: double
+          description: P(OND rain > 125% of the 1991-2020 mean)
+        category:
+          $ref: '#/components/schemas/CategoryEnum'
+        confidence:
+          type: number
+          format: double
+          nullable: true
+          description: probability x 100
+        model_version:
+          type: string
+        issued_at:
+          type: string
+          format: date-time
+        notes:
+          type: string
+          nullable: true
+      required:
+      - category
+      - confidence
+      - county
+      - issued_at
+      - model_version
+      - notes
+      - probability
+      - season
+      - ward_id
+      - ward_name
+    SeasonalOutlookJobAccepted:
+      type: object
+      properties:
+        job_id:
+          type: integer
+          description: Row in JOB_RUNS; see GET /jobs/{job_id}/status
+        job:
+          type: string
+        status:
+          type: string
+          description: Always DONE
+        summary:
+          $ref: '#/components/schemas/SeasonalSummary'
+      required:
+      - job
+      - job_id
+      - status
+      - summary
+    SeasonalOutlookJobInRequest:
+      type: object
+      properties:
+        year:
+          type: integer
+          maximum: 2100
+          minimum: 1982
+          description: 'Season year (OND <year>). Default: this year from October, else last year'
+        source:
+          allOf:
+          - $ref: '#/components/schemas/SeasonalSourceEnum'
+          description: 'auto: full 6-index model when ERA5 (CDSAPI_KEY) is configured, else SST-only. Default: SEASONAL_FEATURE_SOURCE
+
+
+            * `auto` - auto
+
+            * `sst` - sst
+
+            * `era5` - era5'
+        dry_run:
+          type: boolean
+          default: false
+          description: Compute, write nothing
+    SeasonalOutlookList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeasonalOutlookItem'
+      required:
+      - items
+    SeasonalSourceEnum:
+      enum:
+      - auto
+      - sst
+      - era5
+      type: string
+      description: '* `auto` - auto
+
+        * `sst` - sst
+
+        * `era5` - era5'
+    SeasonalSummary:
+      type: object
+      properties:
+        season:
+          type: string
+          description: e.g. OND 2026
+        status:
+          $ref: '#/components/schemas/SeasonalSummaryStatusEnum'
+        reason:
+          type: string
+          description: Why there is no outlook yet (waiting_for_data)
+        dry_run:
+          type: boolean
+        source:
+          type: string
+        model_version:
+          type: string
+          description: ngao-seasonal-v3-lit6 or ngao-seasonal-v3-sst4
+        variant:
+          type: string
+          description: lit6 (6 indices, needs ERA5) or sst4 (SST only)
+        features:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+          description: Index values used
+        threshold:
+          type: number
+          format: double
+          description: Decision threshold (best F1 in training)
+        wards:
+          type: integer
+        high:
+          type: integer
+          description: Wards with p >= 0.5
+        medium:
+          type: integer
+          description: Wards with threshold <= p < 0.5
+        low:
+          type: integer
+        probability_by_region:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+        s1_act:
+          type: integer
+          description: S1 RISK_SCORES rows at ACT (alerted after approval)
+        s1_watch:
+          type: integer
+        s1_alert_type:
+          type: string
+        model_card_rows:
+          type: integer
+        notes:
+          type: array
+          items:
+            type: string
+      required:
+      - dry_run
+      - season
+      - source
+      - status
+    SeasonalSummaryStatusEnum:
+      enum:
+      - ISSUED
+      - DRY_RUN
+      - waiting_for_data
+      type: string
+      description: '* `ISSUED` - ISSUED
+
+        * `DRY_RUN` - DRY_RUN
+
+        * `waiting_for_data` - waiting_for_data'
     SendAlertsJobAccepted:
       type: object
       properties:

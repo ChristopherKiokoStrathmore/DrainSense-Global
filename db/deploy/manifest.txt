@@ -13,3 +13,5 @@
 #     Excluded from automation. Do not copy it into db/deploy/.
 db/deploy/000_live_objects.sql
 db/deploy/010_climate_seasonal.sql
+db/deploy/020_backend_bridge.sql
+db/deploy/030_seasonal_alert.sql

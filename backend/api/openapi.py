@@ -318,6 +318,74 @@ class GradeSummary(serializers.Serializer):
     waiting_for_data = serializers.IntegerField()
 
 
+class SeasonalSummary(serializers.Serializer):
+    season = serializers.CharField(help_text="e.g. OND 2026")
+    status = serializers.ChoiceField(choices=["ISSUED", "DRY_RUN", "waiting_for_data"])
+    reason = serializers.CharField(required=False, help_text="Why there is no outlook yet (waiting_for_data)")
+    dry_run = serializers.BooleanField()
+    source = serializers.CharField()
+    model_version = serializers.CharField(required=False, help_text="ngao-seasonal-v3-lit6 or ngao-seasonal-v3-sst4")
+    variant = serializers.CharField(required=False, help_text="lit6 (6 indices, needs ERA5) or sst4 (SST only)")
+    features = serializers.DictField(required=False, child=serializers.FloatField(), help_text="Index values used")
+    threshold = serializers.FloatField(required=False, help_text="Decision threshold (best F1 in training)")
+    wards = serializers.IntegerField(required=False)
+    high = serializers.IntegerField(required=False, help_text="Wards with p >= 0.5")
+    medium = serializers.IntegerField(required=False, help_text="Wards with threshold <= p < 0.5")
+    low = serializers.IntegerField(required=False)
+    probability_by_region = serializers.DictField(required=False, child=serializers.FloatField())
+    s1_act = serializers.IntegerField(required=False, help_text="S1 RISK_SCORES rows at ACT (alerted after approval)")
+    s1_watch = serializers.IntegerField(required=False)
+    s1_alert_type = serializers.CharField(required=False)
+    model_card_rows = serializers.IntegerField(required=False)
+    notes = serializers.ListField(child=serializers.CharField(), required=False)
+
+
+class SeasonalOutlookItem(serializers.Serializer):
+    ward_id = serializers.IntegerField()
+    ward_name = serializers.CharField()
+    county = serializers.CharField()
+    season = serializers.CharField()
+    probability = serializers.FloatField(help_text="P(OND rain > 125% of the 1991-2020 mean)")
+    category = serializers.ChoiceField(choices=["HIGH", "MEDIUM", "LOW"])
+    confidence = serializers.FloatField(allow_null=True, help_text="probability x 100")
+    model_version = serializers.CharField()
+    issued_at = serializers.DateTimeField()
+    notes = serializers.CharField(allow_null=True)
+
+
+class SeasonalOutlookList(serializers.Serializer):
+    items = SeasonalOutlookItem(many=True)
+
+
+class SeasonalModelCardRow(serializers.Serializer):
+    model_version = serializers.CharField()
+    role = serializers.CharField()
+    target = serializers.CharField()
+    target_desc = serializers.CharField()
+    train_period = serializers.CharField()
+    test_period = serializers.CharField()
+    features = serializers.CharField()
+    auc = serializers.FloatField()
+    auc_ci90 = serializers.ListField(child=serializers.FloatField())
+    f1 = serializers.FloatField()
+    brier = serializers.FloatField()
+    decision_threshold = serializers.FloatField()
+    backtest = serializers.DictField(help_text="{year: [observed share of wet wards, mean predicted probability]}")
+
+
+class SeasonalModelCard(serializers.Serializer):
+    items = SeasonalModelCardRow(many=True)
+    caveats = serializers.CharField()
+
+
+class SeasonalLine(serializers.Serializer):
+    text = serializers.CharField(help_text="One line for the USSD screen, in the subscriber's language")
+    registered = serializers.BooleanField()
+    season = serializers.CharField(allow_null=True)
+    probability = serializers.FloatField(allow_null=True)
+    category = serializers.CharField(allow_null=True)
+
+
 def job_response(name, summary_serializer):
     """The §2.2 202 envelope with a typed summary, as its own named component."""
     return type(f"{name}JobAccepted", (serializers.Serializer,), {
@@ -366,6 +434,27 @@ class WardStatusLine(serializers.Serializer):
 
 class Unsubscribed(serializers.Serializer):
     status = serializers.CharField(help_text="Always STOPPED")
+
+
+class DryingBooking(serializers.Serializer):
+    booking_id = serializers.IntegerField()
+    status = serializers.ChoiceField(choices=["OFFERED", "CONFIRMED"])
+    point_name = serializers.CharField()
+    eta = serializers.DateTimeField(allow_null=True)
+    route_date = serializers.DateField()
+    bags = serializers.IntegerField(allow_null=True)
+    fee_kes = serializers.IntegerField(allow_null=True, help_text="Total drying fee for the booking (bags x fee per bag)")
+
+
+class DryingPoint(serializers.Serializer):
+    point_id = serializers.IntegerField()
+    point_name = serializers.CharField()
+
+
+class DryingState(serializers.Serializer):
+    registered = serializers.BooleanField()
+    booking = DryingBooking(allow_null=True)
+    points = DryingPoint(many=True)
 
 
 # ----- SMS -------------------------------------------------------------------------------------------

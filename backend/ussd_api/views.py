@@ -6,6 +6,7 @@ Auth: Authorization: Bearer <USSD_SERVICE_TOKEN>.
 """
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from django.utils import timezone
 from rest_framework import serializers, status
@@ -15,13 +16,14 @@ from rest_framework.views import APIView
 from alerts.catalogue import WARD_STATUS_LINES, WARD_STATUS_PHRASES
 from alerts.templates import fill, render_system
 from api import openapi as doc
-from ngao.models import Farm, Herd, Message, Report, RiskScore, Subscriber, Ward
+from ngao.models import Booking, CollectionPoint, Farm, Herd, Message, Report, RiskScore, Subscriber, Ward
 from ngao_core.auth import IsUssdService
 from ngao_core.errors import InvalidInput, NotFoundError
 from ngao_core.phones import InvalidPhone, normalize_phone
-from ngao_core.timeutil import today_eat
+from ngao_core.timeutil import iso_eat, today_eat
 from reply_reader.schema import REPORT_TYPES, SPECIES
 from reply_reader.service import create_report
+from routing.service import POINT_KIND_PRIORITY, confirm_booking
 from sms.dispatcher import kick, queue_sms
 
 USSD_REPORT_TYPES = [t for t in REPORT_TYPES if t not in ("other", "stop", "booking_confirm")]
@@ -68,10 +70,18 @@ class ReportIn(serializers.Serializer):
     unit = serializers.ChoiceField(choices=["bags", "animals"], required=False, allow_null=True)
     species = serializers.ChoiceField(choices=SPECIES, required=False, allow_null=True)
     ward_id = serializers.IntegerField(required=False, help_text="Default: the subscriber's registered ward")
+    point_id = serializers.IntegerField(required=False, allow_null=True,
+                                        help_text="Menu 7: a wet_bags report asking for drying at this collection "
+                                                  "point (stored in the payload; the 18:00 router books it there)")
 
 
 class PhoneIn(serializers.Serializer):
     phone = PhoneField()
+
+
+class DryingConfirmIn(serializers.Serializer):
+    phone = PhoneField()
+    booking_id = serializers.IntegerField()
 
 
 def _valid(serializer_class, data):
@@ -194,6 +204,9 @@ class ReportView(APIView):
             doc.example("sick animals", {"phone": "+254722000111", "session_id": "s7", "report_type": "sick_animals",
                                          "count": 3, "unit": "animals", "species": "goats"}, request=True),
             doc.example("flooding", {"phone": "+254712345678", "report_type": "flooding"}, request=True),
+            doc.example("drying request (menu 7)", {"phone": "+254712345678", "session_id": "s9",
+                                                    "report_type": "wet_bags", "count": 20, "unit": "bags",
+                                                    "point_id": 3}, request=True),
             doc.example("created", {"report_id": 77}, response=True, status="201"),
         ],
     )
@@ -205,8 +218,18 @@ class ReportView(APIView):
             ward = Ward.objects.filter(pk=data["ward_id"]).first()
             if ward is None:
                 raise InvalidInput(f"ward_id {data['ward_id']} does not exist", field="ward_id")
+        point = None
+        if data.get("point_id") is not None:
+            point = CollectionPoint.objects.select_related("ward").filter(pk=data["point_id"]).first()
+            if point is None:
+                raise InvalidInput(f"point_id {data['point_id']} does not exist", field="point_id")
+            ward = ward or point.ward
         count = data.get("count")
         unit = data.get("unit") or _default_unit(data["report_type"], count)
+        payload = {"report_type": data["report_type"], "count": count, "unit": unit,
+                   "species": data.get("species"), "session_id": data.get("session_id") or None}
+        if point is not None:
+            payload["point_id"] = point.point_id
         with transaction.atomic():
             # A USSD-channel IN message keeps who reported (the router books that farmer).
             summary = f"USSD report: {data['report_type']}" + (f" {count:g} {unit or ''}".rstrip() if count is not None else "")
@@ -214,9 +237,7 @@ class ReportView(APIView):
                                              subscriber=subscriber, body=summary, status=Message.RECEIVED)
             report = create_report(
                 report_type=data["report_type"], count=count, unit=unit, ward=ward, message=message,
-                payload={"report_type": data["report_type"], "count": count, "unit": unit,
-                         "species": data.get("species"), "session_id": data.get("session_id") or None},
-                ai_confidence=None, source=Report.SOURCE_USSD, review_status=Report.AUTO_ACCEPTED,
+                payload=payload, ai_confidence=None, source=Report.SOURCE_USSD, review_status=Report.AUTO_ACCEPTED,
             )
         return Response({"report_id": report.report_id}, status=status.HTTP_201_CREATED)
 
@@ -295,3 +316,88 @@ class UnsubscribeView(APIView):
         if not updated:
             raise NotFoundError(f"no subscriber with phone {data['phone']}", {"field": "phone"})
         return Response({"status": Subscriber.STOPPED})
+
+
+def _booking_item(booking):
+    stop = booking.stop
+    return {"booking_id": booking.booking_id, "status": booking.status, "point_name": stop.point.point_name,
+            "eta": iso_eat(stop.eta), "route_date": stop.route.route_date.isoformat(),
+            "bags": round(booking.bags) if booking.bags is not None else None,
+            "fee_kes": round(booking.fee_kes) if booking.fee_kes is not None else None}
+
+
+def next_booking(subscriber):
+    """The farmer's soonest OFFERED or CONFIRMED booking whose stop is still ahead."""
+    now = timezone.now()
+    return (
+        Booking.objects.filter(subscriber=subscriber, status__in=[Booking.OFFERED, Booking.CONFIRMED],
+                               stop__route__route_date__gte=today_eat())
+        .filter(Q(stop__eta__isnull=True) | Q(stop__eta__gte=now))
+        .select_related("stop__point", "stop__route")
+        .order_by("stop__route__route_date", "stop__eta")
+        .first()
+    )
+
+
+class DryingView(APIView):
+    """GET /ussd/drying?phone=: menu 7 state (registered?, next booking, collection points in the ward)."""
+
+    permission_classes = [IsUssdService]
+
+    @extend_schema(
+        tags=["USSD contract"], auth=doc.USSD_AUTH, operation_id="ussd_drying", summary="Drying state (menu 7)",
+        description="`booking` is the subscriber's next `BOOKINGS` row that is `OFFERED` or `CONFIRMED` and whose "
+                    "stop is still ahead (null if none). `points` are the `COLLECTION_POINTS` in their ward, best "
+                    "first (market, coop store, depot, school). Unknown or unregistered phones get "
+                    "`registered: false` and empty lists. Always `200`.",
+        parameters=[OpenApiParameter("phone", str, required=True, description="URL-encode the `+` as `%2B`",
+                                     examples=[doc.example("E.164", "+254712345678")])],
+        responses={200: doc.DryingState, **doc.errors(400, 401, 403)},
+        examples=[
+            doc.example("offered slot", {"registered": True, "booking": {
+                "booking_id": 91, "status": "OFFERED", "point_name": "Moiben market",
+                "eta": "2026-10-16T08:00:00+03:00", "route_date": "2026-10-16", "bags": 20, "fee_kes": 4200},
+                "points": [{"point_id": 3, "point_name": "Moiben market"}]}, response=True),
+            doc.example("unregistered", {"registered": False, "booking": None, "points": []}, response=True),
+        ],
+    )
+    def get(self, request):
+        data = _valid(PhoneIn, request.query_params)
+        subscriber = Subscriber.objects.filter(phone=data["phone"]).first()
+        if subscriber is None or subscriber.ward_id is None or subscriber.status != Subscriber.ACTIVE:
+            return Response({"registered": False, "booking": None, "points": []})
+        booking = next_booking(subscriber)
+        points = sorted(CollectionPoint.objects.filter(ward_id=subscriber.ward_id),
+                        key=lambda p: (POINT_KIND_PRIORITY.get(p.kind, 9), p.point_id))
+        return Response({
+            "registered": True,
+            "booking": _booking_item(booking) if booking else None,
+            "points": [{"point_id": p.point_id, "point_name": p.point_name} for p in points],
+        })
+
+
+class DryingConfirmView(APIView):
+    """POST /ussd/drying/confirm: the farmer accepts an OFFERED slot from the USSD menu."""
+
+    permission_classes = [IsUssdService]
+
+    @extend_schema(
+        tags=["USSD contract"], auth=doc.USSD_AUTH, operation_id="ussd_drying_confirm",
+        summary="Confirm a drying slot (menu 7)",
+        description="Same effect as `POST /bookings/{id}/confirm` (and an SMS reply of `1`): `OFFERED` → "
+                    "`CONFIRMED` plus a confirmation SMS. `404` when the booking does not belong to this phone; "
+                    "`409` when it is already `DRIED` or `NO_SHOW`. Confirming twice is harmless.",
+        request=DryingConfirmIn, responses={200: doc.BookingConfirmed, **doc.errors(400, 401, 403, 404, 409)},
+        examples=[doc.example("contract", {"phone": "+254712345678", "booking_id": 91}, request=True),
+                  doc.example("confirmed", {"booking_id": 91, "status": "CONFIRMED"}, response=True)],
+    )
+    def post(self, request):
+        data = _valid(DryingConfirmIn, request.data)
+        booking = (
+            Booking.objects.select_related("stop__point", "stop__route", "subscriber")
+            .filter(pk=data["booking_id"], subscriber__phone=data["phone"]).first()
+        )
+        if booking is None:
+            raise NotFoundError(f"booking {data['booking_id']} not found for this phone", {"field": "booking_id"})
+        booking = confirm_booking(booking=booking)
+        return Response({"booking_id": booking.booking_id, "status": booking.status})

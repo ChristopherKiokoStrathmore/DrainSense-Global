@@ -108,9 +108,13 @@ def collect_demand(plan_day):
         key = ("sub", subscriber.pk) if subscriber else ("rep", report.pk)
         latest[key] = (report, subscriber)
 
+    # A USSD menu-7 request names its collection point; other reports use the ward's primary point.
+    requested_ids = {r.payload.get("point_id") for r, _ in latest.values() if isinstance(r.payload, dict)}
+    requested = CollectionPoint.objects.in_bulk([pid for pid in requested_ids if isinstance(pid, int)])
     demand = {}
     for report, subscriber in latest.values():
-        point = points.get(report.ward_id)
+        point_id = report.payload.get("point_id") if isinstance(report.payload, dict) else None
+        point = requested.get(point_id) or points.get(report.ward_id)
         if point is None:
             continue
         entry = demand.setdefault(point.point_id, Demand(point=point))

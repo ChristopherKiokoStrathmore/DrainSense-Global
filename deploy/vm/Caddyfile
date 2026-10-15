@@ -1,0 +1,25 @@
+# NGAO_SITE_ADDRESS is a domain (automatic Let's Encrypt certificate) or ":80" for plain HTTP.
+# Africa's Talking, Wasiliana and APEX (APEX_WEB_SERVICE) all need the HTTPS form.
+{$NGAO_SITE_ADDRESS} {
+	encode zstd gzip
+
+	# Wasiliana USSD callback: https://<host>/ussd?k=<WEBHOOK_SECRET>
+	@ussd path /ussd /ussd/*
+	handle @ussd {
+		reverse_proxy ussd:8080
+	}
+	handle /ussd-healthz {
+		rewrite * /healthz
+		reverse_proxy ussd:8080
+	}
+
+	# Backend: /ngao/v1/*, /api/v1/*, Swagger UI at /ngao/v1/docs/
+	handle {
+		reverse_proxy api:8000
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

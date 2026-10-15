@@ -339,6 +339,8 @@ def self_test() -> None:
                 "alter session set current_schema = WKSP_NGAO;",
                 str((root / "db/deploy/000_live_objects.sql").resolve()),
                 str((root / "db/deploy/010_climate_seasonal.sql").resolve()),
+                str((root / "db/deploy/020_backend_bridge.sql").resolve()),
+                str((root / "db/deploy/030_seasonal_alert.sql").resolve()),
                 str((root / "frontend/apex/f100.sql").resolve()),
                 'connect WKSP_NGAO/"p@ss/w""ord"@ngaodb_low',
                 "apex_app_100=ok",

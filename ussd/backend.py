@@ -84,6 +84,10 @@ class BackendClient:
         return self._call("POST", "/ussd/drying/confirm",
                           json={"phone": phone, "booking_id": booking_id})
 
+    def seasonal_outlook(self, phone: str) -> dict:
+        """{"text", "registered", "season", "probability", "category"} for menu 6."""
+        return self._call("GET", "/ussd/seasonal-outlook", params={"phone": phone})
+
 
 class DevBackend:
     """Stand-in for local runs before the real §5 endpoints exist. Logs every call."""
@@ -95,6 +99,7 @@ class DevBackend:
         self.langs: dict[str, str] = {}
         self.registered: set[str] = set()
         self.bookings: dict[str, dict] = {}
+        self.outlooks: dict[str, dict] = {}
         # DEV FIXTURE: real points come from COLLECTION_POINTS in the subscriber's ward.
         self.points = [{"point_id": 3, "point_name": "Moiben market"},
                        {"point_id": 4, "point_name": "Kapseret coop store"},
@@ -138,6 +143,11 @@ class DevBackend:
         self._log("drying-confirm", phone=phone, booking_id=booking_id)
         self.bookings[phone]["status"] = "CONFIRMED"
         return {"booking_id": booking_id, "status": "CONFIRMED"}
+
+    def seasonal_outlook(self, phone):
+        self._log("seasonal-outlook", phone=phone)
+        return self.outlooks.get(phone, {"registered": phone in self.registered, "season": None,
+                                         "probability": None, "category": None, "text": ""})
 
     def ward_status(self, phone):
         self._log("ward-status", phone=phone)

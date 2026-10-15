@@ -3,3 +3,4 @@ venv/
 wallet/
 __pycache__/
 staticfiles/
+.cache/

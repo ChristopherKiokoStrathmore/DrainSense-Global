@@ -13,3 +13,8 @@ PyYAML==6.0.3
 oracledb==26.0.1
 # OCI Generative AI for the reply reader (REPLY_READER=genai). Imported lazily.
 oci==2.188.0
+# Seasonal outlook (seasonal/): scoring + reading NOAA ERSST / ERA5 netCDF4 files
+numpy==2.5.4
+h5py==3.16.0
+# ERA5 winds/pressure from the Copernicus CDS (only used when CDSAPI_KEY is set)
+cdsapi==0.7.7

@@ -8,6 +8,7 @@ from rest_framework.permissions import AllowAny
 
 from api import views as api
 from ngao_core.auth import IsApiClient
+from seasonal import views as seasonal
 from sms import views as sms
 from ussd_api import views as ussd
 
@@ -21,6 +22,7 @@ v1 = [
     path("jobs/reset-demo", api.ResetDemoJobView.as_view()),
     path("jobs/dispatch", api.DispatchJobView.as_view()),
     path("jobs/grade-outcomes", api.GradeOutcomesJobView.as_view()),
+    path("jobs/seasonal-outlook", seasonal.SeasonalOutlookJobView.as_view()),
     path("jobs/<int:job_id>/status", api.JobDetailView.as_view()),
     # §2.3 reads
     path("wards", api.WardsView.as_view()),
@@ -31,6 +33,8 @@ v1 = [
     path("bookings/<int:booking_id>/confirm", api.BookingConfirmView.as_view()),
     path("public/scorecard", api.PublicScorecardView.as_view()),
     path("public/calibration", api.PublicCalibrationView.as_view()),
+    path("public/seasonal-model-card", seasonal.PublicSeasonalModelCardView.as_view()),
+    path("seasonal/outlook", seasonal.SeasonalOutlookView.as_view()),
     # alert approval (additive)
     path("alerts", api.AlertsView.as_view()),
     path("alerts/<int:alert_id>/approve", api.AlertApproveView.as_view()),
@@ -45,6 +49,9 @@ v1 = [
     path("ussd/report", ussd.ReportView.as_view()),
     path("ussd/ward-status", ussd.WardStatusView.as_view()),
     path("ussd/unsubscribe", ussd.UnsubscribeView.as_view()),
+    path("ussd/drying", ussd.DryingView.as_view()),
+    path("ussd/drying/confirm", ussd.DryingConfirmView.as_view()),
+    path("ussd/seasonal-outlook", seasonal.UssdSeasonalView.as_view()),
 ]
 
 _docs_permission = [AllowAny] if settings.NGAO_API_DOCS_PUBLIC else [IsApiClient]

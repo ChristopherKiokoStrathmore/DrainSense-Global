@@ -116,6 +116,8 @@ SPECTACULAR_SETTINGS = {
         "HealthStatusEnum": ["ok", "degraded"],
         "DecisionEnum": ["ACT", "WATCH", "ABSTAIN"],
         "ServiceEnum": ["FARM", "HERD", "HEALTH"],
+        "SourceEnum": ["SMS_AI", "SMS_KEYWORD"],
+        "SeasonalSourceEnum": ["auto", "sst", "era5"],
     },
     "APPEND_COMPONENTS": {
         "securitySchemes": {

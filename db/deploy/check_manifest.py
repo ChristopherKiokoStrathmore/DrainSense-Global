@@ -239,6 +239,8 @@ def self_test() -> None:
     if live != [
         "db/deploy/000_live_objects.sql",
         "db/deploy/010_climate_seasonal.sql",
+        "db/deploy/020_backend_bridge.sql",
+        "db/deploy/030_seasonal_alert.sql",
     ]:
         raise AssertionError(live)
     print("check_manifest self-test ok")

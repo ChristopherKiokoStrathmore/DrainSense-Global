@@ -11,6 +11,7 @@ tests; its ward list is a DEV FIXTURE whose ids do not match the real WARDS tabl
 
 import logging
 import os
+import re
 import threading
 import time
 from dataclasses import dataclass, field
@@ -115,6 +116,17 @@ class OracleStore:
         if wallet:
             params.update(config_dir=wallet, wallet_location=wallet,
                           wallet_password=os.getenv("DB_WALLET_PASSWORD"))
+        schema = os.getenv("DB_SCHEMA")
+        if schema:
+            # Log in as one user (e.g. ADMIN), work in the app schema (WKSP_NGAO), like the backend.
+            if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_$#]{0,127}", schema):
+                raise ValueError("DB_SCHEMA must be a plain Oracle identifier")
+
+            def use_schema(conn, requested_tag):
+                with conn.cursor() as cur:
+                    cur.execute(f"ALTER SESSION SET CURRENT_SCHEMA = {schema}")
+
+            params["session_callback"] = use_schema
         return cls(oracledb.create_pool(**params))
 
     def preferred_lang(self, phone: str) -> str | None:

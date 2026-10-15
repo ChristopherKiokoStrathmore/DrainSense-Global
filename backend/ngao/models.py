@@ -497,3 +497,80 @@ class JobRun(models.Model):
 
     class Meta:
         db_table = "job_runs"
+
+
+# ----- Seasonal outlook (db/deploy/010_climate_seasonal.sql; ngao_elnino_model_v3) ------------------
+
+
+class SeasonalModelRun(models.Model):
+    """One evaluated model configuration: the v3 model card (V_SEASONAL_MODEL_CARD)."""
+
+    RECOMMENDED, BASELINE, VARIANT = "RECOMMENDED", "BASELINE", "VARIANT"
+
+    run_id = models.AutoField(primary_key=True)
+    model_version = models.CharField(max_length=60)
+    role = models.CharField(max_length=20)
+    target = models.CharField(max_length=10)  # y25 | yter
+    target_desc = models.CharField(max_length=200, null=True, blank=True)
+    season = models.CharField(max_length=10, default="OND", null=True)
+    issue_point = models.CharField(max_length=60, null=True, blank=True)
+    train_period = models.CharField(max_length=60, null=True, blank=True)
+    test_period = models.CharField(max_length=60, null=True, blank=True)
+    features = models.CharField(max_length=300, null=True, blank=True)
+    algorithm = models.CharField(max_length=80, null=True, blank=True)
+    n_test_ward_seasons = models.IntegerField(null=True)
+    n_effective_seasons = models.IntegerField(null=True)
+    accuracy = models.FloatField(null=True)
+    precision_score = models.FloatField(null=True)
+    recall_score = models.FloatField(null=True)
+    f1 = models.FloatField(null=True)
+    auc = models.FloatField(null=True)
+    auc_ci90_lo = models.FloatField(null=True)
+    auc_ci90_hi = models.FloatField(null=True)
+    brier = models.FloatField(null=True)
+    decision_threshold = models.FloatField(null=True)
+    cv_auc = models.FloatField(null=True)
+    loyo_f1_min = models.FloatField(null=True)
+    loyo_f1_max = models.FloatField(null=True)
+    year_corr = models.FloatField(null=True)
+    caveats = models.TextField(null=True, blank=True)
+    source_file = models.CharField(max_length=200, null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = "seasonal_model_runs"
+
+
+class SeasonalBacktest(models.Model):
+    """Observed vs predicted share of wet wards per test year (V_SEASONAL_BACKTEST)."""
+
+    pk = models.CompositePrimaryKey("run", "test_year")
+    run = models.ForeignKey(SeasonalModelRun, on_delete=models.DO_NOTHING, db_column="run_id")
+    test_year = models.IntegerField()
+    observed_wet_share = models.FloatField(null=True)
+    mean_pred_prob = models.FloatField(null=True)
+
+    class Meta:
+        db_table = "seasonal_backtest"
+
+
+class SeasonalOutlook(models.Model):
+    """Per-ward outlook for a season (V_SEASONAL_OUTLOOK_LATEST): P(OND rain > 125% of normal)."""
+
+    HIGH, MEDIUM, LOW = "HIGH", "MEDIUM", "LOW"
+
+    outlook_id = models.AutoField(primary_key=True)
+    ward = models.ForeignKey(Ward, on_delete=models.DO_NOTHING, db_column="ward_id")
+    season = models.CharField(max_length=20)  # e.g. "OND 2026"
+    probability = models.FloatField()
+    category = models.CharField(max_length=20, null=True)
+    confidence = models.FloatField(null=True)
+    issued_at = models.DateTimeField(default=timezone.now)
+    model_version = models.CharField(max_length=60)
+    notes = models.CharField(max_length=400, null=True, blank=True)
+
+    class Meta:
+        db_table = "seasonal_outlook"
+        constraints = [
+            models.UniqueConstraint(fields=["ward", "season", "model_version"], name="uq_seasonal_outlook")
+        ]
