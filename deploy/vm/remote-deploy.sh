@@ -39,6 +39,10 @@ fi
 
 echo "== start"
 docker compose up -d --remove-orphans
+# The Caddyfile is a single-file bind mount: a replaced file is not seen until Caddy restarts.
+if ! docker compose exec -T caddy cmp -s /etc/caddy/Caddyfile - < Caddyfile; then
+  docker compose restart caddy
+fi
 
 echo "== wait for api health"
 for _ in $(seq 1 40); do

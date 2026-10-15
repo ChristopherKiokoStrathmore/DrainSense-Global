@@ -84,7 +84,7 @@ class MemoryStore:
     def upsert_session(self, session_id: str, phone: str, text: str) -> None:
         self.sessions[session_id] = {"phone": phone, "last_text": text, "updated_at": time.time()}
 
-    def cooperatives(self) -> list[tuple[int, str, int | None]]:
+    def cooperatives(self, include_demo: bool = False) -> list[tuple[int, str, int | None]]:
         """(coop_id, label, ward_id) sorted by label."""
         return sorted(self._coops, key=lambda c: c[1].lower())
 
@@ -92,7 +92,7 @@ class MemoryStore:
 class OracleStore:
     def __init__(self, pool):
         self.pool = pool
-        self._coop_cache: tuple[float, list] | None = None
+        self._coop_cache: dict[bool, tuple[float, list]] = {}
 
     @classmethod
     def from_env(cls) -> "OracleStore":
@@ -154,16 +154,24 @@ class OracleStore:
             )
             conn.commit()
 
-    def cooperatives(self) -> list[tuple[int, str, int | None]]:
-        """Real societies only (is_demo = 'N'), as (coop_id, label, ward_id)."""
+    def cooperatives(self, include_demo: bool = False) -> list[tuple[int, str, int | None]]:
+        """Real societies (is_demo = 'N'), plus demo ones for simulator numbers, as (coop_id, label, ward_id)."""
         # The list changes rarely; cache it for 10 minutes to keep hops fast.
-        if self._coop_cache and time.time() - self._coop_cache[0] < 600:
-            return self._coop_cache[1]
+        cached = self._coop_cache.get(include_demo)
+        if cached and time.time() - cached[0] < 600:
+            return cached[1]
+        import oracledb
+
+        where = "" if include_demo else "WHERE NVL(is_demo, 'Y') = 'N' "
         with self.pool.acquire() as conn, conn.cursor() as cur:
-            cur.execute("SELECT coop_id, NVL(short_name, coop_name), ward_id FROM cooperatives "
-                        "WHERE NVL(is_demo, 'Y') = 'N' ORDER BY UPPER(NVL(short_name, coop_name))")
+            try:
+                cur.execute(f"SELECT coop_id, NVL(short_name, coop_name), ward_id FROM cooperatives {where}"
+                            "ORDER BY UPPER(NVL(short_name, coop_name))")
+            except oracledb.DatabaseError:
+                # Live schema without SHORT_NAME (ORA-00904): fall back to the full name.
+                cur.execute(f"SELECT coop_id, coop_name, ward_id FROM cooperatives {where}ORDER BY UPPER(coop_name)")
             rows = [(int(i), n, int(w) if w is not None else None) for i, n, w in cur]
-        self._coop_cache = (time.time(), rows)
+        self._coop_cache[include_demo] = (time.time(), rows)
         return rows
 
 

@@ -273,7 +273,8 @@ def _register(path: Path, ctx: Ctx) -> str:
 
     # Cooperatives are a fixed numbered list (the USSD "dropdown"), so there is
     # nothing to misspell. The ward is the cooperative's ward (COOPERATIVES.ward_id).
-    coops = ctx.store.cooperatives()
+    # Simulator numbers (+2547000xxxxx) also see demo societies, so the flow can be shown end to end.
+    coops = ctx.store.cooperatives(include_demo=ctx.phone.startswith("+2547000"))
     if not coops:
         return end(t["no_coops"])
     labels = [_short(name) for _, name, _ in coops] + [t["coop_other"]]
