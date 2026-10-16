@@ -14360,7 +14360,7 @@ wwv_flow_imp_page.create_page_item(
 ,p_name=>'P43_JUDGE_MSG'
 ,p_item_sequence=>20
 ,p_item_plug_id=>wwv_flow_imp.id(9950000000300)
-,p_item_default=>'Ngao Co-op: vet-confirmed disease reported near your ward. Check your farm/animals, isolate sick animals and call the co-op vet.'
+,p_item_default=>unistr('\26A0\FE0F URGENT \2013 Ngao Co-op: Vet-CONFIRMED outbreak near your ward! Act NOW: check animals, isolate sick ones, call co-op vet today.')
 ,p_prompt=>'SMS text (max 160 characters; fills from the selected drafted batch)'
 ,p_source_type=>'ALWAYS_NULL'
 ,p_display_as=>'NATIVE_TEXTAREA'
@@ -14399,7 +14399,7 @@ wwv_flow_imp_page.create_page_item(
 ,p_name=>'P43_MESSAGE'
 ,p_item_sequence=>20
 ,p_item_plug_id=>wwv_flow_imp.id(9950000000144)
-,p_item_default=>'Ngao Co-op: vet-confirmed disease reported near your ward. Check your farm/animals, isolate sick animals and call the co-op vet.'
+,p_item_default=>unistr('\26A0\FE0F URGENT \2013 Ngao Co-op: Vet-CONFIRMED outbreak near your ward! Act NOW: check animals, isolate sick ones, call co-op vet today.')
 ,p_prompt=>'SMS text (max 160 characters)'
 ,p_source_type=>'ALWAYS_NULL'
 ,p_display_as=>'NATIVE_TEXTAREA'
