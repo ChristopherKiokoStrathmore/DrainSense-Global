@@ -39,7 +39,7 @@ prompt APPLICATION 100 - Ngao MvuaSmart
 --     Pages:                     37
 --       Items:                   68
 --       Validations:              2
---       Processes:               29
+--       Processes:               30
 --       Regions:                123
 --       Buttons:                 47
 --       Dynamic Actions:         25
@@ -13992,6 +13992,8 @@ wwv_flow_imp_page.create_page(
 ,p_alias=>'SEND-ALERTS'
 ,p_step_title=>'Send Co-op Alerts'
 ,p_autocomplete_on_off=>'OFF'
+,p_javascript_code=>'apex.jQuery(function(){apex.jQuery(''#P43_REPORT_ID'').on(''change'',function(){var v=$v(''P43_REPORT_ID'');if(!v)return;apex.server.process(''URGENT_TEXT'',{x01:v},{dataType:''text'',success:function(t){if(t){$s(''P43_MESSAGE'',t);$s(''P43_JUDGE_MSG'',t);}}});});'
+||'});'
 ,p_inline_css=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '.coop-kpi .a-CardView-items{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px}',
 '@media (max-width:900px){.coop-kpi .a-CardView-items{grid-template-columns:repeat(2,1fr)!important}}',
@@ -14360,7 +14362,19 @@ wwv_flow_imp_page.create_page_item(
 ,p_name=>'P43_JUDGE_MSG'
 ,p_item_sequence=>20
 ,p_item_plug_id=>wwv_flow_imp.id(9950000000300)
-,p_item_default=>unistr('\26A0\FE0F URGENT \2013 Ngao Co-op: Vet-CONFIRMED outbreak near your ward! Act NOW: check animals, isolate sick ones, call co-op vet today.')
+,p_item_default=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select coalesce((select unistr(''\26A0\FE0F URGENT \2013 Ngao Co-op: Vet-CONFIRMED '')||case',
+'  when r.disease like ''%(MLN)%'' then ''MLN'' when lower(r.disease) like ''fall armyworm%'' then ''fall armyworm''',
+'  when lower(r.disease) like ''lumpy skin%'' then ''LSD'' when lower(r.disease) like ''rift valley%'' then ''RVF''',
+'  when r.disease like ''%(PPR)%'' then ''PPR'' when lower(r.disease) like ''flooding%'' then ''flooding''',
+'  when lower(r.disease) like ''wet grain%'' then ''aflatoxin risk'' when lower(r.disease) like ''dead animals%'' then ''animal deaths''',
+'  else nvl(regexp_substr(r.disease,''\(([A-Z]{2,6})\)'',1,1,null,1), regexp_replace(r.disease,'' *\(.*\)$'','''')) end',
+'  ||'' near ''||w.ward_name||''! Act NOW: ''||case when r.category = ''CROP''',
+'  then ''check crops/fields, remove infected plants, call co-op agronomist today.''',
+'  else ''check animals, isolate sick ones, call co-op vet today.'' end msg',
+'from coop_disease_reports r join wards w on w.ward_id = r.ward_id where r.report_id = :P43_REPORT_ID), unistr(''\26A0\FE0F URGENT \2013 Ngao Co-op: Vet-CONFIRMED outbreak near your ward! Act NOW: check animals, isolate sick ones, call co-op vet today.'
+||''')) from dual'))
+,p_item_default_type=>'SQL_QUERY'
 ,p_prompt=>'SMS text (max 160 characters; fills from the selected drafted batch)'
 ,p_source_type=>'ALWAYS_NULL'
 ,p_display_as=>'NATIVE_TEXTAREA'
@@ -14399,7 +14413,19 @@ wwv_flow_imp_page.create_page_item(
 ,p_name=>'P43_MESSAGE'
 ,p_item_sequence=>20
 ,p_item_plug_id=>wwv_flow_imp.id(9950000000144)
-,p_item_default=>unistr('\26A0\FE0F URGENT \2013 Ngao Co-op: Vet-CONFIRMED outbreak near your ward! Act NOW: check animals, isolate sick ones, call co-op vet today.')
+,p_item_default=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'select coalesce((select unistr(''\26A0\FE0F URGENT \2013 Ngao Co-op: Vet-CONFIRMED '')||case',
+'  when r.disease like ''%(MLN)%'' then ''MLN'' when lower(r.disease) like ''fall armyworm%'' then ''fall armyworm''',
+'  when lower(r.disease) like ''lumpy skin%'' then ''LSD'' when lower(r.disease) like ''rift valley%'' then ''RVF''',
+'  when r.disease like ''%(PPR)%'' then ''PPR'' when lower(r.disease) like ''flooding%'' then ''flooding''',
+'  when lower(r.disease) like ''wet grain%'' then ''aflatoxin risk'' when lower(r.disease) like ''dead animals%'' then ''animal deaths''',
+'  else nvl(regexp_substr(r.disease,''\(([A-Z]{2,6})\)'',1,1,null,1), regexp_replace(r.disease,'' *\(.*\)$'','''')) end',
+'  ||'' near ''||w.ward_name||''! Act NOW: ''||case when r.category = ''CROP''',
+'  then ''check crops/fields, remove infected plants, call co-op agronomist today.''',
+'  else ''check animals, isolate sick ones, call co-op vet today.'' end msg',
+'from coop_disease_reports r join wards w on w.ward_id = r.ward_id where r.report_id = :P43_REPORT_ID), unistr(''\26A0\FE0F URGENT \2013 Ngao Co-op: Vet-CONFIRMED outbreak near your ward! Act NOW: check animals, isolate sick ones, call co-op vet today.'
+||''')) from dual'))
+,p_item_default_type=>'SQL_QUERY'
 ,p_prompt=>'SMS text (max 160 characters)'
 ,p_source_type=>'ALWAYS_NULL'
 ,p_display_as=>'NATIVE_TEXTAREA'
@@ -14583,6 +14609,30 @@ wwv_flow_imp_page.create_page_process(
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
 ,p_process_when_button_id=>wwv_flow_imp.id(9950000000147)
 ,p_internal_uid=>9950000000148
+);
+wwv_flow_imp_page.create_page_process(
+ p_id=>wwv_flow_imp.id(9970000000410)
+,p_process_sequence=>90
+,p_process_point=>'ON_DEMAND'
+,p_process_type=>'NATIVE_PLSQL'
+,p_process_name=>'URGENT_TEXT'
+,p_static_id=>'urgent-text-ajax'
+,p_process_sql_clob=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'declare v varchar2(400 char); begin',
+'select coalesce((select unistr(''\26A0\FE0F URGENT \2013 Ngao Co-op: Vet-CONFIRMED '')||case',
+'  when r.disease like ''%(MLN)%'' then ''MLN'' when lower(r.disease) like ''fall armyworm%'' then ''fall armyworm''',
+'  when lower(r.disease) like ''lumpy skin%'' then ''LSD'' when lower(r.disease) like ''rift valley%'' then ''RVF''',
+'  when r.disease like ''%(PPR)%'' then ''PPR'' when lower(r.disease) like ''flooding%'' then ''flooding''',
+'  when lower(r.disease) like ''wet grain%'' then ''aflatoxin risk'' when lower(r.disease) like ''dead animals%'' then ''animal deaths''',
+'  else nvl(regexp_substr(r.disease,''\(([A-Z]{2,6})\)'',1,1,null,1), regexp_replace(r.disease,'' *\(.*\)$'','''')) end',
+'  ||'' near ''||w.ward_name||''! Act NOW: ''||case when r.category = ''CROP''',
+'  then ''check crops/fields, remove infected plants, call co-op agronomist today.''',
+'  else ''check animals, isolate sick ones, call co-op vet today.'' end msg',
+'from coop_disease_reports r join wards w on w.ward_id = r.ward_id where r.report_id = to_number(apex_application.g_x01)), unistr(''\26A0\FE0F URGENT \2013 Ngao Co-op: Vet-CONFIRMED outbreak near your ward! Act NOW: check animals, isolate sick ones, ca'
+||'ll co-op vet today.'')) into v from dual;',
+'apex_util.prn(v, false); end;'))
+,p_process_clob_language=>'PLSQL'
+,p_internal_uid=>9970000000410
 );
 end;
 /
