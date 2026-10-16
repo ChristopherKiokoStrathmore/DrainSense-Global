@@ -14167,9 +14167,9 @@ wwv_flow_imp_page.create_page_plug(
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(9950000000300)
-,p_plug_name=>'Demo: send to a judge''s phone'
+,p_plug_name=>'Send to a farmer''s phone'
 ,p_static_id=>'demo-judge-send'
-,p_title=>'Demo: send to a judge''s phone'
+,p_title=>'Send to a farmer''s phone'
 ,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
 ,p_plug_template=>4073835273271169698
 ,p_plug_display_sequence=>35
@@ -14380,7 +14380,7 @@ wwv_flow_imp_page.create_page_item(
 ,p_name=>'P43_JUDGE_PHONE'
 ,p_item_sequence=>10
 ,p_item_plug_id=>wwv_flow_imp.id(9950000000300)
-,p_prompt=>'Judge''s phone (one Kenyan mobile, e.g. 0712 345 678 or +254712345678)'
+,p_prompt=>'Farmer''s phone (one Kenyan mobile, e.g. 0712 345 678 or +254712345678)'
 ,p_placeholder=>'07XX XXX XXX'
 ,p_source_type=>'ALWAYS_NULL'
 ,p_display_as=>'NATIVE_TEXT_FIELD'
