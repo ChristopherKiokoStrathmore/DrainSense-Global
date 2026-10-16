@@ -8085,6 +8085,7 @@ wwv_flow_imp_page.create_page(
 ,p_reload_on_submit=>null
 ,p_warn_on_unsaved_changes=>null
 ,p_autocomplete_on_off=>'OFF'
+,p_step_template=>4073832297226169690
 ,p_protection_level=>'D'
 ,p_page_component_map=>'14'
 );
@@ -8118,6 +8119,64 @@ wwv_flow_imp_page.create_page_plug(
 ,p_plug_item_display_point=>'ABOVE'
 ,p_location=>null
 ,p_plug_source=>'<style>.t-Header{position:sticky!important;top:0;z-index:800}@media (max-width: 900px), (orientation: portrait) { #ngaoQrBtn, #ngaoQrFull { display:none !important; } }</style>'
+,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
+  'expand_shortcuts', 'N',
+  'output_as', 'HTML')).to_clob
+);
+wwv_flow_imp_page.create_page_plug(
+ p_id=>wwv_flow_imp.id(9970000000311)
+,p_plug_name=>'Pitch timer'
+,p_static_id=>'pitch-timer-global'
+,p_plug_display_sequence=>20
+,p_plug_display_point=>'BEFORE_NAVIGATION_BAR'
+,p_plug_item_display_point=>'ABOVE'
+,p_location=>null
+,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'<div id="ngt" class="ngt"><button type="button" id="ngt-pill" class="ngt-pill" title="Pitch timer: tap to set, start or pause"><svg viewBox="0 0 36 36" class="ngt-ring"><circle cx="18" cy="18" r="15" class="ngt-bg"/><circle cx="18" cy="18" r="15" id='
+||'"ngt-arc" class="ngt-arc"/></svg><span aria-hidden="true">&#x23F1;&#xFE0F;</span><span id="ngt-t">7:00</span></button><div id="ngt-panel" class="ngt-panel" hidden><div class="ngt-row"><button type="button" data-m="7">7:00</button><button type="button'
+||'" data-m="3">3:00</button><button type="button" data-m="10">10:00</button><input id="ngt-cm" type="number" min="1" max="180" placeholder="min" title="Custom minutes"></div><div class="ngt-row"><button type="button" id="ngt-go" class="ngt-go">Start</b'
+||'utton><button type="button" id="ngt-rs">Reset</button></div></div></div><style>.ngt{position:fixed;top:56px;right:12px;z-index:900;font-family:inherit}.ngt-pill{display:flex;align-items:center;gap:6px;border:0;border-radius:999px;padding:4px 12px 4px'
+||' 5px;color:#fff;font-weight:700;font-size:14px;cursor:pointer;background:linear-gradient(120deg,#0f5c43,#1f5f8b);box-shadow:0 3px 10px rgba(0,0,0,.25);font-variant-numeric:tabular-nums}.ngt-ring{width:24px;height:24px;transform:rotate(-90deg)}.ngt-ri'
+||'ng circle{fill:none;stroke-width:4}.ngt-bg{stroke:rgba(255,255,255,.25)}.ngt-arc{stroke:#fff;stroke-linecap:round;stroke-dasharray:94.25}.ngt.amber .ngt-pill{background:#e0a422}.ngt.red .ngt-pill{background:#d7263d}.ngt.zero .ngt-pill{background:#d72'
+||'63d;animation:ngtfl 1s steps(2) infinite}@keyframes ngtfl{50%{background:#7a0f1c}}.ngt-panel{margin-top:6px;padding:8px;border-radius:12px;background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.2);display:flex;flex-direction:column;gap:6px;font-size:12px}'
+||'.ngt-row{display:flex;gap:4px;align-items:center;flex-wrap:wrap}.ngt-panel button{border:1px solid #cfe3dc;background:#eef6f3;color:#0f5c43;border-radius:999px;padding:3px 9px;cursor:pointer;font-size:12px}.ngt-panel .ngt-go{background:#1b7f5f;color:'
+||'#fff;border-color:#1b7f5f;font-weight:700}.ngt-panel input[type=number]{width:52px;padding:3px;border:1px solid #cfe3dc;border-radius:999px;text-align:center;font-size:12px}</style><script>(function(){',
+'var K=''ngaoTimer'';',
+'function ld(){try{var s=JSON.parse(localStorage.getItem(K));if(s && s.total)return s;}catch(e){}return {end:0,left:420000,total:420000,run:false,beeped:false};}',
+'function sv(s){localStorage.setItem(K,JSON.stringify(s));}',
+'function rem(s){return s.run?Math.max(0,s.end-Date.now()):s.left;}',
+'function fmt(ms){var t=Math.max(0,Math.ceil(ms/1000));return Math.floor(t/60)+'':''+String(t%60).padStart(2,''0'');}',
+'function cls(r){return r<=0?''zero'':(r<30000?''red'':(r<60000?''amber'':''''));}',
+'var A={',
+' set:function(m){var s=ld();s.run=false;s.beeped=false;s.total=s.left=Math.round(m*60000);sv(s);},',
+' play:function(){var s=ld();if(s.run)return;if(s.left<=0)s.left=s.total;s.end=Date.now()+s.left;s.run=true;s.beeped=false;sv(s);},',
+' pause:function(){var s=ld();if(!s.run)return;s.left=rem(s);s.run=false;sv(s);},',
+' toggle:function(){ld().run?A.pause():A.play();},',
+' reset:function(){A.set(ld().total/60000);}',
+'};',
+'function tick(){var s=ld(),r=rem(s);',
+' if(r<=0 && s.run){s.run=false;s.left=0;s.beeped=true;sv(s);}',
+' return {s:s,r:r,txt:r<=0?''Time!'':fmt(r),c:cls(r),f:s.total?r/s.total:0};}',
+'function g(id){return document.getElementById(id);}',
+'var JS=(document.currentScript && document.currentScript.textContent)||'''';',
+'if(g(''ngt-mini'')){',
+' function dm(){var t=tick();g(''t'').textContent=t.txt;document.body.className=t.c;g(''pp'').textContent=t.s.run?''\u23F8'':''\u25B6'';}',
+' g(''pp'').onclick=function(){A.toggle();dm();};g(''rs'').onclick=function(){A.reset();dm();};',
+' Array.prototype.forEach.call(document.querySelectorAll(''[data-m]''),function(b){b.onclick=function(){A.set(parseFloat(b.getAttribute(''data-m'')));dm();};});',
+' setInterval(dm,250);dm();return;}',
+'if(!g(''ngt'')||window.ngtInit)return;window.ngtInit=1;',
+'function draw(){var t=tick();g(''ngt-t'').textContent=t.txt;g(''ngt-arc'').style.strokeDashoffset=String(94.25*(1-t.f));g(''ngt'').className=''ngt ''+t.c;g(''ngt-go'').textContent=t.s.run?''Pause'':''Start'';}',
+'g(''ngt-pill'').onclick=function(){var p=g(''ngt-panel'');p.hidden=!p.hidden;};',
+'Array.prototype.forEach.call(document.querySelectorAll(''#ngt-panel [data-m]''),function(b){b.onclick=function(){A.set(parseFloat(b.getAttribute(''data-m'')));draw();};});',
+'g(''ngt-cm'').onchange=function(){var v=parseFloat(this.value);if(v>0 && v<=180){A.set(v);draw();}};',
+'g(''ngt-go'').onclick=function(){A.toggle();draw();};',
+'g(''ngt-rs'').onclick=function(){A.reset();draw();};',
+'setInterval(draw,250);document.addEventListener(''visibilitychange'',draw);draw();',
+'})();',
+'</script>'))
+,p_plug_display_condition_type=>'EXPRESSION'
+,p_plug_display_when_condition=>':APP_PAGE_ID not in (9999)'
+,p_plug_display_when_cond2=>'PLSQL'
 ,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
   'expand_shortcuts', 'N',
   'output_as', 'HTML')).to_clob
@@ -8565,65 +8624,6 @@ wwv_flow_imp_page.create_jet_chart_axis(
 ,p_major_tick_rendered=>'auto'
 ,p_minor_tick_rendered=>'auto'
 ,p_tick_label_rendered=>'on'
-);
-wwv_flow_imp_page.create_page_plug(
- p_id=>wwv_flow_imp.id(9970000000301)
-,p_plug_name=>'Pitch timer'
-,p_static_id=>'pitch-timer'
-,p_title=>'Pitch timer'
-,p_region_template_options=>'#DEFAULT#:t-Region--noUI:t-Region--hideHeader js-addHiddenHeadingRoleDesc'
-,p_plug_template=>4073835273271169698
-,p_plug_display_sequence=>17
-,p_plug_item_display_point=>'ABOVE'
-,p_plug_source=>wwv_flow_string.join(wwv_flow_t_varchar2(
-'<div id="ngt" class="ngt"><button type="button" id="ngt-pill" class="ngt-pill" title="Pitch timer: tap to set, start or pause"><svg viewBox="0 0 36 36" class="ngt-ring"><circle cx="18" cy="18" r="15" class="ngt-bg"/><circle cx="18" cy="18" r="15" id='
-||'"ngt-arc" class="ngt-arc"/></svg><span aria-hidden="true">&#x23F1;&#xFE0F;</span><span id="ngt-t">7:00</span></button><div id="ngt-panel" class="ngt-panel" hidden><div class="ngt-row"><button type="button" data-m="7">7:00</button><button type="button'
-||'" data-m="3">3:00</button><button type="button" data-m="10">10:00</button><input id="ngt-cm" type="number" min="1" max="180" placeholder="min" title="Custom minutes"></div><div class="ngt-row"><button type="button" id="ngt-go" class="ngt-go">Start</b'
-||'utton><button type="button" id="ngt-rs">Reset</button><button type="button" id="ngt-pop" title="Always-on-top mini timer for PowerPoint">Pop out</button><label><input id="ngt-snd" type="checkbox" checked> beep</label></div></div></div><style>.ngt{pos'
-||'ition:fixed;top:56px;right:12px;z-index:900;font-family:inherit}.ngt-pill{display:flex;align-items:center;gap:6px;border:0;border-radius:999px;padding:4px 12px 4px 5px;color:#fff;font-weight:700;font-size:14px;cursor:pointer;background:linear-gradien'
-||'t(120deg,#0f5c43,#1f5f8b);box-shadow:0 3px 10px rgba(0,0,0,.25);font-variant-numeric:tabular-nums}.ngt-ring{width:24px;height:24px;transform:rotate(-90deg)}.ngt-ring circle{fill:none;stroke-width:4}.ngt-bg{stroke:rgba(255,255,255,.25)}.ngt-arc{stroke'
-||':#fff;stroke-linecap:round;stroke-dasharray:94.25}.ngt.amber .ngt-pill{background:#e0a422}.ngt.red .ngt-pill{background:#d7263d}.ngt.zero .ngt-pill{background:#d7263d;animation:ngtfl 1s steps(2) infinite}@keyframes ngtfl{50%{background:#7a0f1c}}.ngt-'
-||'panel{margin-top:6px;padding:8px;border-radius:12px;background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.2);display:flex;flex-direction:column;gap:6px;font-size:12px}.ngt-row{display:flex;gap:4px;align-items:center;flex-wrap:wrap}.ngt-panel button{borde'
-||'r:1px solid #cfe3dc;background:#eef6f3;color:#0f5c43;border-radius:999px;padding:3px 9px;cursor:pointer;font-size:12px}.ngt-panel .ngt-go{background:#1b7f5f;color:#fff;border-color:#1b7f5f;font-weight:700}.ngt-panel input[type=number]{width:52px;padd'
-||'ing:3px;border:1px solid #cfe3dc;border-radius:999px;text-align:center;font-size:12px}</style><script>(function(){',
-'var S=window.ngtS={end:0,left:420000,total:420000,run:false,beeped:false,snd:true};',
-'function g(id){return document.getElementById(id);}',
-'S.rem=function(){return S.run?Math.max(0,S.end-Date.now()):S.left;};',
-'S.fmt=function(ms){var s=Math.max(0,Math.ceil(ms/1000));return Math.floor(s/60)+'':''+String(s%60).padStart(2,''0'');};',
-'S.cls=function(r){return r<=0?''zero'':(r<30000?''red'':(r<60000?''amber'':''''));};',
-'function beep(){try{var C=new (window.AudioContext||window.webkitAudioContext)();[0,0.35,0.7].forEach(function(t){var o=C.createOscillator(),q=C.createGain();o.frequency.value=880;q.gain.setValueAtTime(0.0001,C.currentTime+t);q.gain.exponentialRampTo'
-||'ValueAtTime(0.15,C.currentTime+t+0.03);q.gain.exponentialRampToValueAtTime(0.0001,C.currentTime+t+0.3);o.connect(q);q.connect(C.destination);o.start(C.currentTime+t);o.stop(C.currentTime+t+0.32);});}catch(e){}}',
-'function draw(){var r=S.rem(),f=S.total?r/S.total:0;',
-' if(r<=0 && S.run){S.run=false;S.left=0;if(!S.beeped && S.snd){S.beeped=true;beep();}}',
-' g(''ngt-t'').textContent=r<=0?''Time!'':S.fmt(r);g(''ngt-arc'').style.strokeDashoffset=String(94.25*(1-f));',
-' g(''ngt'').className=''ngt ''+S.cls(r);g(''ngt-go'').textContent=S.run?''Pause'':''Start'';}',
-'function set(m){S.run=false;S.beeped=false;S.total=S.left=Math.round(m*60000);draw();}',
-'g(''ngt-pill'').onclick=function(){var p=g(''ngt-panel'');p.hidden=!p.hidden;};',
-'Array.prototype.forEach.call(document.querySelectorAll(''#ngt-panel [data-m]''),function(b){b.onclick=function(){set(parseFloat(b.getAttribute(''data-m'')));};});',
-'g(''ngt-cm'').onchange=function(){var v=parseFloat(this.value);if(v>0&&v<=180)set(v);};',
-'g(''ngt-go'').onclick=function(){if(S.run){S.left=S.rem();S.run=false;}else{if(S.left<=0)S.left=S.total;S.end=Date.now()+S.left;S.run=true;S.beeped=false;}draw();};',
-'g(''ngt-rs'').onclick=function(){set(S.total/60000);};',
-'g(''ngt-snd'').onchange=function(){S.snd=this.checked;};',
-'var MINI_CSS=''html,body{margin:0;height:100%}body{display:flex;align-items:center;justify-content:center;gap:8px;font:800 34px system-ui,Segoe UI,Roboto,sans-serif;color:#fff;background:linear-gradient(120deg,#0f5c43,#1f5f8b);font-variant-numeric:tab'
-||'ular-nums}body.amber{background:#e0a422}body.red{background:#d7263d}body.zero{background:#d7263d;animation:f 1s steps(2) infinite}@keyframes f{50%{background:#7a0f1c}}span{font-size:22px}'';',
-'var MINI_JS=''setInterval(function(){var S=window.ngtS;if(!S)return;var r=S.rem();document.getElementById("t").textContent=r<=0?"Time!":S.fmt(r);document.body.className=S.cls(r);},250);'';',
-'function fill(w){var d=w.document;d.title=''Ngao timer'';var st=d.createElement(''style'');st.textContent=MINI_CSS;d.head.appendChild(st);d.body.innerHTML=''<span>\u23F1\uFE0F</span><b id="t"></b>'';w.ngtS=S;var sc=d.createElement(''script'');sc.textContent='
-||'MINI_JS;d.body.appendChild(sc);}',
-'g(''ngt-pop'').onclick=async function(){',
-' var DP=window.documentPictureInPicture,w=null;',
-' try{if(DP && DP.requestWindow){if(DP.window){DP.window.focus();return;}w=await DP.requestWindow({width:180,height:70});fill(w);return;}}catch(e){w=null;}',
-' var L=Math.max(0,(screen.availWidth||1280)-200);',
-' w=window.open('''',''ngaoTimer'',''popup=yes,width=180,height=70,left=''+L+'',top=0'');',
-' if(!w){alert(''Please allow pop-ups to open the mini timer.'');return;}',
-' if(!w.document.getElementById(''t'')){w.document.open();w.document.write(''<!doctype html><html><head><meta charset="utf-8"></head><body></body></html>'');w.document.close();fill(w);}else{w.ngtS=S;}',
-' w.focus();};',
-'setInterval(draw,250);document.addEventListener(''visibilitychange'',draw);draw();',
-'})();',
-'</script>'))
-,p_plug_query_num_rows=>15
-,p_attributes=>wwv_flow_t_plugin_attributes(wwv_flow_t_varchar2(
-  'expand_shortcuts', 'N',
-  'output_as', 'HTML')).to_clob
 );
 wwv_flow_imp_page.create_page_plug(
  p_id=>wwv_flow_imp.id(9950000000025)
