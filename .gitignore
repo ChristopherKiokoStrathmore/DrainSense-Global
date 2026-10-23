@@ -1,0 +1,8 @@
+.env
+*.env
+__pycache__/
+.venv/
+node_modules/
+wallet*/
+*.zip
+data/raw/

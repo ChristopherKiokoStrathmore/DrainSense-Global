@@ -1,0 +1,6 @@
+venv/
+*.sqlite3
+wallet/
+__pycache__/
+staticfiles/
+.cache/

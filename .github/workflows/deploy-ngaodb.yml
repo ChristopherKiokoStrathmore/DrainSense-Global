@@ -1,0 +1,103 @@
+# Deploy schema scripts and APEX app 100 to NgaoDB on every push to main.
+# Pull requests only lint the manifest. They do not connect to the database.
+# f100.sql is a SQL export, so the deploy runs that script after
+# apex_application_install setup. SQLcl's `apex import` command is for APEXlang.
+name: Deploy NgaoDB
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Connect and report only. Do not run schema scripts or import the APEX app.
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate deploy manifest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Lint manifest, guard, and shell steps
+        run: bash db/deploy/self-test.sh
+
+      - name: Install actionlint
+        env:
+          ACTIONLINT_VERSION: "1.7.7"
+        run: |
+          set -euo pipefail
+          curl --fail --location --show-error --retry 5 --retry-delay 2 \
+            -o /tmp/actionlint.tar.gz \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          tar -C /tmp -xzf /tmp/actionlint.tar.gz actionlint
+          /tmp/actionlint -color
+
+  deploy:
+    name: Deploy to NgaoDB
+    needs: validate
+    # Opt-in on push: the live APEX app now runs on NgaoATP (imported 2026-10-15) and the NGAO_DB_*
+    # secrets point there, so an automatic import of db/apex/f100.sql would overwrite it.
+    # Set repository variable NGAO_DB_AUTO_DEPLOY=true to re-enable, or run it manually.
+    if: (github.event_name == 'push' && vars.NGAO_DB_AUTO_DEPLOY == 'true') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: ngao-adb-deploy
+      cancel-in-progress: false
+    env:
+      NGAO_DB_WALLET_B64: ${{ secrets.NGAO_DB_WALLET_B64 }}
+      NGAO_DB_USER: ${{ secrets.NGAO_DB_USER }}
+      NGAO_DB_PASSWORD: ${{ secrets.NGAO_DB_PASSWORD }}
+      NGAO_DB_SERVICE: ${{ secrets.NGAO_DB_SERVICE }}
+      NGAO_APEX_WORKSPACE: ${{ secrets.NGAO_APEX_WORKSPACE }}
+      NGAO_APEX_WORKSPACE_ID: ${{ secrets.NGAO_APEX_WORKSPACE_ID }}
+      NGAO_APEX_SCHEMA: ${{ secrets.NGAO_APEX_SCHEMA }}
+      NGAO_APEX_APP_ID: ${{ secrets.NGAO_APEX_APP_ID }}
+      NGAO_APEX_ALIAS: ${{ secrets.NGAO_APEX_ALIAS }}
+      NGAO_SMOKE_URL: ${{ secrets.NGAO_SMOKE_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Record dry-run flag
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          DRY_RUN_INPUT: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && "$DRY_RUN_INPUT" == "true" ]]; then
+            echo "NGAO_DRY_RUN=1" >> "$GITHUB_ENV"
+          else
+            echo "NGAO_DRY_RUN=0" >> "$GITHUB_ENV"
+          fi
+
+      - name: Require GitHub Actions secrets
+        run: bash db/deploy/require-secrets.sh
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install SQLcl
+        run: bash db/deploy/install-sqlcl.sh
+
+      - name: Deploy or dry-run
+        run: bash db/deploy/deploy.sh
