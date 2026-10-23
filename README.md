@@ -1,217 +1,115 @@
-<p align="center">
-  <img src="assets/logo.png" alt="Ngao · MvuaSmart logo" width="320" />
-</p>
+# DrainSense
 
-<p align="center">
-  <img alt="Oracle APEX" src="https://img.shields.io/badge/Oracle-APEX-C74634?logo=oracle&logoColor=white" />
-  <img alt="Oracle Autonomous Database" src="https://img.shields.io/badge/Oracle-Autonomous%20Database-F80000?logo=oracle&logoColor=white" />
-  <img alt="Africa's Talking" src="https://img.shields.io/badge/Africa's%20Talking-SMS-F26522" />
-  <img alt="Wasiliana" src="https://img.shields.io/badge/Wasiliana-USSD-0B6E4F" />
-  <img alt="status: hackathon prototype" src="https://img.shields.io/badge/status-hackathon%20prototype-F5A623" />
-</p>
+Global flood desk. A Python model scores 5-degree land cells for a large-flood year, a FastAPI service serves those scores plus a drainage log, and a Next.js map is the desk. Oracle APEX is not on this path. The old APEX app, schema, and deploy workflows are under [`legacy/`](legacy/README.md).
 
-# 🌧️ Ngao · MvuaSmart
+The map score is a **model probability for 2024**, built from **2023 rainfall and elevation**. It is not a verified flood, and it is not a street-level forecast.
 
-**One shield for farmers, herders and county health teams against flood, disease and drought.**
-GreenTech Hackathon 2026 (Strathmore × Oracle) · pitch **Fri 16 Oct 2026, 9:30 AM EAT**
+## What is real, and what is synthetic
 
-Ngao (*ngao* = shield) is an early-warning platform that tells farmers, herders and county teams
-**what to do**, days to weeks before floods, disease and drought strike. It runs on **Oracle Cloud**,
-reaches people on **any phone by SMS and USSD in Swahili or English, chosen by the user**, and gives county officers **one map
-dashboard** built in **Oracle APEX** (also installable as a phone app, an APEX PWA).
-
-| Service | For | What it does |
-|---|---|---|
-| **MvuaSmart** | Maize farmers, cooperatives, dryer operators | Dry-window & heavy-rain alerts at harvest, aflatoxin advice, field-flood warnings, mobile-dryer routing to wet maize |
-| **Ngao Mifugo** | Herders, grazing committees, county vets | River/flash-flood warnings, Rift Valley fever "vaccinate before outbreak", drought grazing options, sell timing |
-| **Ngao Afya** | County health teams, community health promoters | Cholera risk after floods, RVF human risk, aflatoxin food-safety risk |
-
-**What makes it different:** every alert carries **one action and a confidence**; the engine says
-**Act / Watch / Abstain** and stays silent when unsure; replies in Swahili or English, chosen by the user, are read by **OCI
-Generative AI (extract only, never advise)**; a **public scorecard** grades every alert.
-
-**Friday demo:** farmer service *live* in **Uasin Gishu** (USSD register → SMS alert → reply in Swahili or English, chosen by the user →
-dryer routed → booking SMS), then herder + health services through a **replay of the 2006 Rift
-Valley fever outbreak in Garissa**, on the shared dashboard.
-
----
-
-## 📚 Documentation
-
-| Doc | Read it for |
+| Piece | Origin |
 |---|---|
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | All moving parts, component & data-pipeline diagrams, sequence diagrams, ER diagram |
-| [docs/API_CONTRACT.md](docs/API_CONTRACT.md) | **The frontend ↔ backend contract**, plus the USSD ↔ backend contract: tables/views, REST endpoints, SMS webhooks (Africa's Talking), error format |
-| [docs/ORACLE_APEX.md](docs/ORACLE_APEX.md) | How we use Autonomous DB, APEX, PWA, Select AI, ORDS; exporting APEX into git |
-| [docs/DEPLOY.md](docs/DEPLOY.md) | How a push to `main` deploys APEX app 100 and the `db/deploy/` scripts to NgaoDB |
-| [docs/EXECUTION_PLAN.md](docs/EXECUTION_PLAN.md) | Wed/Thu/Fri timeline, owners, milestones, cut list, demo script, risks |
-| [db/schema.sql](db/schema.sql) | Draft DDL for the shared schema (source of truth) |
+| Flood labels | [Global Flood Records](https://zenodo.org/records/19288171) v0.9.0, DFO Flood Observatory, Zenodo record 19288171, CC BY 4.0. Accessed 2026-10-23. A cell-year is positive when the **bounding-box center** of a kept event falls in the cell. |
+| Rainfall | Open-Meteo historical archive, daily `precipitation_sum`, at the cell center. Open-Meteo documents this as reanalysis (ERA5 / ERA5-Land). CC BY 4.0. This repo did not download CHIRPS or ERA5 files itself. |
+| Elevation | Open-Meteo elevation API (documented 90 m DEM). Cells at elevation 0 were dropped as ocean. |
+| Heavy-day threshold (20 mm) | Reused from NGAO: `HEAVY_RAIN_MM` in `backend/scoring/heuristics.py`. |
+| Model, metrics, SHAP, map scores | Produced by `model/train.py` and stored in `model/artifacts/`. |
+| Drainage reports shipped with the app | **Synthetic drill rows** from `api/app/db.py` (`origin = synthetic`). |
+| Reports filed in the desk | Stored as `origin = community`. They are notes, not flood observations. |
+| Sector panels | **Derived indicators**: fixed rules on the score, elevation, and previous-year rain. Not crop, disease, or loss models. |
 
-## 🗺️ System at a glance
+Event filter from the run that built the table (`model/artifacts/flood_filters.json`, also copied into `metrics.json`): 5503 events in the GeoPackage, 5316 kept, 102 dropped for cause, 83 dropped because the box was wider or taller than 15 degrees, 2 dropped outside the grid.
 
-```mermaid
-flowchart LR
-  subgraph SRC["1 · Sources"]
-    GEE["Google Earth Engine<br/>CHIRPS · GFS · ERA5-Land · MODIS<br/>Sentinel-1 · JRC · WorldCover"]
-    EWDS["Copernicus EWDS<br/>GloFAS river forecasts"]
-    FILES["Public files<br/>NDMA drought · census · HDX wards"]
-  end
-  subgraph ING["2 · Ingestion (Trevor)"]
-    PY["Python jobs<br/>OCI VM / Functions"]
-    OS[("OCI Object Storage")]
-  end
-  subgraph ADB["3 · Oracle Autonomous Database (single source of truth)"]
-    TBL[("Tables<br/>wards · features · risk_scores<br/>alerts · messages · reports · dryers")]
-    OML["OML4Py in-DB scoring<br/>+ calibration"]
-    ENG["Alert engine<br/>Act / Watch / Abstain"]
-    SAI["Select AI"]
-    ORDS["ORDS REST"]
-  end
-  subgraph BE["Backend (Dennis · backend-dennis)"]
-    API["Django/DRF or ORDS<br/>SMS · alert engine · router · reply reader"]
-  end
-  USSD["USSD menus (Louisa · ussd-louisa)"]
-  GENAI["OCI Generative AI<br/>reply → JSON"]
-  WA["Wasiliana<br/>USSD"]
-  AT["Africa's Talking<br/>SMS"]
-  APEX["Oracle APEX dashboard + PWA<br/>(Chris · frontend-chris)"]
-  FARMER(["Farmers · herders<br/>any phone"])
-  OFFICER(["County officers · vets<br/>cooperatives · operators"])
+## Metrics
 
-  GEE --> PY
-  EWDS --> PY
-  FILES --> PY
-  PY --> OS --> TBL
-  TBL <--> OML
-  OML --> ENG --> TBL
-  API <--> TBL
-  API <--> GENAI
-  API <--> AT
-  USSD <--> WA
-  USSD --> API
-  WA <--> FARMER
-  AT <--> FARMER
-  ORDS -.-> API
-  APEX <--> TBL
-  APEX --> SAI --> TBL
-  OFFICER <--> APEX
+Source file: `model/artifacts/metrics.json`, written by `model/train.py` on the committed table `model/artifacts/cell_year_features.csv`. The test `tests/test_model.py` refits that table and checks these figures.
+
+Temporal test, label years 2019–2023, features from the previous calendar year only. 571 cells, 2855 train rows (2014–2018), 2855 test rows. Train positive rate 0.118, test positive rate 0.147. Logistic regression, C = 0.3, threshold 0.13 chosen by F1 on year-blocked out-of-fold training predictions.
+
+| | ROC-AUC | F1 | Precision | Recall | Accuracy | Brier |
+|---|---|---|---|---|---|---|
+| Logistic regression | 0.695 | 0.375 | 0.285 | 0.548 | 0.731 | 0.120 |
+| `DummyClassifier(strategy="prior")` | 0.500 | 0.000 | 0.000 | 0.000 | 0.853 | 0.126 |
+| `DummyClassifier(strategy="most_frequent")` | 0.500 | 0.000 | 0.000 | 0.000 | 0.853 | 0.147 |
+
+Year-clustered bootstrap 90% interval for the temporal ROC-AUC: 0.689–0.702 (`temporal_test.roc_auc_year_bootstrap_90ci`). Out-of-fold training ROC-AUC: 0.702.
+
+A second model held out cells with southwest longitude in [30, 90) and scored their 2019–2023 labels. ROC-AUC 0.617, F1 0.393, Brier 0.152 (685 test rows, 127 positives). The map uses the model trained on every cell, not this holdout model.
+
+The logistic regression ranks floods better than chance and its Brier score is slightly better than the prior dummy (0.120 vs 0.126). Predicting "no flood" every time is more accurate (0.853 vs 0.731) because most cell-years are not in the catalogue. That is why accuracy is the wrong headline.
+
+SHAP values on the map are `shap.LinearExplainer` on the log-odds. Mean absolute SHAP on the test set is largest for `annual_precip_mm` (0.419) and `p95_daily_mm` (0.392). The independent formula `z_j * coef_j` differs by up to 0.036 on 40 test rows because the rainfall features are correlated; both attributions add up to the model log-odds.
+
+## Run it
+
+API, from the repo root:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r api/requirements.txt
+PYTHONPATH=. DRAINSENSE_DB=/tmp/drainsense.sqlite .venv/bin/uvicorn api.app.main:app --host 0.0.0.0 --port 8000
 ```
 
-> **Design rule:** the database is the integration point. APEX reads views directly; the backend
-> writes to the same schema. The USSD service does not send SMS: it calls the backend's USSD
-> contract and Wasiliana carries the session. See the [API contract](docs/API_CONTRACT.md).
+Docker does the same:
 
-## 👥 Team, roles & branches
-
-| Person | Branch | Owns | Folder |
-|---|---|---|---|
-| **Chris** | **`frontend-chris`** | APEX dashboard + PWA | `frontend/` |
-| **Dennis** | **`backend-dennis`** | APIs, alert engine, Africa's Talking SMS, reply reader, dryer router | `backend/` |
-| **Trevor** | **`data-modelling-trevor`** | Data pipelines, GEE exports, OML4Py models, risk scoring | `data/` |
-| **Louisa** | **`ussd-louisa`** | USSD menus and flows via Wasiliana, sessions | `ussd/` |
-| **Esther** | **`slides-esther`** | Slides | `docs/pitch/` |
-
-`db/` is shared. Change `db/schema.sql` in a small PR to `main` first, then merge `main` into your branch. Chris applies it in Autonomous DB. Slides: Esther — Slides (`slides-esther`), in `docs/pitch/`. Partner calls are still unassigned.
-
-### Folder ownership
-
-| Path | Owner | Branch |
-|---|---|---|
-| `frontend/` | Chris | `frontend-chris` |
-| `backend/` | Dennis | `backend-dennis` |
-| `ussd/` | Louisa | `ussd-louisa` |
-| `data/` | Trevor | `data-modelling-trevor` |
-| `docs/pitch/` | Esther | `slides-esther` |
-| `db/` | Shared (small PR to `main`; Chris applies the schema) | all five review |
-
-### Branch workflow
-
-```mermaid
-gitGraph
-  commit id: "README"
-  branch frontend-chris
-  branch backend-dennis
-  branch data-modelling-trevor
-  branch ussd-louisa
-  branch slides-esther
-  checkout frontend-chris
-  commit id: "APEX export"
-  checkout backend-dennis
-  commit id: "SMS router"
-  checkout data-modelling-trevor
-  commit id: "models"
-  checkout ussd-louisa
-  commit id: "USSD menus"
-  checkout slides-esther
-  commit id: "slides"
-  checkout main
-  merge backend-dennis id: "PR backend"
-  merge frontend-chris id: "PR frontend"
-  merge data-modelling-trevor id: "PR data"
-  merge ussd-louisa id: "PR ussd"
-  merge slides-esther id: "PR slides"
-  commit id: "submission tag"
+```bash
+docker compose up --build api
 ```
 
-1. Work only on your branch, in your folder. Pull `main` into your branch often (`git merge origin/main`).
-2. **`db/schema.sql` is shared**: change it in a small PR to `main` first, then merge `main` into your branch. Never change a view or endpoint shape in [API_CONTRACT.md](docs/API_CONTRACT.md) without telling the other owners.
-3. Open a PR to `main` at each integration milestone (see [Execution plan](docs/EXECUTION_PLAN.md)). **Final merge into `main` by Thu 15 Oct, 2:00 PM EAT**; submission is at 4:00 PM.
-4. No secrets in git: keys go in `.env` (git-ignored) or OCI Vault.
-5. The old `frontend` and `backend` branches are obsolete (empty copies of `main`). Delete them on GitHub.
+Desk, against that API:
 
-## 📁 Repository structure
-
-```text
-MVUA-SMART/
-├── README.md               ← you are here
-├── docs/                   architecture, API contract, APEX guide, execution plan
-│   └── pitch/              Esther — Slides (`slides-esther`)
-├── db/
-│   └── schema.sql          shared DDL: tables + views (source of truth)
-├── frontend/               Chris · frontend-chris
-│   ├── apex/               APEX app export (fXXX.sql / split export), never hand-edited
-│   └── pwa/                PWA settings, icons, install notes
-├── backend/                Dennis · backend-dennis (APIs, SMS, alert engine, router)
-├── ussd/                   Louisa · ussd-louisa (Wasiliana USSD menus and sessions)
-└── data/                   Trevor · data-modelling-trevor
-    ├── pipelines/          Earth Engine & GloFAS ingestion → ward_features_daily
-    └── models/             training, calibration, OML4Py scoring scripts
+```bash
+cd web
+npm ci
+NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 ```
 
-## ▶️ How it runs (daily cycle)
+Open http://localhost:3000. The map, ledger, dispatch list, sector flags, and model card all read the API.
 
-| Time (EAT) | Step | Who/what |
-|---|---|---|
-| 05:00 | Pull new data → `ward_features_daily` | Trevor · `data/pipelines` (DBMS_SCHEDULER / OCI job) |
-| ~05:30 | Score every ward → `risk_scores` (calibrated prob + Act/Watch/Abstain) | Trevor · OML4Py / SQL rules |
-| 06:00 | Send Act alerts to matching subscribers, cooldowns applied | Alert engine → Africa's Talking SMS (Dennis) |
-| All day | USSD register / report / ward status | Louisa's `ussd/` service via Wasiliana |
-| All day | Replies → OCI GenAI → `reports` (or review queue) | Backend reply reader |
-| 18:00 | Plan tomorrow's dryer routes → `routes`, `bookings`; booking SMS | Dryer router |
-| Weekly | Match alerts to outcomes → scorecard, recalibrate | SQL job |
+Tests:
 
-For the demo every step is triggered **on cue** from the hidden APEX **Demo controls** page.
+```bash
+pip install -r api/requirements.txt -r model/requirements.txt pytest==8.3.3
+pytest
+```
 
-### Run it locally / for development
-- **Database:** run `db/schema.sql` in the Autonomous DB (SQL Worksheet in Database Actions) under schema `NGAO`.
-- **Dashboard:** APEX workspace on the same ADB; import `frontend/apex/` (see [ORACLE_APEX.md](docs/ORACLE_APEX.md)).
-- **Backend:** see [backend/README.md](backend/README.md); copy `.env.example` → `.env`. SMS (send, delivery reports, incoming) uses **Africa's Talking** (`SMS_BACKEND=africastalking`, `AT_USERNAME`, `AT_API_KEY`, optional `AT_SENDER_ID`; `AT_USERNAME=sandbox` for the free simulator). Swagger UI at `/ngao/v1/docs/`.
-- **USSD:** see [ussd/README.md](ussd/README.md). Wasiliana POSTs each session to the callback URL; the service replies with plain text prefixed `CON` or `END`.
-- **Data:** see [data/README.md](data/README.md).
+Rebuild the feature table (network, Open-Meteo and Zenodo) and refit:
 
-## ✅ Submission checklist (due **Thu 15 Oct 2026, 4:00 PM EAT** → ilabee@strathmore.edu)
+```bash
+pip install -r model/requirements.txt
+python3 -m model.train --download
+```
 
-- [ ] GitHub repo link (this repo; make sure judges can access it: public or invited)
-- [ ] Working app: **APEX workspace / app URL on Oracle Cloud** that judges can open (+ demo login)
-- [ ] Project description, **≤ 200 words**
-- [ ] Pitch deck, **≤ 5 slides**
-- [ ] `frontend-chris`, `backend-dennis`, `data-modelling-trevor`, `ussd-louisa`, and `slides-esther` merged into `main` by **2:00 PM**
-- [ ] Backup demo video (laptop + USB)
-- [ ] Friday 9:30 AM pitch at Strathmore. Bring **National ID**.
+Refit from the committed CSV only, no network:
 
-## ⚠️ Open decisions
+```bash
+python3 -m model.train --refit
+```
 
-1. **Django/DRF vs ORDS** for SMS webhooks and alert sending (backend built in Django/DRF). The brief uses ORDS inside the DB; this README originally planned Django. Either works against the same schema; see [ARCHITECTURE.md § Open decisions](docs/ARCHITECTURE.md#open-decisions). Louisa's USSD callback is a separate public URL either way.
-2. Where the Django service is hosted if chosen (OCI Always Free VM + public HTTPS, or a tunnel for the demo). The USSD callback needs a public URL too.
-3. React/Next.js web frontend is **dropped** in favour of APEX + APEX PWA (brief + judging favour Oracle). Reopen only if needed.
-4. **Incoming SMS** needs an Africa's Talking shortcode (free in the sandbox) with its callback set to `/ngao/v1/sms/inbound`. Until then the demo uses `/demo/inbound-sms` and USSD menu 2.
+## Layout
+
+| Path | Role |
+|---|---|
+| `model/train.py` | Download, labels, leak checks, logistic regression, dummy baselines, SHAP |
+| `model/artifacts/` | Feature table, `metrics.json`, `scores.geojson` |
+| `api/` | FastAPI. Scores come from the artifacts. SQLite holds the drainage log. |
+| `web/` | Next.js desk, MapLibre, CARTO dark basemap |
+| `backend/scoring/heuristics.py` | NGAO heavy-rain constant used by the flood model |
+| `backend/`, `ussd/` | NGAO services, kept. Not the DrainSense runtime. |
+| `legacy/` | APEX export, Oracle schema, VM deploy, APEX workflows |
+
+## Limitations
+
+- The label is a Dartmouth Flood Observatory large-flood catalogue event, assigned to a 5-degree cell by the center of the event bounding box. It is not a mapped inundation footprint, a gauge exceedance, or a household survey.
+- Cells are 5 degrees on a side, about 500 km at the equator. A score is for that whole cell, not a street, a drain, or a ward.
+- Rainfall features are the previous calendar year's Open-Meteo daily precipitation at the cell center, plus elevation. The model does not use a weather forecast, river discharge, soil moisture, drainage infrastructure, or flood defenses.
+- Training label years are 2014-2018 and test label years are 2019-2023. Feature years do not overlap. The same cells appear in both splits, so the temporal test measures a later period at seen locations. The longitude-block holdout is the check on unseen regions.
+- DFO records large events drawn from news, agencies, and satellites. Absence of a record is not proof that no flood occurred. Small and unreported floods are missing, and reporting effort differs by country.
+- Events whose bounding box is wider or taller than 15 degrees are dropped so a continent-scale outline does not stamp a single cell. Cells the elevation API treats as ocean (elevation 0) are dropped, which removes some coastal box centers.
+- The 2024 outlook uses 2023 rainfall and has no DFO label in this run. It is a model score, not a verified outcome.
+- Sector panels are deterministic relabellings of the score, elevation, and rainfall. They are not crop, epidemiological, or insurance-loss models.
+- Drainage reports, inspections, repairs, and incidents shipped with the prototype are synthetic drill rows. Rows created through the API are stored as community reports and are not flood observations.
+- DrainSense is not a warning service and does not replace national hydrological agencies.
+
+## NGAO history
+
+`main` of [NGAO](https://github.com/ChristopherKiokoStrathmore/NGAO) is an ancestor of this branch, merged without rewriting those commits. Their authors are unchanged. New DrainSense commits are Christopher Nguu only, with no co-author trailer.

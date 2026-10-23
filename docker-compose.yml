@@ -1,0 +1,14 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DRAINSENSE_DB: /data/drainsense.sqlite
+    volumes:
+      - drainsense-data:/data
+
+volumes:
+  drainsense-data: {}

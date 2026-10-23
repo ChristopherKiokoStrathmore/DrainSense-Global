@@ -1,0 +1,8 @@
+{
+  "events_in_gpkg": 5503,
+  "events_kept": 5316,
+  "dropped_cause": 102,
+  "dropped_bbox_over_15deg": 83,
+  "dropped_outside_grid_or_coord": 2,
+  "cell_years_with_a_kept_event": 3908
+}

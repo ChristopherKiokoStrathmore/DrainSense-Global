@@ -6,3 +6,8 @@ node_modules/
 wallet*/
 *.zip
 data/raw/
+model/.cache/
+web/.next/
+api/data/
+*.sqlite
+.pytest_cache/

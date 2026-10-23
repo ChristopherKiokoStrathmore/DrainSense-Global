@@ -1,0 +1,275 @@
+{
+  "generated_at": "2026-10-23T11:37:01Z",
+  "script": "model/train.py",
+  "heavy_day_mm": 20.0,
+  "heavy_day_source": "backend/scoring/heuristics.py HEAVY_RAIN_MM",
+  "target": "At least one kept DFO large-flood bounding-box center in the 5-degree cell during the label year",
+  "feature_columns": [
+    "elev_m",
+    "annual_precip_mm",
+    "p95_daily_mm",
+    "max_daily_mm",
+    "max_7day_mm",
+    "wet_day_frac",
+    "heavy_day_count"
+  ],
+  "split": {
+    "train_label_years": [
+      2014,
+      2015,
+      2016,
+      2017,
+      2018
+    ],
+    "test_label_years": [
+      2019,
+      2020,
+      2021,
+      2022,
+      2023
+    ],
+    "outlook_label_year": 2024,
+    "feature_rule": "precipitation statistics from label_year - 1 only, plus static elevation",
+    "train_feature_years": [
+      2013,
+      2014,
+      2015,
+      2016,
+      2017
+    ],
+    "test_feature_years": [
+      2018,
+      2019,
+      2020,
+      2021,
+      2022
+    ],
+    "feature_years_disjoint": true
+  },
+  "n_cells": 571,
+  "n_train_rows": 2855,
+  "n_test_rows": 2855,
+  "train_positive_rate": 0.117688,
+  "test_positive_rate": 0.14711,
+  "model": {
+    "feature_columns": [
+      "elev_m",
+      "annual_precip_mm",
+      "p95_daily_mm",
+      "max_daily_mm",
+      "max_7day_mm",
+      "wet_day_frac",
+      "heavy_day_count"
+    ],
+    "mean": [
+      636.06654991,
+      821.69362522,
+      10.00264098,
+      38.96217163,
+      87.8634676,
+      0.29276231,
+      7.33309982
+    ],
+    "scale": [
+      789.17111127,
+      1080.04862524,
+      9.16373971,
+      31.28519474,
+      75.8164042,
+      0.18745113,
+      16.82484426
+    ],
+    "coef": [
+      0.06718182,
+      -0.73099322,
+      0.54390898,
+      0.36544335,
+      0.04590092,
+      0.13457972,
+      0.32597842
+    ],
+    "intercept": -2.16771263,
+    "C": 0.3,
+    "threshold": 0.13,
+    "class_weight": null,
+    "random_state": 0
+  },
+  "temporal_test": {
+    "roc_auc": 0.694907,
+    "f1": 0.374898,
+    "precision": 0.285006,
+    "recall": 0.547619,
+    "accuracy": 0.731349,
+    "brier": 0.12026,
+    "n": 2855,
+    "positives": 420,
+    "threshold": 0.13,
+    "roc_auc_year_bootstrap_90ci": [
+      0.688533,
+      0.701707
+    ],
+    "by_year": [
+      {
+        "year": 2019,
+        "n": 571,
+        "observed_positive_rate": 0.152364,
+        "mean_predicted_probability": 0.122964
+      },
+      {
+        "year": 2020,
+        "n": 571,
+        "observed_positive_rate": 0.14711,
+        "mean_predicted_probability": 0.125052
+      },
+      {
+        "year": 2021,
+        "n": 571,
+        "observed_positive_rate": 0.143608,
+        "mean_predicted_probability": 0.130501
+      },
+      {
+        "year": 2022,
+        "n": 571,
+        "observed_positive_rate": 0.145359,
+        "mean_predicted_probability": 0.128234
+      },
+      {
+        "year": 2023,
+        "n": 571,
+        "observed_positive_rate": 0.14711,
+        "mean_predicted_probability": 0.129394
+      }
+    ],
+    "oof_train_roc_auc": 0.702139
+  },
+  "dummy_prior": {
+    "roc_auc": 0.5,
+    "f1": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "accuracy": 0.85289,
+    "brier": 0.126335,
+    "n": 2855,
+    "positives": 420,
+    "threshold": 0.5,
+    "f1_at_predict": 0.0
+  },
+  "dummy_most_frequent": {
+    "roc_auc": 0.5,
+    "f1": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "accuracy": 0.85289,
+    "brier": 0.14711,
+    "n": 2855,
+    "positives": 420,
+    "threshold": 0.5,
+    "f1_at_predict": 0.0
+  },
+  "spatial_holdout": {
+    "roc_auc": 0.617405,
+    "f1": 0.392694,
+    "precision": 0.467391,
+    "recall": 0.338583,
+    "accuracy": 0.805839,
+    "brier": 0.152291,
+    "n": 685,
+    "positives": 127,
+    "threshold": 0.12,
+    "status": "scored",
+    "C": 0.3,
+    "train_rows": 2170,
+    "test_rows": 685,
+    "test_positives": 127
+  },
+  "mean_abs_shap_test_log_odds": {
+    "elev_m": 0.044775,
+    "annual_precip_mm": 0.418933,
+    "p95_daily_mm": 0.392479,
+    "max_daily_mm": 0.267625,
+    "max_7day_mm": 0.032,
+    "wet_day_frac": 0.107573,
+    "heavy_day_count": 0.171149
+  },
+  "shap": {
+    "method": "shap.LinearExplainer",
+    "link": "identity on the logistic log-odds after StandardScaler",
+    "background": "all training rows, standardized",
+    "additivity": "sum of SHAP values plus expected_value matches decision_function within 1e-4",
+    "max_abs_diff_vs_independent_formula_on_40_test_rows": 0.036476,
+    "independent_formula": "phi_j = z_j * coef_j. Rainfall features are correlated, so this shares credit differently from LinearExplainer.",
+    "rows_compared": 40
+  },
+  "sources": {
+    "floods": {
+      "name": "Global Flood Records",
+      "publisher": "DFO Flood Observatory",
+      "zenodo": "https://zenodo.org/records/19288171",
+      "version": "0.9.0",
+      "license": "CC-BY-4.0",
+      "accessed": "2026-10-23",
+      "geometry": "bounding-box center from the GeoPackage rtree, not a surveyed point"
+    },
+    "rainfall": {
+      "name": "Open-Meteo Historical Weather API",
+      "url": "https://archive-api.open-meteo.com/v1/archive",
+      "variable": "daily precipitation_sum",
+      "docs": "https://open-meteo.com/en/docs/historical-weather-api",
+      "license": "CC-BY-4.0",
+      "note": "Open-Meteo documents this archive as reanalysis (ERA5 / ERA5-Land blend). DrainSense did not download CHIRPS or ERA5 files itself."
+    },
+    "elevation": {
+      "name": "Open-Meteo Elevation API",
+      "url": "https://api.open-meteo.com/v1/elevation",
+      "note": "Open-Meteo documents a 90 m digital elevation model. Cells with elevation 0 were treated as ocean and dropped."
+    }
+  },
+  "grid": {
+    "step_degrees": 5.0,
+    "lat_sw": [
+      -55,
+      65
+    ],
+    "lon_sw": [
+      -180,
+      175
+    ]
+  },
+  "spatial_holdout_definition": {
+    "sw_lon_from_inclusive": 30.0,
+    "sw_lon_to_exclusive": 90.0,
+    "train": "other cells, label years 2014-2018",
+    "test": "holdout cells, label years 2019-2023",
+    "note": "A second model. The map uses the model trained on every cell's 2014-2018 labels."
+  },
+  "train_feature_medians": {
+    "elev_m": 357.0,
+    "annual_precip_mm": 562.7,
+    "p95_daily_mm": 7.96,
+    "max_daily_mm": 29.8,
+    "max_7day_mm": 67.3,
+    "wet_day_frac": 0.271233,
+    "heavy_day_count": 2.0
+  },
+  "cells_in_spatial_holdout_train_rows": 685,
+  "limitations": [
+    "The label is a Dartmouth Flood Observatory large-flood catalogue event, assigned to a 5-degree cell by the center of the event bounding box. It is not a mapped inundation footprint, a gauge exceedance, or a household survey.",
+    "Cells are 5 degrees on a side, about 500 km at the equator. A score is for that whole cell, not a street, a drain, or a ward.",
+    "Rainfall features are the previous calendar year's Open-Meteo daily precipitation at the cell center, plus elevation. The model does not use a weather forecast, river discharge, soil moisture, drainage infrastructure, or flood defenses.",
+    "Training label years are 2014-2018 and test label years are 2019-2023. Feature years do not overlap. The same cells appear in both splits, so the temporal test measures a later period at seen locations. The longitude-block holdout is the check on unseen regions.",
+    "DFO records large events drawn from news, agencies, and satellites. Absence of a record is not proof that no flood occurred. Small and unreported floods are missing, and reporting effort differs by country.",
+    "Events whose bounding box is wider or taller than 15 degrees are dropped so a continent-scale outline does not stamp a single cell. Cells the elevation API treats as ocean (elevation 0) are dropped, which removes some coastal box centers.",
+    "The 2024 outlook uses 2023 rainfall and has no DFO label in this run. It is a model score, not a verified outcome.",
+    "Sector panels are deterministic relabellings of the score, elevation, and rainfall. They are not crop, epidemiological, or insurance-loss models.",
+    "Drainage reports, inspections, repairs, and incidents shipped with the prototype are synthetic drill rows. Rows created through the API are stored as community reports and are not flood observations.",
+    "DrainSense is not a warning service and does not replace national hydrological agencies."
+  ],
+  "flood_filters": {
+    "events_in_gpkg": 5503,
+    "events_kept": 5316,
+    "dropped_cause": 102,
+    "dropped_bbox_over_15deg": 83,
+    "dropped_outside_grid_or_coord": 2,
+    "cell_years_with_a_kept_event": 3908
+  }
+}
