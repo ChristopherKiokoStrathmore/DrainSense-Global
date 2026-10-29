@@ -1,0 +1,1033 @@
+{
+  "info": {
+    "name": "DrainSense API",
+    "description": "Flood impact model (CatBoost) and the DrainSense desk. Set baseUrl in the environment. Run the folders in order: Risk map stores cell_id, Drainage log chains report and inspection ids. Schema: api/openapi.json, or /docs on a running server.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Impact model",
+      "item": [
+        {
+          "name": "Model card",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/impact/model",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "impact",
+                "model"
+              ]
+            },
+            "description": "Parameters, every metric and baseline, data checks, limitations, and the fields each variant requires."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"both variants\", () => pm.expect(Object.keys(body.variants)).to.have.members([\"brief\", \"no_size\"]));",
+                  "pm.test(\"brief needs area, no_size does not\", () => {",
+                  "  pm.expect(body.inputs.brief.required).to.include(\"area_km2\");",
+                  "  pm.expect(body.inputs.no_size.required).to.not.include(\"area_km2\");",
+                  "});",
+                  "pm.test(\"formula baseline beats the brief model\", () =>",
+                  "  pm.expect(body.baselines_temporal_test.dfo_formula.rmse).to.be.below(body.variants.brief.temporal_test.rmse));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Predict - brief (Kenya 2023)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/impact/predict?variant=brief",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "impact",
+                "predict"
+              ],
+              "query": [
+                {
+                  "key": "variant",
+                  "value": "brief"
+                }
+              ]
+            },
+            "description": "Event 5477, Kenya 15 Oct - 11 Nov 2023. Severity is optional for the model and only feeds dfo_formula.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_date\": \"2023-10-15\",\n  \"end_date\": \"2023-11-11\",\n  \"area_km2\": 229835,\n  \"severity\": 1.5,\n  \"latitude\": -1.503,\n  \"longitude\": 40.03,\n  \"koppen_climate_zone\": \"Af/Am (Equatorial / Tropical Monsoon)\",\n  \"continent_region\": \"Africa\",\n  \"main_cause\": \"Heavy rain\",\n  \"total_precipitation_mm\": 793.3,\n  \"max_24h_precipitation_mm\": 375.3,\n  \"total_liquid_rain_mm\": 793.3,\n  \"snow_melt_equiv_mm\": 0.0,\n  \"antecedent_7day_precip_mm\": 121.5,\n  \"estimated_surface_runoff_mm\": 502.0,\n  \"mean_temp_2m_c\": 30.7,\n  \"max_temp_2m_c\": 35.4,\n  \"min_temp_2m_c\": 26.9,\n  \"max_wind_gust_10m_kmh\": 51.4,\n  \"min_sea_level_pressure_hpa\": 1008.6,\n  \"mean_relative_humidity_pct\": 78.2,\n  \"topsoil_moisture_0_7cm_m3m3\": 0.452,\n  \"cumulative_et0_evapotranspiration_mm\": 145.7\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"variant brief\", () => pm.expect(body.variant).to.eql(\"brief\"));",
+                  "pm.test(\"formula matches the recorded index 7.0\", () => pm.expect(body.dfo_formula.rounded).to.eql(7.0));",
+                  "pm.test(\"SHAP contributions add up to the estimate\", () => {",
+                  "  const total = body.expected_value + body.contributions.reduce((s, c) => s + c.contribution, 0);",
+                  "  pm.expect(Math.abs(total - body.flood_impact_index)).to.be.below(0.002);",
+                  "});",
+                  "pm.test(\"log area leads\", () => pm.expect(body.contributions[0].feature).to.eql(\"Log_Area\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Predict - no_size",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/impact/predict?variant=no_size",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "impact",
+                "predict"
+              ],
+              "query": [
+                {
+                  "key": "variant",
+                  "value": "no_size"
+                }
+              ]
+            },
+            "description": "Illustrative inputs, not a recorded event. No area, end date or severity.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_date\": \"2024-04-20\",\n  \"latitude\": -1.28,\n  \"longitude\": 36.82,\n  \"koppen_climate_zone\": \"Af/Am (Equatorial / Tropical Monsoon)\",\n  \"continent_region\": \"Africa\",\n  \"main_cause\": \"Heavy rain\",\n  \"max_24h_precipitation_mm\": 80,\n  \"antecedent_7day_precip_mm\": 120,\n  \"mean_temp_2m_c\": 19,\n  \"max_temp_2m_c\": 24,\n  \"min_temp_2m_c\": 14,\n  \"max_wind_gust_10m_kmh\": 40,\n  \"min_sea_level_pressure_hpa\": 1010,\n  \"mean_relative_humidity_pct\": 85,\n  \"topsoil_moisture_0_7cm_m3m3\": 0.4\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"variant no_size\", () => pm.expect(body.variant).to.eql(\"no_size\"));",
+                  "pm.test(\"no formula without area, end date and severity\", () => pm.expect(body.dfo_formula).to.be.null);",
+                  "pm.test(\"reading flags synthetic training weather\", () => pm.expect(body.reading).to.include(\"synthetic\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Predict batch - brief",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/impact/predict/batch?variant=brief",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "impact",
+                "predict",
+                "batch"
+              ],
+              "query": [
+                {
+                  "key": "variant",
+                  "value": "brief"
+                }
+              ]
+            },
+            "description": "Up to 500 events. One bad event fails the call and names its index.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"events\": [\n    {\n      \"start_date\": \"2023-10-15\",\n      \"end_date\": \"2023-11-11\",\n      \"area_km2\": 229835,\n      \"severity\": 1.5,\n      \"latitude\": -1.503,\n      \"longitude\": 40.03,\n      \"koppen_climate_zone\": \"Af/Am (Equatorial / Tropical Monsoon)\",\n      \"continent_region\": \"Africa\",\n      \"main_cause\": \"Heavy rain\",\n      \"total_precipitation_mm\": 793.3,\n      \"max_24h_precipitation_mm\": 375.3,\n      \"total_liquid_rain_mm\": 793.3,\n      \"snow_melt_equiv_mm\": 0.0,\n      \"antecedent_7day_precip_mm\": 121.5,\n      \"estimated_surface_runoff_mm\": 502.0,\n      \"mean_temp_2m_c\": 30.7,\n      \"max_temp_2m_c\": 35.4,\n      \"min_temp_2m_c\": 26.9,\n      \"max_wind_gust_10m_kmh\": 51.4,\n      \"min_sea_level_pressure_hpa\": 1008.6,\n      \"mean_relative_humidity_pct\": 78.2,\n      \"topsoil_moisture_0_7cm_m3m3\": 0.452,\n      \"cumulative_et0_evapotranspiration_mm\": 145.7\n    },\n    {\n      \"start_date\": \"2023-10-15\",\n      \"end_date\": \"2023-11-11\",\n      \"area_km2\": 10,\n      \"severity\": 1.5,\n      \"latitude\": -1.503,\n      \"longitude\": 40.03,\n      \"koppen_climate_zone\": \"Af/Am (Equatorial / Tropical Monsoon)\",\n      \"continent_region\": \"Africa\",\n      \"main_cause\": \"Heavy rain\",\n      \"total_precipitation_mm\": 793.3,\n      \"max_24h_precipitation_mm\": 375.3,\n      \"total_liquid_rain_mm\": 793.3,\n      \"snow_melt_equiv_mm\": 0.0,\n      \"antecedent_7day_precip_mm\": 121.5,\n      \"estimated_surface_runoff_mm\": 502.0,\n      \"mean_temp_2m_c\": 30.7,\n      \"max_temp_2m_c\": 35.4,\n      \"min_temp_2m_c\": 26.9,\n      \"max_wind_gust_10m_kmh\": 51.4,\n      \"min_sea_level_pressure_hpa\": 1008.6,\n      \"mean_relative_humidity_pct\": 78.2,\n      \"topsoil_moisture_0_7cm_m3m3\": 0.452,\n      \"cumulative_et0_evapotranspiration_mm\": 145.7\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"two results\", () => pm.expect(body.count).to.eql(2));",
+                  "pm.test(\"smaller area scores lower\", () =>",
+                  "  pm.expect(body.results[1].flood_impact_index).to.be.below(body.results[0].flood_impact_index));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Held-out test events (Kenya)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/impact/test-events?country=KE&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "impact",
+                "test-events"
+              ],
+              "query": [
+                {
+                  "key": "country",
+                  "value": "KE"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"2019 onward\", () => body.events.forEach(e => pm.expect(e.start_date >= \"2019-01-01\").to.be.true));",
+                  "pm.test(\"filtered to Kenya\", () => body.events.forEach(e => pm.expect(e.country).to.include(\"Kenya\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error - brief without area_km2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/impact/predict",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "impact",
+                "predict"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_date\": \"2023-10-15\",\n  \"end_date\": \"2023-11-11\",\n  \"severity\": 1.5,\n  \"latitude\": -1.503,\n  \"longitude\": 40.03,\n  \"koppen_climate_zone\": \"Af/Am (Equatorial / Tropical Monsoon)\",\n  \"continent_region\": \"Africa\",\n  \"main_cause\": \"Heavy rain\",\n  \"total_precipitation_mm\": 793.3,\n  \"max_24h_precipitation_mm\": 375.3,\n  \"total_liquid_rain_mm\": 793.3,\n  \"snow_melt_equiv_mm\": 0.0,\n  \"antecedent_7day_precip_mm\": 121.5,\n  \"estimated_surface_runoff_mm\": 502.0,\n  \"mean_temp_2m_c\": 30.7,\n  \"max_temp_2m_c\": 35.4,\n  \"min_temp_2m_c\": 26.9,\n  \"max_wind_gust_10m_kmh\": 51.4,\n  \"min_sea_level_pressure_hpa\": 1008.6,\n  \"mean_relative_humidity_pct\": 78.2,\n  \"topsoil_moisture_0_7cm_m3m3\": 0.452,\n  \"cumulative_et0_evapotranspiration_mm\": 145.7\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"names the missing field\", () => pm.expect(pm.response.json().detail).to.include(\"area_km2\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error - unknown climate zone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/impact/predict",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "impact",
+                "predict"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_date\": \"2023-10-15\",\n  \"end_date\": \"2023-11-11\",\n  \"area_km2\": 229835,\n  \"severity\": 1.5,\n  \"latitude\": -1.503,\n  \"longitude\": 40.03,\n  \"koppen_climate_zone\": \"BWh\",\n  \"continent_region\": \"Africa\",\n  \"main_cause\": \"Heavy rain\",\n  \"total_precipitation_mm\": 793.3,\n  \"max_24h_precipitation_mm\": 375.3,\n  \"total_liquid_rain_mm\": 793.3,\n  \"snow_melt_equiv_mm\": 0.0,\n  \"antecedent_7day_precip_mm\": 121.5,\n  \"estimated_surface_runoff_mm\": 502.0,\n  \"mean_temp_2m_c\": 30.7,\n  \"max_temp_2m_c\": 35.4,\n  \"min_temp_2m_c\": 26.9,\n  \"max_wind_gust_10m_kmh\": 51.4,\n  \"min_sea_level_pressure_hpa\": 1008.6,\n  \"mean_relative_humidity_pct\": 78.2,\n  \"topsoil_moisture_0_7cm_m3m3\": 0.452,\n  \"cumulative_et0_evapotranspiration_mm\": 145.7\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"lists the allowed zones\", () => pm.expect(pm.response.json().detail).to.include(\"koppen_climate_zone must be one of\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Error - severity 3",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/impact/predict",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "impact",
+                "predict"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_date\": \"2023-10-15\",\n  \"end_date\": \"2023-11-11\",\n  \"area_km2\": 229835,\n  \"severity\": 3,\n  \"latitude\": -1.503,\n  \"longitude\": 40.03,\n  \"koppen_climate_zone\": \"Af/Am (Equatorial / Tropical Monsoon)\",\n  \"continent_region\": \"Africa\",\n  \"main_cause\": \"Heavy rain\",\n  \"total_precipitation_mm\": 793.3,\n  \"max_24h_precipitation_mm\": 375.3,\n  \"total_liquid_rain_mm\": 793.3,\n  \"snow_melt_equiv_mm\": 0.0,\n  \"antecedent_7day_precip_mm\": 121.5,\n  \"estimated_surface_runoff_mm\": 502.0,\n  \"mean_temp_2m_c\": 30.7,\n  \"max_temp_2m_c\": 35.4,\n  \"min_temp_2m_c\": 26.9,\n  \"max_wind_gust_10m_kmh\": 51.4,\n  \"min_sea_level_pressure_hpa\": 1008.6,\n  \"mean_relative_humidity_pct\": 78.2,\n  \"topsoil_moisture_0_7cm_m3m3\": 0.452,\n  \"cumulative_et0_evapotranspiration_mm\": 145.7\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Risk map",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"ok\", () => pm.expect(body.status).to.eql(\"ok\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Risk model metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/metrics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "metrics"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"has temporal test\", () => pm.expect(body).to.have.property(\"temporal_test\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Risk grid (GeoJSON)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/risk/grid",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "risk",
+                "grid"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"feature collection\", () => pm.expect(body.type).to.eql(\"FeatureCollection\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Hotspots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/risk/hotspots?limit=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "risk",
+                "hotspots"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Also stores the top cell as {{cell_id}} for the requests below."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"has hotspots\", () => pm.expect(body.hotspots.length).to.be.above(0));",
+                  "pm.collectionVariables.set(\"cell_id\", body.hotspots[0].cell_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cell detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/risk/cells/{{cell_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "risk",
+                "cells",
+                "{{cell_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"same cell\", () => pm.expect(body.cell_id).to.eql(pm.collectionVariables.get(\"cell_id\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sector indicators",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sectors?limit=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sectors"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"derived indicators\", () => pm.expect(body.kind).to.eql(\"derived indicators\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Response plan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/response/plan?limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "response",
+                "plan"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"ranked\", () => pm.expect(body.plan[0].rank).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Drainage log",
+      "item": [
+        {
+          "name": "List reports",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"reports array\", () => pm.expect(body.reports).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reports"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cell_id\": \"{{cell_id}}\",\n  \"severity\": \"blocked\",\n  \"note\": \"Culvert blocked after rain (Postman test row)\",\n  \"reporter\": \"postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"community origin\", () => pm.expect(body.origin).to.eql(\"community\"));",
+                  "pm.collectionVariables.set(\"report_id\", body.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List inspections",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/inspections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inspections"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"inspections array\", () => pm.expect(body.inspections).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create inspection",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/inspections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inspections"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cell_id\": \"{{cell_id}}\",\n  \"report_id\": {{report_id}},\n  \"crew\": \"Crew A\",\n  \"scheduled_for\": \"2026-11-02\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set(\"inspection_id\", body.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List repairs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/repairs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "repairs"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"repairs array\", () => pm.expect(body.repairs).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create repair",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/repairs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "repairs"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cell_id\": \"{{cell_id}}\",\n  \"inspection_id\": {{inspection_id}},\n  \"report_id\": {{report_id}},\n  \"action\": \"Cleared culvert\",\n  \"completed_on\": \"2026-11-03\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"linked to report\", () => pm.expect(String(body.report_id)).to.eql(String(pm.collectionVariables.get(\"report_id\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List incidents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/incidents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "incidents"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"incidents array\", () => pm.expect(body.incidents).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create incident",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/incidents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "incidents"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cell_id\": \"{{cell_id}}\",\n  \"kind\": \"street flooding\",\n  \"occurred_on\": \"2026-10-30\",\n  \"note\": \"Postman test row\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"community origin\", () => pm.expect(body.origin).to.eql(\"community\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Intervention effectiveness",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/interventions/effectiveness",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "interventions",
+                "effectiveness"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"repairs array\", () => pm.expect(body.repairs).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "cell_id",
+      "value": ""
+    },
+    {
+      "key": "report_id",
+      "value": ""
+    },
+    {
+      "key": "inspection_id",
+      "value": ""
+    }
+  ]
+}

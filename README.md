@@ -39,6 +39,60 @@ The logistic regression ranks floods better than chance and its Brier score is s
 
 SHAP values on the map are `shap.LinearExplainer` on the log-odds. Mean absolute SHAP on the test set is largest for `annual_precip_mm` (0.419) and `p95_daily_mm` (0.392). The independent formula `z_j * coef_j` differs by up to 0.036 on 40 test rows because the rainfall features are correlated; both attributions add up to the model log-odds.
 
+## Flood impact model (CatBoost)
+
+A second, separate model. `model/impact.py` trains the CatBoost regressor from `data/CatBoost_Model_Executive_Brief.pdf` (depth 7, learning rate 0.03, L2 5.0, MVS subsample 0.8, up to 1,200 trees) on the 5,503 records in `data/Enriched_Global_Flood_Records-v2.csv`. It does not feed the map. The notebook `model/notebooks/catboost_flood_impact.ipynb` walks through the same steps.
+
+The target, `Flood impact index`, is the DFO magnitude: log10(days × severity × area_km2), rounded to 0.1, with days counting the start and end date. That formula matches 5,499 of 5,503 rows after rounding. The 14 weather columns came from an enrichment step that is not in this repo, and they look synthetic: 376 distinct points for 5,503 events, and spot checks against the Open-Meteo archive disagree.
+
+Source file: `model/artifacts/impact/impact_metrics.json`. Temporal test: start years 2019–2024, 792 events. The trees are counted on 2016–2018 and the model is refit on 1985–2018.
+
+| | Inputs | Test RMSE | R² |
+|---|---|---|---|
+| DFO formula | days, severity, area | 0.029 | 0.999 |
+| Linear regression | log area, log days | 0.114 | 0.991 |
+| CatBoost `brief` | log area, duration, 14 weather columns, climate zone, continent | 0.162 | 0.982 |
+| CatBoost `no_size` | weather that is not summed over the event, location, month, cause, zone | 0.899 | 0.456 |
+| Training mean | none | 1.233 | −0.022 |
+
+The brief's own protocol, a random 80/20 split that picks the best iteration on the test rows, gives test RMSE 0.104 here against the 0.0985 the brief reports (`brief_reproduction`).
+
+API:
+
+| Endpoint | Returns |
+|---|---|
+| `GET /api/v1/impact/model` | Model card: parameters, metrics, baselines, data checks, required inputs per variant |
+| `POST /api/v1/impact/predict?variant=brief\|no_size` | One estimate, SHAP contributions, and the exact formula value when area, dates and severity are sent |
+| `POST /api/v1/impact/predict/batch?variant=…` | Up to 500 events in one call |
+| `GET /api/v1/impact/test-events?country=&limit=` | Held-out 2019–2024 records with the index, the formula and both holdout predictions (`limit` up to 1000) |
+
+Swagger UI is at `/docs` on a running API (ReDoc at `/redoc`, raw schema at `/openapi.json`). The same schema is committed as `api/openapi.json`; regenerate it with `python -m api.export_openapi` after changing a route, and `tests/test_impact_api.py` fails if it drifts. Request bodies carry two examples: the Kenya flood of Oct–Nov 2023 (event 5477) for `brief`, and illustrative inputs for `no_size`.
+
+Postman: import `api/postman/DrainSense.postman_collection.json` and `api/postman/DrainSense.local.postman_environment.json`. 24 requests in three folders (impact model, risk map, drainage log) with 55 test assertions. Run the folders in order; the risk map folder stores `cell_id` and the drainage log chains report and inspection ids. From the command line:
+
+```bash
+npx newman run api/postman/DrainSense.postman_collection.json -e api/postman/DrainSense.local.postman_environment.json
+```
+
+Dashboard: the desk's **Impact** page (`web/app/impact/page.js`, http://localhost:3000/impact) runs entirely on the API above:
+
+| Section | Endpoint |
+|---|---|
+| Status strip (API up, model build date, links to Swagger UI and the schema) | `GET /api/v1/health`, `GET /api/v1/impact/model` |
+| Headline errors, error by model, SHAP drivers per variant, data checks, limitations | `GET /api/v1/impact/model` |
+| Predicted against recorded for all 792 held-out events, and the held-out table | `GET /api/v1/impact/test-events?limit=1000` |
+| Score an event (form starts from the schema's examples) | `POST /api/v1/impact/predict`, `GET /openapi.json` |
+| Score a batch: CSV template, upload or paste, 500 rows per call, errors mapped to CSV rows, results as CSV | `POST /api/v1/impact/predict/batch` |
+
+Each section loads on its own, so one failing call does not blank the page.
+
+Retrain from the committed event table, or rebuild that table from `data/` first:
+
+```bash
+python3 -m model.impact
+python3 -m model.impact --rebuild
+```
+
 ## Run it
 
 API, from the repo root:
@@ -63,7 +117,7 @@ npm ci
 NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 ```
 
-Open http://localhost:3000. The map, ledger, dispatch list, sector flags, and model card all read the API.
+Open http://localhost:3000. The map, ledger, dispatch list, sector flags, model card, and impact dashboard all read the API.
 
 Tests:
 
@@ -91,6 +145,10 @@ python3 -m model.train --refit
 |---|---|
 | `model/train.py` | Download, labels, leak checks, logistic regression, dummy baselines, SHAP |
 | `model/artifacts/` | Feature table, `metrics.json`, `scores.geojson` |
+| `model/impact.py` | CatBoost flood-impact regressor from the executive brief, baselines, data checks |
+| `model/artifacts/impact/` | Event table, both `.cbm` models, `impact_metrics.json`, held-out predictions |
+| `model/notebooks/` | Walkthrough notebook for the impact model |
+| `api/openapi.json`, `api/postman/` | Committed Swagger schema and Postman collection |
 | `api/` | FastAPI. Scores come from the artifacts. SQLite holds the drainage log. |
 | `web/` | Next.js desk, MapLibre, CARTO dark basemap |
 | `backend/scoring/heuristics.py` | NGAO heavy-rain constant used by the flood model |
@@ -99,6 +157,7 @@ python3 -m model.train --refit
 
 ## Limitations
 
+- The target is the DFO magnitude, log10(days x severity x area_km2), rounded to 0.1. Given those three numbers the formula is exact. The brief model is given two of them and learns the rest; it is not forecasting impact. The weather columns it trains on look synthetic. The rest of `impact_metrics.json` `limitations` covers that model.
 - The label is a Dartmouth Flood Observatory large-flood catalogue event, assigned to a 5-degree cell by the center of the event bounding box. It is not a mapped inundation footprint, a gauge exceedance, or a household survey.
 - Cells are 5 degrees on a side, about 500 km at the equator. A score is for that whole cell, not a street, a drain, or a ward.
 - Rainfall features are the previous calendar year's Open-Meteo daily precipitation at the cell center, plus elevation. The model does not use a weather forecast, river discharge, soil moisture, drainage infrastructure, or flood defenses.

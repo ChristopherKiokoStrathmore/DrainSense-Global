@@ -3,12 +3,14 @@ from __future__ import annotations
 
 import os
 from contextlib import asynccontextmanager
+from typing import Annotated, Literal
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel, Field
 
-from api.app import db, scoring
+from api.app import db, impact, scoring
 
 SEVERITIES = {"blocked", "slow", "overflow"}
 
@@ -26,7 +28,43 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="DrainSense", version="0.1.0", lifespan=lifespan)
+DESCRIPTION = """
+Global flood desk API. Two separate models are served here.
+
+* **Risk map** (`/risk`, `/sectors`, `/response`): logistic flood-susceptibility scores for 5-degree cells,
+  from `model/train.py`.
+* **Flood impact** (`/impact`): the CatBoost regressor from the executive brief, from `model/impact.py`.
+  Its target is the DFO magnitude, log10(days × severity × area_km2). When those three are known the
+  formula is exact, and every prediction returns it next to the model's estimate. Weather inputs are
+  Open-Meteo (ERA5 / ERA5-Land) daily values at the centre of the flooded area. Read
+  `GET /api/v1/impact/model` before using the numbers.
+
+Drainage reports, inspections, repairs and incidents shipped with the app are synthetic drill rows.
+"""
+
+TAGS = [
+    {"name": "impact model", "description": "CatBoost flood-impact regressor (variants `brief` and `no_size`)."},
+    {"name": "risk map", "description": "Logistic flood-susceptibility scores for 5-degree cells."},
+    {"name": "drainage log", "description": "Reports, inspections, repairs and incidents stored in SQLite."},
+    {"name": "system", "description": "Health and the risk model's metrics card."},
+]
+
+IMPACT_422 = {
+    422: {
+        "description": (
+            "Request rejected. Schema errors return the standard list under `detail`. "
+            "An event the variant cannot score returns a string, e.g. `variant brief needs: area_km2`."
+        ),
+    },
+}
+
+app = FastAPI(
+    title="DrainSense",
+    version="0.2.0",
+    description=DESCRIPTION,
+    openapi_tags=TAGS,
+    lifespan=lifespan,
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -64,6 +102,17 @@ class IncidentIn(BaseModel):
     note: str = Field(min_length=1, max_length=500)
 
 
+@app.exception_handler(impact.ModelOutOfStep)
+async def impact_out_of_step(request: Request, exc: impact.ModelOutOfStep):
+    # A handled 503 keeps the CORS headers, so the desk can show this message instead of "Failed to fetch".
+    return JSONResponse(status_code=503, content={"detail": str(exc)})
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    return RedirectResponse("/docs")
+
+
 def _require_cell(cell_id: str) -> dict:
     row = scoring.cell(cell_id)
     if row is None:
@@ -71,28 +120,78 @@ def _require_cell(cell_id: str) -> dict:
     return row
 
 
-@app.get("/api/v1/health")
+@app.get("/api/v1/health", tags=["system"])
 def health():
     return {"status": "ok", "cells": len(scoring.cells()), "service": "drainsense"}
 
 
-@app.get("/api/v1/metrics")
+@app.get("/api/v1/metrics", tags=["system"])
 def get_metrics():
     return scoring.metrics()
 
 
-@app.get("/api/v1/risk/grid")
+@app.get("/api/v1/impact/model", tags=["impact model"], response_model=impact.ModelCard,
+         summary="Model card: metrics, baselines, data checks, required inputs")
+def impact_model():
+    return impact.model_card()
+
+
+@app.post("/api/v1/impact/predict", tags=["impact model"], response_model=impact.ImpactPrediction,
+          responses=IMPACT_422, summary="Score one flood event")
+def impact_predict(
+    body: Annotated[impact.ImpactEventIn, Body(openapi_examples=impact.PREDICT_EXAMPLES)],
+    variant: Annotated[Literal["brief", "no_size"], Query(description="Which CatBoost model scores the event")] = "brief",
+):
+    """Returns the estimate, SHAP contributions, and the exact DFO formula value when
+    `end_date`, `area_km2` and `severity` are all sent. Required fields per variant are listed
+    under `inputs` in `GET /api/v1/impact/model`."""
+    try:
+        return impact.predict([body], variant)[0]
+    except impact.ImpactInputError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/impact/predict/batch", tags=["impact model"], response_model=impact.ImpactBatchOut,
+          responses=IMPACT_422, summary="Score up to 500 flood events")
+def impact_predict_batch(
+    body: Annotated[impact.ImpactBatchIn, Body(openapi_examples=impact.BATCH_EXAMPLES)],
+    variant: Annotated[Literal["brief", "no_size"], Query(description="Which CatBoost model scores the events")] = "brief",
+):
+    """One bad event fails the whole call, and the message starts with its index (`event 1: ...`)."""
+    try:
+        results = impact.predict(body.events, variant, label_index=True)
+    except impact.ImpactInputError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"variant": variant, "count": len(results), "results": results}
+
+
+@app.get("/api/v1/impact/test-events", tags=["impact model"], response_model=impact.HeldOutEventsOut,
+         summary="Held-out 2019-2024 events with both holdout predictions")
+def impact_test_events(
+    limit: Annotated[int, Query(description="1 to 1000; values outside are clamped. 1000 returns all 792.")] = 50,
+    country: Annotated[str | None, Query(description="Country name substring or ISO code, e.g. kenya or KE")] = None,
+):
+    limit = max(1, min(limit, 1000))
+    card = impact.metrics()
+    return {
+        "test_years": card["split"]["test_years"],
+        "rmse": {name: v["temporal_test"]["rmse"] for name, v in card["variants"].items()},
+        "events": impact.test_events(limit, country),
+    }
+
+
+@app.get("/api/v1/risk/grid", tags=["risk map"])
 def risk_grid():
     return scoring.grid()
 
 
-@app.get("/api/v1/risk/hotspots")
+@app.get("/api/v1/risk/hotspots", tags=["risk map"])
 def risk_hotspots(limit: int = 12):
     limit = max(1, min(limit, 50))
     return {"outlook_year": 2024, "feature_year": 2023, "hotspots": scoring.hotspots(limit)}
 
 
-@app.get("/api/v1/risk/cells/{cell_id}")
+@app.get("/api/v1/risk/cells/{cell_id}", tags=["risk map"])
 def risk_cell(cell_id: str):
     row = scoring.detail(cell_id)
     if row is None:
@@ -100,7 +199,7 @@ def risk_cell(cell_id: str):
     return row
 
 
-@app.get("/api/v1/sectors")
+@app.get("/api/v1/sectors", tags=["risk map"])
 def sectors(limit: int = 8):
     limit = max(1, min(limit, 30))
     cards = []
@@ -119,7 +218,7 @@ def sectors(limit: int = 8):
     }
 
 
-@app.get("/api/v1/reports")
+@app.get("/api/v1/reports", tags=["drainage log"])
 def list_reports():
     con = db.connect()
     try:
@@ -128,7 +227,7 @@ def list_reports():
         con.close()
 
 
-@app.post("/api/v1/reports", status_code=201)
+@app.post("/api/v1/reports", status_code=201, tags=["drainage log"])
 def create_report(body: ReportIn):
     if body.severity not in SEVERITIES:
         raise HTTPException(status_code=422, detail="severity must be blocked, slow, or overflow")
@@ -146,7 +245,7 @@ def create_report(body: ReportIn):
         con.close()
 
 
-@app.get("/api/v1/inspections")
+@app.get("/api/v1/inspections", tags=["drainage log"])
 def list_inspections():
     con = db.connect()
     try:
@@ -155,7 +254,7 @@ def list_inspections():
         con.close()
 
 
-@app.post("/api/v1/inspections", status_code=201)
+@app.post("/api/v1/inspections", status_code=201, tags=["drainage log"])
 def create_inspection(body: InspectionIn):
     _require_cell(body.cell_id)
     con = db.connect()
@@ -179,7 +278,7 @@ def create_inspection(body: InspectionIn):
         con.close()
 
 
-@app.get("/api/v1/repairs")
+@app.get("/api/v1/repairs", tags=["drainage log"])
 def list_repairs():
     con = db.connect()
     try:
@@ -188,7 +287,7 @@ def list_repairs():
         con.close()
 
 
-@app.post("/api/v1/repairs", status_code=201)
+@app.post("/api/v1/repairs", status_code=201, tags=["drainage log"])
 def create_repair(body: RepairIn):
     _require_cell(body.cell_id)
     con = db.connect()
@@ -208,7 +307,7 @@ def create_repair(body: RepairIn):
         con.close()
 
 
-@app.get("/api/v1/incidents")
+@app.get("/api/v1/incidents", tags=["drainage log"])
 def list_incidents():
     con = db.connect()
     try:
@@ -217,7 +316,7 @@ def list_incidents():
         con.close()
 
 
-@app.post("/api/v1/incidents", status_code=201)
+@app.post("/api/v1/incidents", status_code=201, tags=["drainage log"])
 def create_incident(body: IncidentIn):
     _require_cell(body.cell_id)
     con = db.connect()
@@ -233,7 +332,7 @@ def create_incident(body: IncidentIn):
         con.close()
 
 
-@app.get("/api/v1/interventions/effectiveness")
+@app.get("/api/v1/interventions/effectiveness", tags=["drainage log"])
 def intervention_effectiveness():
     con = db.connect()
     try:
@@ -249,7 +348,7 @@ def intervention_effectiveness():
     }
 
 
-@app.get("/api/v1/response/plan")
+@app.get("/api/v1/response/plan", tags=["risk map"])
 def response_plan(limit: int = 15):
     """Rank cells for inspection. Model points are the outlook score. Log points come from SQLite."""
     limit = max(1, min(limit, 40))

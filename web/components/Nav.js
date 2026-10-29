@@ -9,6 +9,7 @@ const LINKS = [
   ["/response", "Dispatch"],
   ["/sectors", "Sectors"],
   ["/model", "Model card"],
+  ["/impact", "Impact"],
 ];
 
 export default function Nav() {

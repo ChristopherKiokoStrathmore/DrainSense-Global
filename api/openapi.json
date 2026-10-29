@@ -1,0 +1,1807 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "DrainSense",
+    "description": "\nGlobal flood desk API. Two separate models are served here.\n\n* **Risk map** (`/risk`, `/sectors`, `/response`): logistic flood-susceptibility scores for 5-degree cells,\n  from `model/train.py`.\n* **Flood impact** (`/impact`): the CatBoost regressor from the executive brief, from `model/impact.py`.\n  Its target is the DFO magnitude, log10(days × severity × area_km2). When those three are known the\n  formula is exact, and every prediction returns it next to the model's estimate. The weather columns\n  it was trained on look synthetic. Read `GET /api/v1/impact/model` before using the numbers.\n\nDrainage reports, inspections, repairs and incidents shipped with the app are synthetic drill rows.\n",
+    "version": "0.2.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Health",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/metrics": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Get Metrics",
+        "operationId": "get_metrics_api_v1_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/impact/model": {
+      "get": {
+        "tags": [
+          "impact model"
+        ],
+        "summary": "Model card: metrics, baselines, data checks, required inputs",
+        "operationId": "impact_model_api_v1_impact_model_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelCard"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/impact/predict": {
+      "post": {
+        "tags": [
+          "impact model"
+        ],
+        "summary": "Score one flood event",
+        "description": "Returns the estimate, SHAP contributions, and the exact DFO formula value when\n`end_date`, `area_km2` and `severity` are all sent. Required fields per variant are listed\nunder `inputs` in `GET /api/v1/impact/model`.",
+        "operationId": "impact_predict_api_v1_impact_predict_post",
+        "parameters": [
+          {
+            "name": "variant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "brief",
+                "no_size"
+              ],
+              "type": "string",
+              "description": "Which CatBoost model scores the event",
+              "default": "brief",
+              "title": "Variant"
+            },
+            "description": "Which CatBoost model scores the event"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImpactEventIn"
+              },
+              "examples": {
+                "brief": {
+                  "summary": "brief: Kenya, Oct-Nov 2023 (event 5477)",
+                  "description": "Every field the brief variant needs, plus severity so the response carries the formula.",
+                  "value": {
+                    "start_date": "2023-10-15",
+                    "end_date": "2023-11-11",
+                    "area_km2": 229835,
+                    "severity": 1.5,
+                    "latitude": -1.503,
+                    "longitude": 40.03,
+                    "koppen_climate_zone": "Af/Am (Equatorial / Tropical Monsoon)",
+                    "continent_region": "Africa",
+                    "main_cause": "Heavy rain",
+                    "total_precipitation_mm": 793.3,
+                    "max_24h_precipitation_mm": 375.3,
+                    "total_liquid_rain_mm": 793.3,
+                    "snow_melt_equiv_mm": 0.0,
+                    "antecedent_7day_precip_mm": 121.5,
+                    "estimated_surface_runoff_mm": 502.0,
+                    "mean_temp_2m_c": 30.7,
+                    "max_temp_2m_c": 35.4,
+                    "min_temp_2m_c": 26.9,
+                    "max_wind_gust_10m_kmh": 51.4,
+                    "min_sea_level_pressure_hpa": 1008.6,
+                    "mean_relative_humidity_pct": 78.2,
+                    "topsoil_moisture_0_7cm_m3m3": 0.452,
+                    "cumulative_et0_evapotranspiration_mm": 145.7
+                  }
+                },
+                "no_size": {
+                  "summary": "no_size: no area, end date or severity",
+                  "description": "Send with ?variant=no_size. Values are illustrative, not a recorded event.",
+                  "value": {
+                    "start_date": "2024-04-20",
+                    "latitude": -1.28,
+                    "longitude": 36.82,
+                    "koppen_climate_zone": "Af/Am (Equatorial / Tropical Monsoon)",
+                    "continent_region": "Africa",
+                    "main_cause": "Heavy rain",
+                    "max_24h_precipitation_mm": 80,
+                    "antecedent_7day_precip_mm": 120,
+                    "mean_temp_2m_c": 19,
+                    "max_temp_2m_c": 24,
+                    "min_temp_2m_c": 14,
+                    "max_wind_gust_10m_kmh": 40,
+                    "min_sea_level_pressure_hpa": 1010,
+                    "mean_relative_humidity_pct": 85,
+                    "topsoil_moisture_0_7cm_m3m3": 0.4
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImpactPrediction"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request rejected. Schema errors return the standard list under `detail`. An event the variant cannot score returns a string, e.g. `variant brief needs: area_km2`."
+          }
+        }
+      }
+    },
+    "/api/v1/impact/predict/batch": {
+      "post": {
+        "tags": [
+          "impact model"
+        ],
+        "summary": "Score up to 500 flood events",
+        "description": "One bad event fails the whole call, and the message starts with its index (`event 1: ...`).",
+        "operationId": "impact_predict_batch_api_v1_impact_predict_batch_post",
+        "parameters": [
+          {
+            "name": "variant",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "brief",
+                "no_size"
+              ],
+              "type": "string",
+              "description": "Which CatBoost model scores the events",
+              "default": "brief",
+              "title": "Variant"
+            },
+            "description": "Which CatBoost model scores the events"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImpactBatchIn"
+              },
+              "examples": {
+                "two_events": {
+                  "summary": "The Kenya event, and the same event at 10 km²",
+                  "value": {
+                    "events": [
+                      {
+                        "start_date": "2023-10-15",
+                        "end_date": "2023-11-11",
+                        "area_km2": 229835,
+                        "severity": 1.5,
+                        "latitude": -1.503,
+                        "longitude": 40.03,
+                        "koppen_climate_zone": "Af/Am (Equatorial / Tropical Monsoon)",
+                        "continent_region": "Africa",
+                        "main_cause": "Heavy rain",
+                        "total_precipitation_mm": 793.3,
+                        "max_24h_precipitation_mm": 375.3,
+                        "total_liquid_rain_mm": 793.3,
+                        "snow_melt_equiv_mm": 0.0,
+                        "antecedent_7day_precip_mm": 121.5,
+                        "estimated_surface_runoff_mm": 502.0,
+                        "mean_temp_2m_c": 30.7,
+                        "max_temp_2m_c": 35.4,
+                        "min_temp_2m_c": 26.9,
+                        "max_wind_gust_10m_kmh": 51.4,
+                        "min_sea_level_pressure_hpa": 1008.6,
+                        "mean_relative_humidity_pct": 78.2,
+                        "topsoil_moisture_0_7cm_m3m3": 0.452,
+                        "cumulative_et0_evapotranspiration_mm": 145.7
+                      },
+                      {
+                        "start_date": "2023-10-15",
+                        "end_date": "2023-11-11",
+                        "area_km2": 10,
+                        "severity": 1.5,
+                        "latitude": -1.503,
+                        "longitude": 40.03,
+                        "koppen_climate_zone": "Af/Am (Equatorial / Tropical Monsoon)",
+                        "continent_region": "Africa",
+                        "main_cause": "Heavy rain",
+                        "total_precipitation_mm": 793.3,
+                        "max_24h_precipitation_mm": 375.3,
+                        "total_liquid_rain_mm": 793.3,
+                        "snow_melt_equiv_mm": 0.0,
+                        "antecedent_7day_precip_mm": 121.5,
+                        "estimated_surface_runoff_mm": 502.0,
+                        "mean_temp_2m_c": 30.7,
+                        "max_temp_2m_c": 35.4,
+                        "min_temp_2m_c": 26.9,
+                        "max_wind_gust_10m_kmh": 51.4,
+                        "min_sea_level_pressure_hpa": 1008.6,
+                        "mean_relative_humidity_pct": 78.2,
+                        "topsoil_moisture_0_7cm_m3m3": 0.452,
+                        "cumulative_et0_evapotranspiration_mm": 145.7
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImpactBatchOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Request rejected. Schema errors return the standard list under `detail`. An event the variant cannot score returns a string, e.g. `variant brief needs: area_km2`."
+          }
+        }
+      }
+    },
+    "/api/v1/impact/test-events": {
+      "get": {
+        "tags": [
+          "impact model"
+        ],
+        "summary": "Held-out 2019-2024 events with both holdout predictions",
+        "operationId": "impact_test_events_api_v1_impact_test_events_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "1 to 1000; values outside are clamped. 1000 returns all 792.",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "1 to 1000; values outside are clamped. 1000 returns all 792."
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Country name substring or ISO code, e.g. kenya or KE",
+              "title": "Country"
+            },
+            "description": "Country name substring or ISO code, e.g. kenya or KE"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeldOutEventsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/risk/grid": {
+      "get": {
+        "tags": [
+          "risk map"
+        ],
+        "summary": "Risk Grid",
+        "operationId": "risk_grid_api_v1_risk_grid_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/risk/hotspots": {
+      "get": {
+        "tags": [
+          "risk map"
+        ],
+        "summary": "Risk Hotspots",
+        "operationId": "risk_hotspots_api_v1_risk_hotspots_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 12,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/risk/cells/{cell_id}": {
+      "get": {
+        "tags": [
+          "risk map"
+        ],
+        "summary": "Risk Cell",
+        "operationId": "risk_cell_api_v1_risk_cells__cell_id__get",
+        "parameters": [
+          {
+            "name": "cell_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Cell Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sectors": {
+      "get": {
+        "tags": [
+          "risk map"
+        ],
+        "summary": "Sectors",
+        "operationId": "sectors_api_v1_sectors_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 8,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports": {
+      "get": {
+        "tags": [
+          "drainage log"
+        ],
+        "summary": "List Reports",
+        "operationId": "list_reports_api_v1_reports_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "drainage log"
+        ],
+        "summary": "Create Report",
+        "operationId": "create_report_api_v1_reports_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inspections": {
+      "get": {
+        "tags": [
+          "drainage log"
+        ],
+        "summary": "List Inspections",
+        "operationId": "list_inspections_api_v1_inspections_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "drainage log"
+        ],
+        "summary": "Create Inspection",
+        "operationId": "create_inspection_api_v1_inspections_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InspectionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/repairs": {
+      "get": {
+        "tags": [
+          "drainage log"
+        ],
+        "summary": "List Repairs",
+        "operationId": "list_repairs_api_v1_repairs_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "drainage log"
+        ],
+        "summary": "Create Repair",
+        "operationId": "create_repair_api_v1_repairs_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepairIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/incidents": {
+      "get": {
+        "tags": [
+          "drainage log"
+        ],
+        "summary": "List Incidents",
+        "operationId": "list_incidents_api_v1_incidents_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "drainage log"
+        ],
+        "summary": "Create Incident",
+        "operationId": "create_incident_api_v1_incidents_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncidentIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interventions/effectiveness": {
+      "get": {
+        "tags": [
+          "drainage log"
+        ],
+        "summary": "Intervention Effectiveness",
+        "operationId": "intervention_effectiveness_api_v1_interventions_effectiveness_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/response/plan": {
+      "get": {
+        "tags": [
+          "risk map"
+        ],
+        "summary": "Response Plan",
+        "description": "Rank cells for inspection. Model points are the outlook score. Log points come from SQLite.",
+        "operationId": "response_plan_api_v1_response_plan_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 15,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Contribution": {
+        "properties": {
+          "feature": {
+            "type": "string",
+            "title": "Feature",
+            "description": "Model column"
+          },
+          "input": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Input",
+            "description": "Value the model saw, after derivation"
+          },
+          "contribution": {
+            "type": "number",
+            "title": "Contribution",
+            "description": "CatBoost SHAP value in index points"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feature",
+          "input",
+          "contribution"
+        ],
+        "title": "Contribution"
+      },
+      "DfoFormula": {
+        "properties": {
+          "value": {
+            "type": "number",
+            "title": "Value",
+            "description": "log10(days_inclusive × severity × area_km2)"
+          },
+          "rounded": {
+            "type": "number",
+            "title": "Rounded",
+            "description": "Rounded to 0.1, as the DFO table stores it"
+          },
+          "definition": {
+            "type": "string",
+            "title": "Definition"
+          },
+          "inputs": {
+            "$ref": "#/components/schemas/DfoFormulaInputs"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "rounded",
+          "definition",
+          "inputs",
+          "note"
+        ],
+        "title": "DfoFormula"
+      },
+      "DfoFormulaInputs": {
+        "properties": {
+          "days_inclusive": {
+            "type": "integer",
+            "title": "Days Inclusive"
+          },
+          "severity": {
+            "type": "number",
+            "title": "Severity"
+          },
+          "area_km2": {
+            "type": "number",
+            "title": "Area Km2"
+          }
+        },
+        "type": "object",
+        "required": [
+          "days_inclusive",
+          "severity",
+          "area_km2"
+        ],
+        "title": "DfoFormulaInputs"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HeldOutEvent": {
+        "properties": {
+          "event_id": {
+            "type": "integer",
+            "title": "Event Id"
+          },
+          "start_date": {
+            "type": "string",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "title": "End Date"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country"
+          },
+          "iso_country_code": {
+            "type": "string",
+            "title": "Iso Country Code"
+          },
+          "continent_region": {
+            "type": "string",
+            "title": "Continent Region"
+          },
+          "cause_group": {
+            "type": "string",
+            "title": "Cause Group"
+          },
+          "area_km2": {
+            "type": "number",
+            "title": "Area Km2"
+          },
+          "days_inclusive": {
+            "type": "integer",
+            "title": "Days Inclusive"
+          },
+          "severity": {
+            "type": "number",
+            "title": "Severity"
+          },
+          "flood_impact_index": {
+            "type": "number",
+            "title": "Flood Impact Index",
+            "description": "Recorded DFO value"
+          },
+          "dfo_formula": {
+            "type": "number",
+            "title": "Dfo Formula"
+          },
+          "predictions": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Predictions",
+            "description": "Holdout-model prediction per variant"
+          },
+          "origin": {
+            "type": "string",
+            "title": "Origin"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event_id",
+          "start_date",
+          "end_date",
+          "country",
+          "iso_country_code",
+          "continent_region",
+          "cause_group",
+          "area_km2",
+          "days_inclusive",
+          "severity",
+          "flood_impact_index",
+          "dfo_formula",
+          "predictions",
+          "origin"
+        ],
+        "title": "HeldOutEvent"
+      },
+      "HeldOutEventsOut": {
+        "properties": {
+          "test_years": {
+            "type": "string",
+            "title": "Test Years"
+          },
+          "rmse": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Rmse"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/HeldOutEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "test_years",
+          "rmse",
+          "events"
+        ],
+        "title": "HeldOutEventsOut"
+      },
+      "ImpactBatchIn": {
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/ImpactEventIn"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "events"
+        ],
+        "title": "ImpactBatchIn"
+      },
+      "ImpactBatchOut": {
+        "properties": {
+          "variant": {
+            "type": "string",
+            "enum": [
+              "brief",
+              "no_size"
+            ],
+            "title": "Variant"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ImpactPrediction"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "variant",
+          "count",
+          "results"
+        ],
+        "title": "ImpactBatchOut"
+      },
+      "ImpactEventIn": {
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "area_km2": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Km2"
+          },
+          "severity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Severity"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 90.0,
+                "minimum": -90.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 180.0,
+                "minimum": -180.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "koppen_climate_zone": {
+            "type": "string",
+            "title": "Koppen Climate Zone"
+          },
+          "continent_region": {
+            "type": "string",
+            "title": "Continent Region"
+          },
+          "main_cause": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Main Cause"
+          },
+          "total_precipitation_mm": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Precipitation Mm"
+          },
+          "max_24h_precipitation_mm": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max 24H Precipitation Mm"
+          },
+          "total_liquid_rain_mm": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Liquid Rain Mm"
+          },
+          "snow_melt_equiv_mm": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snow Melt Equiv Mm"
+          },
+          "antecedent_7day_precip_mm": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Antecedent 7Day Precip Mm"
+          },
+          "estimated_surface_runoff_mm": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Surface Runoff Mm"
+          },
+          "mean_temp_2m_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Temp 2M C"
+          },
+          "max_temp_2m_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Temp 2M C"
+          },
+          "min_temp_2m_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Temp 2M C"
+          },
+          "max_wind_gust_10m_kmh": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Wind Gust 10M Kmh"
+          },
+          "min_sea_level_pressure_hpa": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Sea Level Pressure Hpa"
+          },
+          "mean_relative_humidity_pct": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Relative Humidity Pct"
+          },
+          "topsoil_moisture_0_7cm_m3m3": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topsoil Moisture 0 7Cm M3M3"
+          },
+          "cumulative_et0_evapotranspiration_mm": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cumulative Et0 Evapotranspiration Mm"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_date",
+          "koppen_climate_zone",
+          "continent_region"
+        ],
+        "title": "ImpactEventIn"
+      },
+      "ImpactPrediction": {
+        "properties": {
+          "variant": {
+            "type": "string",
+            "enum": [
+              "brief",
+              "no_size"
+            ],
+            "title": "Variant"
+          },
+          "flood_impact_index": {
+            "type": "number",
+            "title": "Flood Impact Index",
+            "description": "Model estimate of the DFO flood impact index"
+          },
+          "dfo_formula": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DfoFormula"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Exact value, when dates, area and severity were sent"
+          },
+          "model_minus_formula": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Minus Formula"
+          },
+          "expected_value": {
+            "type": "number",
+            "title": "Expected Value",
+            "description": "SHAP base value; plus the contributions equals the estimate"
+          },
+          "contributions": {
+            "items": {
+              "$ref": "#/components/schemas/Contribution"
+            },
+            "type": "array",
+            "title": "Contributions",
+            "description": "Sorted by absolute size"
+          },
+          "outside_training_range": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Outside Training Range",
+            "description": "Model columns outside the 1985-2018 training range"
+          },
+          "model_test_rmse": {
+            "type": "number",
+            "title": "Model Test Rmse",
+            "description": "RMSE of this variant on 2019-2024 events"
+          },
+          "data_origin": {
+            "type": "string",
+            "title": "Data Origin"
+          },
+          "reading": {
+            "type": "string",
+            "title": "Reading"
+          }
+        },
+        "type": "object",
+        "required": [
+          "variant",
+          "flood_impact_index",
+          "dfo_formula",
+          "model_minus_formula",
+          "expected_value",
+          "contributions",
+          "outside_training_range",
+          "model_test_rmse",
+          "data_origin",
+          "reading"
+        ],
+        "title": "ImpactPrediction"
+      },
+      "IncidentIn": {
+        "properties": {
+          "cell_id": {
+            "type": "string",
+            "title": "Cell Id"
+          },
+          "kind": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Kind"
+          },
+          "occurred_on": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "title": "Occurred On"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cell_id",
+          "kind",
+          "occurred_on",
+          "note"
+        ],
+        "title": "IncidentIn"
+      },
+      "InspectionIn": {
+        "properties": {
+          "cell_id": {
+            "type": "string",
+            "title": "Cell Id"
+          },
+          "report_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Id"
+          },
+          "crew": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Crew"
+          },
+          "scheduled_for": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "title": "Scheduled For"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cell_id",
+          "crew",
+          "scheduled_for"
+        ],
+        "title": "InspectionIn"
+      },
+      "ModelCard": {
+        "properties": {
+          "generated_at": {
+            "type": "string",
+            "title": "Generated At"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "target_definition": {
+            "type": "string",
+            "title": "Target Definition"
+          },
+          "catboost_params": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Catboost Params"
+          },
+          "split": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Split"
+          },
+          "variants": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/VariantCard"
+            },
+            "type": "object",
+            "title": "Variants"
+          },
+          "baselines_temporal_test": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Baselines Temporal Test"
+          },
+          "brief_reproduction": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Brief Reproduction"
+          },
+          "data_checks": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Data Checks"
+          },
+          "categories": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Categories"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          },
+          "inputs": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/VariantInputs"
+            },
+            "type": "object",
+            "title": "Inputs"
+          },
+          "weather_fields": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Weather Fields"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "generated_at",
+          "target",
+          "target_definition",
+          "catboost_params",
+          "split",
+          "variants",
+          "baselines_temporal_test",
+          "brief_reproduction",
+          "data_checks",
+          "categories",
+          "limitations",
+          "inputs",
+          "weather_fields"
+        ],
+        "title": "ModelCard",
+        "description": "The metrics file plus the input rules. Fields not listed here are passed through."
+      },
+      "RepairIn": {
+        "properties": {
+          "cell_id": {
+            "type": "string",
+            "title": "Cell Id"
+          },
+          "inspection_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inspection Id"
+          },
+          "report_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Report Id"
+          },
+          "action": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Action"
+          },
+          "completed_on": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "title": "Completed On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cell_id",
+          "action",
+          "completed_on"
+        ],
+        "title": "RepairIn"
+      },
+      "ReportIn": {
+        "properties": {
+          "cell_id": {
+            "type": "string",
+            "title": "Cell Id"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Note"
+          },
+          "reporter": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Reporter"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cell_id",
+          "severity",
+          "note",
+          "reporter"
+        ],
+        "title": "ReportIn"
+      },
+      "Scores": {
+        "properties": {
+          "rmse": {
+            "type": "number",
+            "title": "Rmse"
+          },
+          "mae": {
+            "type": "number",
+            "title": "Mae"
+          },
+          "r2": {
+            "type": "number",
+            "title": "R2"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rmse",
+          "mae",
+          "r2",
+          "n"
+        ],
+        "title": "Scores"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VariantCard": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "numeric_features": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Numeric Features"
+          },
+          "categorical_features": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Categorical Features"
+          },
+          "iterations": {
+            "type": "integer",
+            "title": "Iterations"
+          },
+          "temporal_test": {
+            "$ref": "#/components/schemas/Scores"
+          },
+          "feature_importance": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Feature Importance"
+          },
+          "mean_abs_shap_test": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Mean Abs Shap Test"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "file",
+          "description",
+          "numeric_features",
+          "categorical_features",
+          "iterations",
+          "temporal_test",
+          "feature_importance",
+          "mean_abs_shap_test"
+        ],
+        "title": "VariantCard"
+      },
+      "VariantInputs": {
+        "properties": {
+          "required": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Required"
+          },
+          "used_for_dfo_formula": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Used For Dfo Formula"
+          }
+        },
+        "type": "object",
+        "required": [
+          "required",
+          "used_for_dfo_formula"
+        ],
+        "title": "VariantInputs"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "impact model",
+      "description": "CatBoost flood-impact regressor (variants `brief` and `no_size`)."
+    },
+    {
+      "name": "risk map",
+      "description": "Logistic flood-susceptibility scores for 5-degree cells."
+    },
+    {
+      "name": "drainage log",
+      "description": "Reports, inspections, repairs and incidents stored in SQLite."
+    },
+    {
+      "name": "system",
+      "description": "Health and the risk model's metrics card."
+    }
+  ]
+}

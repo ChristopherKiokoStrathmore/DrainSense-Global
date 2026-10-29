@@ -15,3 +15,14 @@ export async function api(path, options = {}) {
   }
   return response.json();
 }
+
+// FastAPI returns `detail` as a string (our own 422s) or a list (schema errors). Make it one readable line.
+export function errorDetail(err) {
+  try {
+    const detail = JSON.parse(err.message).detail;
+    if (typeof detail === "string") return detail;
+    return detail.map((d) => `${d.loc.slice(1).join(".")}: ${d.msg}`).join("; ");
+  } catch {
+    return err.message;
+  }
+}
