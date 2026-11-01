@@ -1,0 +1,13 @@
+# Build context for api/Dockerfile (the repo root). It copies api/ and model/artifacts/ only.
+.git
+.venv
+**/__pycache__
+**/.pytest_cache
+data/
+model/.cache/
+web/
+backend/
+ussd/
+legacy/
+api/data/
+*.sqlite

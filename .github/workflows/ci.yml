@@ -1,8 +1,14 @@
 name: ci
 
+# Every push and pull request: tests, the web build, and both Docker images (linux/amd64).
+# Pushes to main also publish the images to GHCR (linux/amd64 + linux/arm64, since Always Free
+# Oracle VMs are often Ampere A1) and deploy them to the Oracle VM. docs/DEPLOY_DRAINSENSE.md lists the
+# secrets; without them the deploy job stops and names what is missing.
+
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   test:
@@ -24,10 +30,185 @@ jobs:
         run: npm ci && npm run build
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8000
+      - name: Check the deploy script
+        run: shellcheck deploy/oracle-vm/remote-deploy.sh
 
-  docker:
+  images:
+    name: Build images (publish on main)
+    needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      PUBLISH: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    outputs:
+      api: ${{ steps.names.outputs.api }}
+      web: ${{ steps.names.outputs.web }}
     steps:
       - uses: actions/checkout@v4
-      - name: Build the API image
-        run: docker build -f api/Dockerfile -t drainsense-api .
+      - name: Image names
+        id: names
+        env:
+          OWNER: ${{ github.repository_owner }}
+          SHA: ${{ github.sha }}
+        run: |
+          registry="ghcr.io/${OWNER,,}"
+          {
+            echo "api=${registry}/drainsense-api:${SHA}"
+            echo "web=${registry}/drainsense-web:${SHA}"
+            echo "api_main=${registry}/drainsense-api:main"
+            echo "web_main=${registry}/drainsense-web:main"
+          } >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-qemu-action@v3
+        if: env.PUBLISH == 'true'
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        if: env.PUBLISH == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: api/Dockerfile
+          platforms: ${{ env.PUBLISH == 'true' && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
+          push: ${{ env.PUBLISH == 'true' }}
+          tags: |
+            ${{ steps.names.outputs.api }}
+            ${{ steps.names.outputs.api_main }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+      - name: Desk image
+        uses: docker/build-push-action@v6
+        with:
+          context: web
+          # Repository variable, not a secret: the basemap key is visible in every browser that opens the desk.
+          build-args: NEXT_PUBLIC_CARTO_KEY=${{ vars.CARTO_BASEMAPS_KEY }}
+          platforms: ${{ env.PUBLISH == 'true' && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
+          push: ${{ env.PUBLISH == 'true' }}
+          tags: |
+            ${{ steps.names.outputs.web }}
+            ${{ steps.names.outputs.web_main }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+  deploy:
+    name: Deploy to the Oracle VM
+    needs: images
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: read
+    concurrency:
+      group: drainsense-deploy
+      cancel-in-progress: false
+    environment:
+      name: production
+      url: ${{ steps.site.outputs.url }}
+    env:
+      VM_HOST: ${{ secrets.ORACLE_VM_HOST }}
+      VM_USER: ${{ secrets.ORACLE_VM_USER }}
+      VM_PORT: ${{ secrets.ORACLE_VM_SSH_PORT }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Check secrets and pick the site address
+        id: site
+        env:
+          HAS_KEY: ${{ secrets.ORACLE_VM_SSH_KEY != '' }}
+          SITE: ${{ vars.DRAINSENSE_SITE_ADDRESS }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [[ -n "$VM_HOST" ]] || missing+=(ORACLE_VM_HOST)
+          [[ -n "$VM_USER" ]] || missing+=(ORACLE_VM_USER)
+          [[ "$HAS_KEY" == "true" ]] || missing+=(ORACLE_VM_SSH_KEY)
+          if (( ${#missing[@]} )); then
+            echo "::error::Missing GitHub Actions secrets: ${missing[*]}. See docs/DEPLOY_DRAINSENSE.md."
+            exit 1
+          fi
+          if [[ -z "$SITE" ]]; then
+            if [[ "$VM_HOST" =~ ^[0-9]+(\.[0-9]+){3}$ ]]; then
+              SITE="drainsense.${VM_HOST}.sslip.io"
+            else
+              echo "::error::ORACLE_VM_HOST is not an IPv4 address: set the repository variable DRAINSENSE_SITE_ADDRESS."
+              exit 1
+            fi
+          fi
+          echo "site=${SITE}" >> "$GITHUB_OUTPUT"
+          echo "url=https://${SITE}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up SSH
+        env:
+          SSH_KEY: ${{ secrets.ORACLE_VM_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.ORACLE_VM_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          port="${VM_PORT:-22}"
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/oracle_vm
+          chmod 600 ~/.ssh/oracle_vm
+          if [[ -n "$KNOWN_HOSTS" ]]; then
+            printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            echo "::warning::ORACLE_VM_KNOWN_HOSTS is not set; trusting the host key seen now (ssh-keyscan). Set it to pin the key."
+            ssh-keyscan -p "$port" -T 15 "$VM_HOST" > ~/.ssh/known_hosts 2>/dev/null
+          fi
+          cat > ~/.ssh/config <<EOF
+          Host vm
+            HostName ${VM_HOST}
+            User ${VM_USER}
+            Port ${port}
+            IdentityFile ~/.ssh/oracle_vm
+            StrictHostKeyChecking yes
+            ServerAliveInterval 30
+          EOF
+          ssh vm 'echo "connected to $(hostname) ($(uname -m)), $(docker compose version)"'
+
+      - name: Upload the bundle
+        env:
+          API_IMAGE: ${{ needs.images.outputs.api }}
+          WEB_IMAGE: ${{ needs.images.outputs.web }}
+        run: |
+          set -euo pipefail
+          bundle="$RUNNER_TEMP/bundle"
+          install -d "$bundle"
+          cp deploy/oracle-vm/docker-compose.yml deploy/oracle-vm/drainsense.caddy deploy/oracle-vm/remote-deploy.sh "$bundle/"
+          printf 'DRAINSENSE_API_IMAGE=%s\nDRAINSENSE_WEB_IMAGE=%s\n' "$API_IMAGE" "$WEB_IMAGE" > "$bundle/.env"
+          ssh vm 'test -w /opt/drainsense 2>/dev/null || sudo install -d -o "$(id -un)" -g "$(id -gn)" -m 755 /opt/drainsense'
+          tar -C "$bundle" -czf - . | ssh vm 'tar -xzf - -C /opt/drainsense'
+
+      - name: Start the stack and route the site
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+          SITE: ${{ steps.site.outputs.site }}
+        run: |
+          set -euo pipefail
+          # The user and site are expanded here on purpose (quoted with %q); the token goes over stdin.
+          # shellcheck disable=SC2029
+          printf '%s\n' "$GHCR_TOKEN" | ssh vm \
+            "bash /opt/drainsense/remote-deploy.sh $(printf '%q' "$GHCR_USER") $(printf '%q' "$SITE")"
+
+      - name: Smoke test the public URL
+        env:
+          URL: ${{ steps.site.outputs.url }}
+        run: |
+          set -euo pipefail
+          # The first deploy waits for Let's Encrypt to issue the certificate.
+          for _ in $(seq 1 30); do
+            if curl -fsS -m 10 "$URL/api/v1/health" | grep -q '"service":"drainsense"'; then
+              curl -fsS -m 10 -o /dev/null "$URL/" && curl -fsS -m 10 -o /dev/null "$URL/impact" \
+                && { echo "DrainSense is live at $URL"; exit 0; }
+            fi
+            sleep 5
+          done
+          echo "::error::$URL did not answer as DrainSense within 150 s."
+          exit 1

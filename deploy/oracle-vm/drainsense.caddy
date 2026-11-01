@@ -1,0 +1,21 @@
+# DrainSense site block, imported by the Caddy of NGAO's stack. remote-deploy.sh puts the hostname
+# (e.g. drainsense.158.180.57.75.sslip.io) in place of the site placeholder; Caddy gets its certificate.
+__SITE__ {
+	encode zstd gzip
+
+	# API, Swagger UI, ReDoc and the schema. The desk calls these on its own origin.
+	@api path /api/* /docs /docs/* /redoc /openapi.json
+	handle @api {
+		reverse_proxy drainsense-api:8000
+	}
+
+	# Everything else is the Next.js desk.
+	handle {
+		reverse_proxy drainsense-web:3000
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

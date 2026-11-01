@@ -1,4 +1,5 @@
-export const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// Unset: the local API. Empty string: the API on the desk's own origin (production, behind Caddy).
+export const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export async function api(path, options = {}) {
   const response = await fetch(`${API}${path}`, {

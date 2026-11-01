@@ -58,7 +58,7 @@ export default function ImpactPage() {
     return (
       <main className="sheet">
         <h1>Flood impact model</h1>
-        <p className="error">Could not load the model card from {API}: {problems.model}</p>
+        <p className="error">Could not load the model card from {API || "this site"}: {problems.model}</p>
         {problems.unreachable && (
           <p className="reading">Start the API (see the README) or set NEXT_PUBLIC_API_URL, then reload.</p>
         )}
@@ -91,7 +91,7 @@ export default function ImpactPage() {
       <p className="kicker">Numbers from model/artifacts/impact/impact_metrics.json · generated {card.generated_at.slice(0, 10)}</p>
       <p className="status">
         <i className={health ? "dot ok" : "dot down"} aria-hidden="true" />
-        API {health ? "online" : "unreachable"} at <code>{API}</code> · model built {card.generated_at.slice(0, 10)} ·{" "}
+        API {health ? "online" : "unreachable"} at <code>{API || "this site"}</code> · model built {card.generated_at.slice(0, 10)} ·{" "}
         <a href={`${API}/docs`} target="_blank" rel="noreferrer">Swagger UI</a> ·{" "}
         <a href={`${API}/openapi.json`} target="_blank" rel="noreferrer">OpenAPI JSON</a> ·{" "}
         <a href="#batch">Batch scoring</a>

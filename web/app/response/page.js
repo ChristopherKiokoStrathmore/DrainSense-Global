@@ -1,48 +1,122 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { api } from "../../lib/api";
+import { api, errorDetail } from "../../lib/api";
+
+// Slots 1-3 of the dataviz reference palette, validated on the paper surface. Orange and aqua are under 3:1
+// there, so each segment is named in the legend and its points are in the table under the bar.
+const PARTS = [
+  ["model_probability", "Flood model", "#2a78d6"],
+  ["open_reports", "Open reports", "#eb6834"],
+  ["recurring_incidents", "Repeat incidents", "#1baf7a"],
+];
+// The longest bar spans this share of the row, leaving room for the value at its tip.
+const SPAN = 82;
 
 export default function ResponsePage() {
   const [plan, setPlan] = useState(null);
+  const [limit, setLimit] = useState(12);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    api("/api/v1/response/plan?limit=12").then(setPlan).catch((err) => setError(err.message));
-  }, []);
+    api(`/api/v1/response/plan?limit=${limit}`).then(setPlan).catch((err) => setError(errorDetail(err)));
+  }, [limit]);
+
+  const items = plan?.plan || [];
+  const max = Math.max(...items.map((item) => item.priority), 1);
 
   return (
     <main className="sheet">
       <p className="kicker">Where to send a crew first</p>
-      <h1>Dispatch list</h1>
+      <h1>Dispatch plan</h1>
       <p className="reading">
-        Priority mixes the flood-model outlook with the drainage log. Model points are the real score.
-        Report and incident points come from the database, and the rows shipped with this prototype are synthetic.
+        One ranking from three kinds of evidence: the flood model's outlook for the cell, unresolved drain reports, and
+        incidents that keep coming back. Every point is shown with its source. Model points are the real score; report and
+        incident points come from the drainage ledger, and the rows shipped with this prototype are synthetic.
       </p>
-      {plan && <p className="reading">{plan.rule}</p>}
+      {plan && <p className="reading"><code>{plan.rule}</code>. One open report adds 25 points, as much as 0.025 of model probability.</p>}
       {error && <p className="error">{error}</p>}
-      <ol className="hotlist">
-        {(plan?.plan || []).map((item) => (
-          <li key={item.cell_id} style={{ padding: "12px 0", borderTop: "1px solid var(--line)" }}>
-            <span className="rank">{String(item.rank).padStart(2, "0")}</span>
-            <strong>{item.cell_id}</strong>
-            <span> · priority {item.priority.toFixed(1)} · p {item.probability.toFixed(3)}</span>
-            <p className="reading">{item.action}</p>
-            <table>
+
+      <div className="plan-controls">
+        <p className="plan-legend">
+          {PARTS.map(([key, label, color]) => (
+            <span key={key}><i style={{ background: color }} />{label}</span>
+          ))}
+        </p>
+        <label className="filter">
+          Show
+          <select value={limit} onChange={(event) => setLimit(Number(event.target.value))}>
+            {[12, 25, 40].map((n) => <option key={n} value={n}>top {n} cells</option>)}
+          </select>
+        </label>
+      </div>
+
+      <ol className="plan">
+        {items.map((item) => (
+          <li key={item.cell_id}>
+            <div className="plan-head">
+              <span className="rank">{String(item.rank).padStart(2, "0")}</span>
+              <strong>{item.cell_id}</strong>
+              <span className="reading">
+                p {item.probability.toFixed(3)} · {item.components.open_reports.count} open{" "}
+                {item.components.open_reports.count === 1 ? "report" : "reports"} ·{" "}
+                {item.components.recurring_incidents.count} repeat incidents counted
+              </span>
+            </div>
+            <PriorityBar item={item} max={max} />
+            <table className="parts">
               <tbody>
-                {Object.entries(item.components).map(([name, part]) => (
-                  <tr key={name}>
-                    <td>{name.replaceAll("_", " ")}</td>
-                    <td>{part.points}</td>
-                    <td><span className={`origin ${part.origin}`}>{part.origin}</span></td>
-                    <td>{part.note}</td>
-                  </tr>
-                ))}
+                {PARTS.map(([key, label, color]) => {
+                  const part = item.components[key];
+                  return (
+                    <tr key={key}>
+                      <td><i className="key" style={{ background: color }} />{label}</td>
+                      <td className="num">{part.points}</td>
+                      <td><span className={`origin ${part.origin}`}>{part.origin}</span></td>
+                      <td>{part.note}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
+            <p className="actions">
+              <Link href={`/operations?cell=${item.cell_id}&form=inspection#record`}>Schedule an inspection</Link>
+              <Link href={`/map?cell=${item.cell_id}`}>Show on the map</Link>
+            </p>
           </li>
         ))}
       </ol>
     </main>
+  );
+}
+
+function PriorityBar({ item, max }) {
+  const [hover, setHover] = useState(null);
+  let start = 0;
+  const segments = PARTS.map(([key, label, color]) => {
+    const points = item.components[key].points;
+    const segment = { key, label, color, points, start };
+    start += points;
+    return segment;
+  }).filter((segment) => segment.points > 0);
+  const at = (points) => `${(points / max) * SPAN}%`;
+  const summary = segments.map((s) => `${s.label} ${s.points}`).join(", ");
+  return (
+    <div className="pbar" role="img" aria-label={`Priority ${item.priority}: ${summary}`}>
+      <div className="pbar-track" style={{ width: at(item.priority) }}>
+        {segments.map((segment) => (
+          <span key={segment.key} style={{ flexGrow: segment.points, background: segment.color }}
+            onMouseEnter={() => setHover(segment)} onMouseLeave={() => setHover(null)} />
+        ))}
+      </div>
+      <b>{item.priority.toFixed(1)}</b>
+      {hover && (
+        <div className="tip" style={{ left: at(hover.start + hover.points / 2) }}>
+          <strong>{hover.label}</strong>
+          <span>{hover.points} of {item.priority} points</span>
+        </div>
+      )}
+    </div>
   );
 }

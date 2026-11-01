@@ -4,18 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-const STYLE = {
-  version: 8,
-  sources: {
-    carto: {
-      type: "raster",
-      tiles: ["https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png"],
-      tileSize: 256,
-      attribution: "© OpenStreetMap contributors © CARTO",
-    },
-  },
-  layers: [{ id: "carto", type: "raster", source: "carto" }],
-};
+// CARTO Dark Matter as a vector style. Since 25 September 2026 CARTO serves its raster tiles only with a key;
+// the vector styles still load without one, but CARTO may extend the requirement. A free key from
+// carto.com/basemaps/apikey, set as NEXT_PUBLIC_CARTO_KEY at build time, is added to every CARTO request.
+// It ships to the browser, so restrict it to the desk's domain in CARTO's dashboard.
+const STYLE_URL = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
+const CARTO_KEY = process.env.NEXT_PUBLIC_CARTO_KEY || "";
+
+function withCartoKey(url) {
+  if (!CARTO_KEY || !url.includes("basemaps.cartocdn.com") || /[?&]key=/.test(url)) return { url };
+  return { url: `${url}${url.includes("?") ? "&" : "?"}key=${encodeURIComponent(CARTO_KEY)}` };
+}
 
 // Same stops as the fill-color expression below, for the flat fallback.
 const STOPS = [
@@ -36,6 +35,18 @@ function riskColor(p) {
   return `rgb(${ca.map((c, i) => Math.round(c + (cb[i] - c) * t)).join(",")})`;
 }
 
+// Open drain reports as points at the cell centers. marks: [{cell_id, lon, lat, open}]
+function points(marks) {
+  return {
+    type: "FeatureCollection",
+    features: (marks || []).map((mark) => ({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [mark.lon, mark.lat] },
+      properties: { cell_id: mark.cell_id, open: mark.open },
+    })),
+  };
+}
+
 function webglAvailable() {
   try {
     const canvas = document.createElement("canvas");
@@ -46,7 +57,7 @@ function webglAvailable() {
 }
 
 /** The risk cells on a plain lon/lat grid, for browsers where MapLibre cannot start. */
-function FlatMap({ features, selectedId, onSelect, reason }) {
+function FlatMap({ features, marks, selectedId, onSelect, reason }) {
   return (
     <div className="map flatmap">
       <svg viewBox="0 0 720 300" role="img" aria-label="Flood risk cells on a flat longitude-latitude grid">
@@ -67,17 +78,26 @@ function FlatMap({ features, selectedId, onSelect, reason }) {
             </rect>
           );
         })}
+        {(marks || []).map((mark) => (
+          <circle key={mark.cell_id} cx={(mark.lon + 180) * 2} cy={(75 - mark.lat) * 2} r={2.5 + Math.min(mark.open, 4)}
+            fill="#ffffff" stroke="#081014" strokeWidth={1.2} onClick={() => onSelect(mark.cell_id)} style={{ cursor: "pointer" }}>
+            <title>{mark.cell_id} · {mark.open} open drain {mark.open === 1 ? "report" : "reports"}</title>
+          </circle>
+        ))}
       </svg>
       <p className="flatmap-note">Flat view: {reason} The cells and the dossier work as usual.</p>
     </div>
   );
 }
 
-export default function RiskMap({ features, selectedId, onSelect }) {
+export default function RiskMap({ features, marks, selectedId, onSelect }) {
   const holder = useRef(null);
   const mapRef = useRef(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  // A cell picked before the map loads (a ?cell= link) still gets its outline.
+  const selectedRef = useRef(selectedId);
+  selectedRef.current = selectedId;
   const [fallback, setFallback] = useState("");
 
   useEffect(() => {
@@ -89,7 +109,8 @@ export default function RiskMap({ features, selectedId, onSelect }) {
     try {
       map = new maplibregl.Map({
         container: holder.current,
-        style: STYLE,
+        style: STYLE_URL,
+        transformRequest: withCartoKey,
         center: [20, 8],
         zoom: 1.55,
         attributionControl: true,
@@ -99,7 +120,17 @@ export default function RiskMap({ features, selectedId, onSelect }) {
       return undefined;
     }
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-left");
+    let ready = false;
+    map.on("error", (event) => {
+      // Without its style the map never loads and would show no cells. The flat view still does.
+      if (!ready && String(event.error?.url || "").includes("style.json")) {
+        setFallback(`the basemap style did not load (${event.error.status || event.error.message}).`);
+      }
+    });
     map.on("load", () => {
+      ready = true;
+      // Cells go under the style's place labels, so country and city names stay readable.
+      const labels = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
       map.addSource("risk", {
         type: "geojson",
         data: { type: "FeatureCollection", features: features || [] },
@@ -121,30 +152,44 @@ export default function RiskMap({ features, selectedId, onSelect }) {
           ],
           "fill-opacity": 0.78,
         },
-      });
+      }, labels);
       map.addLayer({
         id: "cells-line",
         type: "line",
         source: "risk",
         paint: { "line-color": "#081014", "line-width": 0.6, "line-opacity": 0.55 },
-      });
+      }, labels);
       map.addLayer({
         id: "picked",
         type: "line",
         source: "risk",
-        filter: ["==", ["get", "cell_id"], ""],
+        filter: ["==", ["get", "cell_id"], selectedRef.current || ""],
         paint: { "line-color": "#f4efe4", "line-width": 2.4 },
+      }, labels);
+      map.addSource("reports", { type: "geojson", data: points(marks) });
+      map.addLayer({
+        id: "reports",
+        type: "circle",
+        source: "reports",
+        paint: {
+          "circle-radius": ["+", 4, ["*", 2, ["min", ["get", "open"], 4]]],
+          "circle-color": "#ffffff",
+          "circle-stroke-color": "#081014",
+          "circle-stroke-width": 2,
+        },
       });
-      map.on("click", "cells", (event) => {
-        const id = event.features?.[0]?.properties?.cell_id;
-        if (id) onSelectRef.current(id);
-      });
-      map.on("mouseenter", "cells", () => {
-        map.getCanvas().style.cursor = "pointer";
-      });
-      map.on("mouseleave", "cells", () => {
-        map.getCanvas().style.cursor = "";
-      });
+      for (const layer of ["cells", "reports"]) {
+        map.on("click", layer, (event) => {
+          const id = event.features?.[0]?.properties?.cell_id;
+          if (id) onSelectRef.current(id);
+        });
+        map.on("mouseenter", layer, () => {
+          map.getCanvas().style.cursor = "pointer";
+        });
+        map.on("mouseleave", layer, () => {
+          map.getCanvas().style.cursor = "";
+        });
+      }
     });
     mapRef.current = map;
     return () => map.remove();
@@ -158,9 +203,20 @@ export default function RiskMap({ features, selectedId, onSelect }) {
       const source = map.getSource("risk");
       if (source) source.setData(data);
     };
-    if (map.isStyleLoaded() && map.getSource("risk")) apply();
+    if (map.getSource("risk")) apply();
     else map.once("load", apply);
   }, [features]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      const source = map.getSource("reports");
+      if (source) source.setData(points(marks));
+    };
+    if (map.getSource("reports")) apply();
+    else map.once("load", apply);
+  }, [marks]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -168,6 +224,6 @@ export default function RiskMap({ features, selectedId, onSelect }) {
     map.setFilter("picked", ["==", ["get", "cell_id"], selectedId || ""]);
   }, [selectedId]);
 
-  if (fallback) return <FlatMap features={features} selectedId={selectedId} onSelect={onSelect} reason={fallback} />;
+  if (fallback) return <FlatMap features={features} marks={marks} selectedId={selectedId} onSelect={onSelect} reason={fallback} />;
   return <div ref={holder} className="map" />;
 }

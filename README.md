@@ -93,6 +93,10 @@ python3 -m model.impact
 python3 -m model.impact --rebuild
 ```
 
+## Production
+
+**https://drainsense.158.180.57.75.sslip.io** (Swagger UI at `/docs`), on the Oracle VM next to NGAO. Pushes to `main` build the images, publish them to GHCR, and deploy them once the `ORACLE_VM_*` secrets are set. [`docs/DEPLOY_DRAINSENSE.md`](docs/DEPLOY_DRAINSENSE.md) has the setup, the manual deploy, rollback, and logs.
+
 ## Run it
 
 API, from the repo root:
@@ -117,7 +121,19 @@ npm ci
 NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 ```
 
-Open http://localhost:3000. The map, ledger, dispatch list, sector flags, model card, and impact dashboard all read the API.
+Open http://localhost:3000. Every page reads the API:
+
+| Page | What it shows |
+|---|---|
+| `/` Overview | The problem each part answers, live figures from every part, the maintenance loop |
+| `/map` Risk map | Flood score per cell, SHAP reasons, flood record, open drain reports, the cell's ledger and sector flags |
+| `/operations` Ledger | Report, inspection, repair and incident forms; a report moves to inspection scheduled, then repaired; incidents before and after each repair |
+| `/response` Dispatch | The ranking, with each cell's points split into model, open reports and repeat incidents |
+| `/sectors` Sectors | The rule behind each sector flag, a flag matrix for the 30 highest-scoring cells, and each flag's inputs |
+| `/impact`, `/model` | The impact dashboard and the risk model card |
+| `/endpoints` API | Every endpoint, read live from `/openapi.json`, with links into Swagger UI |
+
+The only key the desk can take is an optional CARTO basemaps key, `NEXT_PUBLIC_CARTO_KEY` (free from https://carto.com/basemaps/apikey). The map uses CARTO's vector Dark Matter style, which loads without one today; CARTO's raster tiles have needed a key since 2026-09-25. The API itself has no key or login.
 
 Tests:
 
@@ -149,8 +165,9 @@ python3 -m model.train --refit
 | `model/artifacts/impact/` | Event table, both `.cbm` models, `impact_metrics.json`, held-out predictions |
 | `model/notebooks/` | Walkthrough notebook for the impact model |
 | `api/openapi.json`, `api/postman/` | Committed Swagger schema and Postman collection |
+| `deploy/oracle-vm/`, `web/Dockerfile` | Production Compose file, Caddy site, deploy script, desk image |
 | `api/` | FastAPI. Scores come from the artifacts. SQLite holds the drainage log. |
-| `web/` | Next.js desk, MapLibre, CARTO dark basemap |
+| `web/` | Next.js desk, MapLibre, CARTO Dark Matter vector basemap |
 | `backend/scoring/heuristics.py` | NGAO heavy-rain constant used by the flood model |
 | `backend/`, `ussd/` | NGAO services, kept. Not the DrainSense runtime. |
 | `legacy/` | APEX export, Oracle schema, VM deploy, APEX workflows |

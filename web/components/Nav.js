@@ -4,12 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
-  ["/", "Map"],
+  ["/", "Overview"],
+  ["/map", "Map"],
   ["/operations", "Ledger"],
   ["/response", "Dispatch"],
   ["/sectors", "Sectors"],
-  ["/model", "Model card"],
   ["/impact", "Impact"],
+  ["/model", "Model card"],
+  ["/endpoints", "API"],
 ];
 
 export default function Nav() {

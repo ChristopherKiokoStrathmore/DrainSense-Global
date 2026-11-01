@@ -11,3 +11,4 @@ web/.next/
 api/data/
 *.sqlite
 .pytest_cache/
+.env*.local

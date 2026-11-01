@@ -14,7 +14,8 @@ const sans = Outfit({
 
 export const metadata = {
   title: "DrainSense",
-  description: "Global flood desk. Model scores, drainage ledger, and derived sector flags.",
+  description:
+    "Flood-risk and drainage desk: risk map, drainage ledger, dispatch plan, sector flags, flood-impact model, and the API behind them.",
 };
 
 export default function RootLayout({ children }) {
