@@ -1,13 +1,13 @@
-import { Fraunces, Outfit } from "next/font/google";
+import { Bricolage_Grotesque, Instrument_Sans } from "next/font/google";
 import Nav from "../components/Nav";
 import "./globals.css";
 
-const display = Fraunces({
+const display = Bricolage_Grotesque({
   subsets: ["latin"],
-  variable: "--font-serif",
+  variable: "--font-display",
 });
 
-const sans = Outfit({
+const sans = Instrument_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
 });
@@ -30,10 +30,10 @@ export default function RootLayout({ children }) {
               <em>Global flood desk</em>
             </span>
           </a>
+          <Nav />
           <p className="mast-note">5° cells · 2024 outlook from 2023 rainfall · not a warning</p>
         </header>
         <div className="frame">
-          <Nav />
           <div className="stage">{children}</div>
         </div>
       </body>
@@ -46,7 +46,7 @@ function Grate() {
     <svg viewBox="0 0 48 48" aria-hidden="true" className="grate">
       <rect x="3" y="3" width="42" height="42" rx="3" fill="none" stroke="currentColor" strokeWidth="2.5" />
       <path d="M12 10v28M24 10v28M36 10v28M8 16h32M8 24h32M8 32h32" stroke="currentColor" strokeWidth="1.6" />
-      <circle cx="36" cy="36" r="3.2" fill="#d84a2f" stroke="none" />
+      <circle cx="36" cy="36" r="3.2" fill="#ff6a3d" stroke="none" />
     </svg>
   );
 }

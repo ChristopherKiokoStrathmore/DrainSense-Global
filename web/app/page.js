@@ -94,36 +94,43 @@ export default function OverviewPage() {
 
   return (
     <main className="sheet wide overview">
-      <p className="kicker">Flood-risk and drainage desk</p>
-      <h1>Send crews where risk and reports overlap</h1>
-      <p className="lede">
-        DrainSense puts historical flood records, rainfall and terrain, and residents' blocked-drain reports in one
-        place. It scores where a large flood is most likely, says why, ranks where to inspect first, and checks
-        afterwards whether repairs cut the incidents. Every number is open through a documented API.
-      </p>
+      <section className="hero">
+        <p className="kicker">Flood-risk and drainage desk</p>
+        <h1>Send crews where risk and reports overlap</h1>
+        <p className="lede">
+          DrainSense puts historical flood records, rainfall and terrain, and residents' blocked-drain reports in one
+          place. It scores where a large flood is most likely, says why, ranks where to inspect first, and checks
+          afterwards whether repairs cut the incidents. Every number is open through a documented API.
+        </p>
+        <div className="hero-actions">
+          <Link className="btn primary" href="/map">Open the risk map</Link>
+          <Link className="btn secondary" href="/response">See the dispatch plan</Link>
+        </div>
+      </section>
+
       {down && (
         <p className="error">
           The API at {API || "this site"} did not answer. Start it (see the README) or set NEXT_PUBLIC_API_URL, then reload.
         </p>
       )}
 
-      <div className="metrics three">
-        <div className="metric">
+      <section className="stats" aria-label="Desk at a glance">
+        <div className="stat">
           <span>Land cells scored for 2024</span>
           <b>{facts.cells ?? "—"}</b>
           <small>{facts.above != null ? `${facts.above} at or above the model threshold${metrics ? ` ${metrics.model.threshold}` : ""}` : ""}</small>
         </div>
-        <div className="metric">
+        <div className="stat">
           <span>First on the dispatch plan</span>
           <b>{top ? top.cell_id : "—"}</b>
           <small>{top ? `priority ${top.priority.toFixed(1)} · flood score ${top.probability.toFixed(2)}` : ""}</small>
         </div>
-        <div className="metric">
+        <div className="stat">
           <span>Open drain reports</span>
           <b>{facts.open ?? "—"}</b>
           <small>{facts.open != null ? `${facts.openSynthetic} of them synthetic drill rows` : ""}</small>
         </div>
-        <div className="metric">
+        <div className="stat">
           <span>Repairs with a before / after count</span>
           <b>{repairs ? repairs.length : "—"}</b>
           <small>
@@ -132,38 +139,33 @@ export default function OverviewPage() {
               : ""}
           </small>
         </div>
-        <div className="metric">
+        <div className="stat">
           <span>Risk model ROC-AUC, later years</span>
           <b>{metrics ? fmt(metrics.temporal_test.roc_auc, 3) : "—"}</b>
           <small>{metrics ? `test years ${metrics.split.test_label_years[0]}–${metrics.split.test_label_years.at(-1)} · dummy ${fmt(metrics.dummy_prior.roc_auc, 3)}` : ""}</small>
         </div>
-        <div className="metric">
+        <div className="stat">
           <span>Impact model test RMSE</span>
           <b>{impact ? fmt(impact.variants.brief.temporal_test.rmse, 3) : "—"}</b>
           <small>{impact ? `${impact.split.n_test} held-out events · exact formula ${fmt(impact.baselines_temporal_test.dfo_formula.rmse, 3)}` : ""}</small>
         </div>
-      </div>
+      </section>
 
       <section className="panel">
         <h2>What it answers</h2>
-        <div className="scroll">
-          <table className="answers">
-            <thead>
-              <tr><th>The problem today</th><th>What the desk does</th></tr>
-            </thead>
-            <tbody>
-              {ANSWERS.map((row) => (
-                <tr key={row.part}>
-                  <td>{row.problem}</td>
-                  <td><Link href={row.href}><b>{row.part}</b></Link>{row.answer}</td>
-                </tr>
-              ))}
-              <tr>
-                <td>Each tool keeps its numbers to itself.</td>
-                <td><Link href="/endpoints"><b>API</b></Link>Every page reads the same documented endpoints, with Swagger, a published schema and a Postman collection.</td>
-              </tr>
-            </tbody>
-          </table>
+        <div className="answer-grid">
+          {ANSWERS.map((row) => (
+            <Link key={row.part} href={row.href} className="answer">
+              <span className="answer-problem">{row.problem}</span>
+              <b>{row.part}</b>
+              <span className="answer-text">{row.answer}</span>
+            </Link>
+          ))}
+          <Link href="/endpoints" className="answer answer-wide">
+            <span className="answer-problem">Each tool keeps its numbers to itself.</span>
+            <b>API</b>
+            <span className="answer-text">Every page reads the same documented endpoints, with Swagger, a published schema and a Postman collection.</span>
+          </Link>
         </div>
       </section>
 
@@ -180,7 +182,7 @@ export default function OverviewPage() {
         </ol>
       </section>
 
-      <section className="panel">
+      <section className="panel provenance">
         <h2>What is real, and what is not</h2>
         <ul className="reading">
           <li>Flood labels: Global Flood Records (DFO Flood Observatory), Zenodo, CC BY 4.0.</li>
