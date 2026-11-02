@@ -79,10 +79,12 @@ def footprints(gpkg: Path = GPKG) -> pd.DataFrame:
     con.close()
     frame = pd.DataFrame(rows, columns=["Event_ID", "minx", "maxx", "miny", "maxy"])
     frame["Event_ID"] = frame["Event_ID"].astype(int)
+    # Two polygons are stored a whole turn off (5161 Thailand at 459°, 5228 Cuba at -442°). Wrap into [-180, 180).
+    centre_lon = (frame["minx"] + frame["maxx"]) / 2
     return pd.DataFrame({
         "Event_ID": frame["Event_ID"],
         "Footprint_Lat": ((frame["miny"] + frame["maxy"]) / 2).round(4),
-        "Footprint_Lon": ((frame["minx"] + frame["maxx"]) / 2).round(4),
+        "Footprint_Lon": (((centre_lon + 180) % 360) - 180).round(4),
         "Footprint_Span_Deg": np.maximum(frame["maxx"] - frame["minx"], frame["maxy"] - frame["miny"]).round(3),
     })
 

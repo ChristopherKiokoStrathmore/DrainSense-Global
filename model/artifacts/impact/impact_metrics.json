@@ -1,7 +1,8 @@
 {
-  "generated_at": "2026-10-29T13:45:39Z",
+  "generated_at": "2026-11-02T05:22:05Z",
   "script": "model/impact.py",
   "source": "data/Enriched_Global_Flood_Records-v2.csv (DFO Global Flood Records plus an external enrichment)",
+  "weather_source": "Open-Meteo historical archive (ERA5 / ERA5-Land), CC BY 4.0, daily series at the centre of each event's footprint in the DFO GeoPackage (Zenodo 19288171): 14 days before the start and up to 45 days of the event. Fetched by model/weather.py.",
   "target": "Flood_Impact_Index",
   "target_definition": "DFO magnitude: log10(days_inclusive x severity x area_km2), rounded to 0.1",
   "catboost_params": {
@@ -29,145 +30,148 @@
   "variants": {
     "brief": {
       "file": "catboost_flood_model.cbm",
-      "description": "The brief's model. Area and duration are two of the three terms in the formula that defines the target, so its error is mostly the severity term it is not given.",
+      "description": "The brief's model with observed weather. Area and duration are two of the three terms in the formula that defines the target, so its error is mostly the severity term it is not given.",
       "numeric_features": [
         "Log_Area",
         "Event_Duration_Days",
-        "Total_Precipitation_mm",
-        "Max_24h_Precipitation_mm",
-        "Total_Liquid_Rain_mm",
-        "Snow_Melt_Equiv_mm",
-        "Antecedent_7Day_Precip_mm",
-        "Estimated_Surface_Runoff_mm",
-        "Mean_Temp_2m_C",
-        "Max_Temp_2m_C",
-        "Min_Temp_2m_C",
-        "Max_Wind_Gust_10m_kmh",
-        "Min_Sea_Level_Pressure_hPa",
-        "Mean_Relative_Humidity_pct",
-        "Topsoil_Moisture_0_7cm_m3m3",
-        "Cumulative_ET0_Evapotranspiration_mm"
+        "Elevation_m",
+        "Wx_Precip_Antecedent_7d_mm",
+        "Wx_Precip_Antecedent_14d_mm",
+        "Wx_Soil_Moisture_Before_m3m3",
+        "Wx_Precip_Max_1d_First3d_mm",
+        "Wx_Precip_First3d_mm",
+        "Wx_Wind_Gust_Max_First3d_kmh",
+        "Wx_Temp_Mean_First3d_C",
+        "Wx_Pressure_Min_First3d_hPa",
+        "Wx_Precip_Event_mm",
+        "Wx_Rain_Event_mm",
+        "Wx_Snowfall_Event_cm",
+        "Wx_Precip_Max_1d_mm",
+        "Wx_ET0_Event_mm",
+        "Wx_Temp_Max_C",
+        "Wx_RH_Mean_pct",
+        "Wx_Soil_Moisture_Event_Max_m3m3"
       ],
       "categorical_features": [
-        "Koppen_Climate_Zone",
         "Continent_Region"
       ],
-      "iterations": 499,
-      "validation_rmse_first_iteration": 0.8511,
-      "validation_rmse_best": 0.0922,
-      "train_rmse": 0.0859,
+      "iterations": 824,
+      "validation_rmse_first_iteration": 0.8544,
+      "validation_rmse_best": 0.1223,
+      "train_rmse": 0.0985,
       "temporal_test": {
-        "rmse": 0.162,
-        "mae": 0.1001,
-        "r2": 0.9824,
+        "rmse": 0.1726,
+        "mae": 0.1196,
+        "r2": 0.98,
         "n": 792
       },
       "feature_importance": {
-        "Log_Area": 73.335,
-        "Event_Duration_Days": 9.996,
-        "Cumulative_ET0_Evapotranspiration_mm": 5.585,
-        "Total_Precipitation_mm": 3.128,
-        "Total_Liquid_Rain_mm": 2.254,
-        "Estimated_Surface_Runoff_mm": 1.826,
-        "Topsoil_Moisture_0_7cm_m3m3": 0.806,
-        "Max_24h_Precipitation_mm": 0.69,
-        "Mean_Temp_2m_C": 0.466,
-        "Min_Temp_2m_C": 0.33,
-        "Min_Sea_Level_Pressure_hPa": 0.296,
-        "Snow_Melt_Equiv_mm": 0.29,
-        "Max_Temp_2m_C": 0.272,
-        "Max_Wind_Gust_10m_kmh": 0.244,
-        "Antecedent_7Day_Precip_mm": 0.195,
-        "Koppen_Climate_Zone": 0.15,
-        "Mean_Relative_Humidity_pct": 0.113,
-        "Continent_Region": 0.025
+        "Log_Area": 69.709,
+        "Event_Duration_Days": 21.116,
+        "Wx_ET0_Event_mm": 4.937,
+        "Wx_Rain_Event_mm": 0.622,
+        "Elevation_m": 0.411,
+        "Wx_Precip_Event_mm": 0.364,
+        "Wx_Soil_Moisture_Event_Max_m3m3": 0.325,
+        "Wx_Pressure_Min_First3d_hPa": 0.316,
+        "Wx_Temp_Mean_First3d_C": 0.3,
+        "Wx_Wind_Gust_Max_First3d_kmh": 0.29,
+        "Wx_RH_Mean_pct": 0.256,
+        "Wx_Temp_Max_C": 0.24,
+        "Wx_Precip_Max_1d_mm": 0.228,
+        "Wx_Precip_Antecedent_7d_mm": 0.176,
+        "Wx_Soil_Moisture_Before_m3m3": 0.155,
+        "Wx_Precip_Antecedent_14d_mm": 0.149,
+        "Wx_Precip_Max_1d_First3d_mm": 0.135,
+        "Wx_Precip_First3d_mm": 0.11,
+        "Continent_Region": 0.104,
+        "Wx_Snowfall_Event_cm": 0.056
       },
       "mean_abs_shap_test": {
-        "Log_Area": 0.6838,
-        "Event_Duration_Days": 0.1632,
-        "Cumulative_ET0_Evapotranspiration_mm": 0.1029,
-        "Total_Precipitation_mm": 0.0657,
-        "Estimated_Surface_Runoff_mm": 0.0595,
-        "Total_Liquid_Rain_mm": 0.0408,
-        "Topsoil_Moisture_0_7cm_m3m3": 0.0182,
-        "Min_Temp_2m_C": 0.0139,
-        "Mean_Temp_2m_C": 0.0139,
-        "Max_24h_Precipitation_mm": 0.0133,
-        "Min_Sea_Level_Pressure_hPa": 0.0115,
-        "Max_Temp_2m_C": 0.009,
-        "Max_Wind_Gust_10m_kmh": 0.0061,
-        "Snow_Melt_Equiv_mm": 0.006,
-        "Mean_Relative_Humidity_pct": 0.0053,
-        "Antecedent_7Day_Precip_mm": 0.0044,
-        "Koppen_Climate_Zone": 0.0043,
-        "Continent_Region": 0.0014
+        "Log_Area": 0.7081,
+        "Event_Duration_Days": 0.2869,
+        "Wx_ET0_Event_mm": 0.1,
+        "Wx_Rain_Event_mm": 0.0211,
+        "Wx_Precip_Event_mm": 0.0176,
+        "Wx_Temp_Mean_First3d_C": 0.0115,
+        "Elevation_m": 0.0101,
+        "Wx_Precip_Max_1d_mm": 0.0087,
+        "Wx_Temp_Max_C": 0.008,
+        "Wx_Wind_Gust_Max_First3d_kmh": 0.0058,
+        "Wx_Pressure_Min_First3d_hPa": 0.0056,
+        "Wx_RH_Mean_pct": 0.0051,
+        "Wx_Soil_Moisture_Event_Max_m3m3": 0.0047,
+        "Continent_Region": 0.003,
+        "Wx_Precip_Antecedent_14d_mm": 0.003,
+        "Wx_Precip_Antecedent_7d_mm": 0.0027,
+        "Wx_Soil_Moisture_Before_m3m3": 0.0019,
+        "Wx_Precip_Max_1d_First3d_mm": 0.0019,
+        "Wx_Precip_First3d_mm": 0.0019,
+        "Wx_Snowfall_Event_cm": 0.0013
       }
     },
     "no_size": {
       "file": "catboost_flood_model_no_size.cbm",
-      "description": "No area, duration, severity, or window-summed weather. Its score is the skill left once the formula inputs are taken away, on weather columns that are synthetic.",
+      "description": "No area, duration, severity, or weather summed over the event. Observed weather from the 14 days before and the first 3 days, plus place, month and cause: the skill left once the formula inputs are taken away.",
       "numeric_features": [
-        "Max_24h_Precipitation_mm",
-        "Antecedent_7Day_Precip_mm",
-        "Mean_Temp_2m_C",
-        "Max_Temp_2m_C",
-        "Min_Temp_2m_C",
-        "Max_Wind_Gust_10m_kmh",
-        "Min_Sea_Level_Pressure_hPa",
-        "Mean_Relative_Humidity_pct",
-        "Topsoil_Moisture_0_7cm_m3m3",
-        "Latitude",
-        "Longitude",
+        "Elevation_m",
+        "Wx_Precip_Antecedent_7d_mm",
+        "Wx_Precip_Antecedent_14d_mm",
+        "Wx_Soil_Moisture_Before_m3m3",
+        "Wx_Precip_Max_1d_First3d_mm",
+        "Wx_Precip_First3d_mm",
+        "Wx_Wind_Gust_Max_First3d_kmh",
+        "Wx_Temp_Mean_First3d_C",
+        "Wx_Pressure_Min_First3d_hPa",
+        "Footprint_Lat",
+        "Footprint_Lon",
         "Start_Month"
       ],
       "categorical_features": [
-        "Koppen_Climate_Zone",
         "Continent_Region",
         "Cause_Group"
       ],
-      "iterations": 273,
-      "validation_rmse_first_iteration": 0.865,
-      "validation_rmse_best": 0.6377,
-      "train_rmse": 0.7197,
+      "iterations": 793,
+      "validation_rmse_first_iteration": 0.8724,
+      "validation_rmse_best": 0.7463,
+      "train_rmse": 0.7516,
       "temporal_test": {
-        "rmse": 0.8994,
-        "mae": 0.6833,
-        "r2": 0.4559,
+        "rmse": 1.1017,
+        "mae": 0.824,
+        "r2": 0.1835,
         "n": 792
       },
       "feature_importance": {
-        "Max_24h_Precipitation_mm": 27.663,
-        "Topsoil_Moisture_0_7cm_m3m3": 19.487,
-        "Cause_Group": 8.723,
-        "Longitude": 6.797,
-        "Antecedent_7Day_Precip_mm": 6.577,
-        "Continent_Region": 6.157,
-        "Latitude": 5.086,
-        "Mean_Temp_2m_C": 3.205,
-        "Start_Month": 2.921,
-        "Koppen_Climate_Zone": 2.918,
-        "Min_Temp_2m_C": 2.769,
-        "Min_Sea_Level_Pressure_hPa": 2.469,
-        "Max_Temp_2m_C": 2.217,
-        "Max_Wind_Gust_10m_kmh": 1.839,
-        "Mean_Relative_Humidity_pct": 1.172
+        "Footprint_Lat": 13.36,
+        "Footprint_Lon": 12.335,
+        "Continent_Region": 9.436,
+        "Wx_Pressure_Min_First3d_hPa": 8.952,
+        "Cause_Group": 8.765,
+        "Elevation_m": 8.109,
+        "Wx_Temp_Mean_First3d_C": 6.695,
+        "Wx_Soil_Moisture_Before_m3m3": 5.487,
+        "Wx_Wind_Gust_Max_First3d_kmh": 5.265,
+        "Wx_Precip_Antecedent_14d_mm": 4.848,
+        "Wx_Precip_First3d_mm": 4.833,
+        "Start_Month": 4.722,
+        "Wx_Precip_Max_1d_First3d_mm": 3.749,
+        "Wx_Precip_Antecedent_7d_mm": 3.446
       },
       "mean_abs_shap_test": {
-        "Max_24h_Precipitation_mm": 0.3163,
-        "Topsoil_Moisture_0_7cm_m3m3": 0.2876,
-        "Cause_Group": 0.0768,
-        "Antecedent_7Day_Precip_mm": 0.0714,
-        "Continent_Region": 0.0705,
-        "Longitude": 0.0374,
-        "Latitude": 0.0366,
-        "Mean_Temp_2m_C": 0.0291,
-        "Min_Temp_2m_C": 0.0257,
-        "Koppen_Climate_Zone": 0.024,
-        "Start_Month": 0.0238,
-        "Min_Sea_Level_Pressure_hPa": 0.0156,
-        "Max_Temp_2m_C": 0.0134,
-        "Max_Wind_Gust_10m_kmh": 0.0085,
-        "Mean_Relative_Humidity_pct": 0.0065
+        "Continent_Region": 0.1341,
+        "Wx_Pressure_Min_First3d_hPa": 0.1271,
+        "Wx_Precip_First3d_mm": 0.1159,
+        "Elevation_m": 0.1124,
+        "Cause_Group": 0.1037,
+        "Footprint_Lat": 0.0843,
+        "Footprint_Lon": 0.077,
+        "Wx_Precip_Max_1d_First3d_mm": 0.0732,
+        "Wx_Temp_Mean_First3d_C": 0.0704,
+        "Wx_Precip_Antecedent_14d_mm": 0.0483,
+        "Wx_Wind_Gust_Max_First3d_kmh": 0.0443,
+        "Wx_Soil_Moisture_Before_m3m3": 0.0409,
+        "Start_Month": 0.0348,
+        "Wx_Precip_Antecedent_7d_mm": 0.0241
       }
     }
   },
@@ -205,10 +209,10 @@
   "brief_reproduction": {
     "protocol": "random 80/20 split (random_state 42), use_best_model on the test rows",
     "caveat": "Choosing the iteration on the rows it is scored on is optimistic.",
-    "best_iteration": 1195,
-    "test_rmse_first_iteration": 1.0813,
-    "test_rmse_best": 0.1038,
-    "train_rmse_last_iteration": 0.0754,
+    "best_iteration": 895,
+    "test_rmse_first_iteration": 1.081,
+    "test_rmse_best": 0.1306,
+    "train_rmse_last_iteration": 0.084,
     "dfo_formula_rmse_same_rows": 0.0287,
     "brief_reported": {
       "test_rmse": 0.0985,
@@ -244,16 +248,20 @@
     ],
     "total_precip_equals_liquid_plus_snowmelt_max_abs_diff": 0.0,
     "spearman_topsoil_moisture_vs_days": 0.73,
-    "spearman_cumulative_et0_vs_days": 0.9539
+    "spearman_cumulative_et0_vs_days": 0.9539,
+    "observed": {
+      "source": "Open-Meteo archive (ERA5 / ERA5-Land) at the DFO footprint bounding-box centre",
+      "distinct_footprint_centres": 5492,
+      "median_km_snapped_point_to_footprint_centre": 541.0,
+      "share_snapped_points_over_500km_away": 0.518,
+      "spearman_enriched_vs_observed_event_precip": 0.5803,
+      "log_event_precip_r2_from_days_and_abs_latitude": 0.3149,
+      "log_event_precip_r2_adding_log_area_and_severity": 0.3211,
+      "footprint_span_deg_median": 2.82,
+      "footprints_wider_than_15_deg": 86
+    }
   },
   "categories": {
-    "Koppen_Climate_Zone": [
-      "Af/Am (Equatorial / Tropical Monsoon)",
-      "Aw (Tropical Wet & Dry)",
-      "Cfa/Cwa (Humid Subtropical)",
-      "Cfb/Dfa (Temperate / Humid Continental)",
-      "Dfb/Dfc (Boreal / Subarctic)"
-    ],
     "Continent_Region": [
       "Africa",
       "America",
@@ -325,78 +333,94 @@
       1.0,
       418.0
     ],
-    "Latitude": [
-      -54.8,
-      74.6956
+    "Footprint_Lat": [
+      -52.9076,
+      68.2565
     ],
-    "Longitude": [
-      -176.6581,
-      178.4167
+    "Footprint_Lon": [
+      -173.4544,
+      179.5618
     ],
-    "Total_Precipitation_mm": [
-      6.7,
-      6097.0
+    "Start_Month": [
+      1.0,
+      12.0
     ],
-    "Max_24h_Precipitation_mm": [
-      6.7,
-      2621.7
+    "Elevation_m": [
+      -153.0,
+      5990.0
     ],
-    "Total_Liquid_Rain_mm": [
-      3.7,
-      6097.0
-    ],
-    "Snow_Melt_Equiv_mm": [
+    "Wx_Precip_Antecedent_7d_mm": [
       0.0,
-      406.3
+      618.7
     ],
-    "Antecedent_7Day_Precip_mm": [
-      12.0,
-      690.3
+    "Wx_Precip_Antecedent_14d_mm": [
+      0.0,
+      942.4
     ],
-    "Estimated_Surface_Runoff_mm": [
-      2.8,
-      4182.5
+    "Wx_Soil_Moisture_Before_m3m3": [
+      0.0,
+      0.762
     ],
-    "Mean_Temp_2m_C": [
-      -16.5,
-      31.5
+    "Wx_Precip_Max_1d_First3d_mm": [
+      0.0,
+      441.7
     ],
-    "Max_Temp_2m_C": [
-      -11.9,
-      36.6
+    "Wx_Precip_First3d_mm": [
+      0.0,
+      685.3
     ],
-    "Min_Temp_2m_C": [
-      -20.4,
-      28.1
+    "Wx_Wind_Gust_Max_First3d_kmh": [
+      15.1,
+      200.2
     ],
-    "Max_Wind_Gust_10m_kmh": [
-      28.2,
-      210.3
+    "Wx_Temp_Mean_First3d_C": [
+      -17.9333,
+      37.3667
     ],
-    "Min_Sea_Level_Pressure_hPa": [
-      953.1,
-      1015.9
+    "Wx_Pressure_Min_First3d_hPa": [
+      953.2,
+      1033.0
     ],
-    "Mean_Relative_Humidity_pct": [
-      74.2,
-      96.0
+    "Wx_Precip_Event_mm": [
+      0.0,
+      1739.7
     ],
-    "Topsoil_Moisture_0_7cm_m3m3": [
-      0.288,
-      0.49
+    "Wx_Rain_Event_mm": [
+      0.0,
+      1739.7
     ],
-    "Cumulative_ET0_Evapotranspiration_mm": [
-      1.8,
-      158.2
+    "Wx_Snowfall_Event_cm": [
+      0.0,
+      206.57
+    ],
+    "Wx_Precip_Max_1d_mm": [
+      0.0,
+      441.7
+    ],
+    "Wx_ET0_Event_mm": [
+      0.34,
+      322.97
+    ],
+    "Wx_Temp_Max_C": [
+      -15.0,
+      46.2
+    ],
+    "Wx_RH_Mean_pct": [
+      10.5,
+      99.6667
+    ],
+    "Wx_Soil_Moisture_Event_Max_m3m3": [
+      0.0,
+      0.762
     ]
   },
   "limitations": [
     "The target is the DFO magnitude, log10(days x severity x area_km2), rounded to 0.1. Given those three numbers the formula is exact. The brief model is given two of them and learns the rest; it is not forecasting impact.",
-    "The 14 weather columns were added to the DFO table by an enrichment step this repo did not run. Every event is placed at one of 376 points (often a capital), and spot checks against the Open-Meteo archive at those points disagree on both temperature and rainfall. Treat them as synthetic.",
+    "Weather is Open-Meteo reanalysis (ERA5 / ERA5-Land, roughly 9-30 km cells) at one point: the centre of the event's bounding box in the DFO GeoPackage. Large footprints get one point for the whole area, and the centre can fall outside the flooded polygon. The enriched CSV's own weather columns are not used: they snap events to 376 points and disagree with reanalysis.",
     "Area, duration and severity are only known once a flood is over and mapped. The brief model cannot be used before or during an event.",
-    "The no_size variant drops the formula inputs and the window-summed weather. Its weather inputs are still synthetic, so its skill says how the enrichment was generated, not how floods behave.",
+    "The no_size variant drops the formula inputs and the weather summed over the event. It still sees the first three days, which for one- and two-day events is the whole event, so it is a by-day-3 estimate, not a forecast.",
     "DFO records large events from news, agencies and satellites. Small and unreported floods are missing, and reporting effort differs by country and decade.",
-    "The temporal test scores 2019-2024 start years. Locations repeat across the split because events are snapped to a small set of points.",
+    "The temporal test scores 2019-2024 start years. The same countries and river basins appear on both sides of the split, so it measures a later period at familiar places.",
     "This model does not feed the DrainSense map. The map score is the logistic model in model/train.py."
   ]
 }

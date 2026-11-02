@@ -79,7 +79,7 @@
             "description": "Event 5477, Kenya 15 Oct - 11 Nov 2023. Severity is optional for the model and only feeds dfo_formula.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"start_date\": \"2023-10-15\",\n  \"end_date\": \"2023-11-11\",\n  \"area_km2\": 229835,\n  \"severity\": 1.5,\n  \"latitude\": -1.503,\n  \"longitude\": 40.03,\n  \"koppen_climate_zone\": \"Af/Am (Equatorial / Tropical Monsoon)\",\n  \"continent_region\": \"Africa\",\n  \"main_cause\": \"Heavy rain\",\n  \"total_precipitation_mm\": 793.3,\n  \"max_24h_precipitation_mm\": 375.3,\n  \"total_liquid_rain_mm\": 793.3,\n  \"snow_melt_equiv_mm\": 0.0,\n  \"antecedent_7day_precip_mm\": 121.5,\n  \"estimated_surface_runoff_mm\": 502.0,\n  \"mean_temp_2m_c\": 30.7,\n  \"max_temp_2m_c\": 35.4,\n  \"min_temp_2m_c\": 26.9,\n  \"max_wind_gust_10m_kmh\": 51.4,\n  \"min_sea_level_pressure_hpa\": 1008.6,\n  \"mean_relative_humidity_pct\": 78.2,\n  \"topsoil_moisture_0_7cm_m3m3\": 0.452,\n  \"cumulative_et0_evapotranspiration_mm\": 145.7\n}",
+              "raw": "{\n  \"start_date\": \"2023-10-15\",\n  \"end_date\": \"2023-11-11\",\n  \"area_km2\": 229835,\n  \"severity\": 1.5,\n  \"continent_region\": \"Africa\",\n  \"elevation_m\": 244,\n  \"precip_antecedent_7d_mm\": 0.0,\n  \"precip_antecedent_14d_mm\": 1.2,\n  \"soil_moisture_before_m3m3\": 0.115,\n  \"precip_max_1d_first3d_mm\": 5.3,\n  \"precip_first3d_mm\": 9.5,\n  \"wind_gust_max_first3d_kmh\": 40,\n  \"temp_mean_first3d_c\": 29.5,\n  \"pressure_min_first3d_hpa\": 1007.7,\n  \"precip_event_mm\": 200.9,\n  \"rain_event_mm\": 200.9,\n  \"snowfall_event_cm\": 0.0,\n  \"precip_max_1d_mm\": 23.6,\n  \"et0_event_mm\": 135.4,\n  \"temp_max_c\": 36.1,\n  \"rh_mean_pct\": 68.536,\n  \"soil_moisture_event_max_m3m3\": 0.414\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -109,7 +109,7 @@
           ]
         },
         {
-          "name": "Predict - no_size",
+          "name": "Predict - no_size (Germany and Belgium 2021)",
           "request": {
             "method": "POST",
             "header": [
@@ -139,7 +139,7 @@
             "description": "Illustrative inputs, not a recorded event. No area, end date or severity.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"start_date\": \"2024-04-20\",\n  \"latitude\": -1.28,\n  \"longitude\": 36.82,\n  \"koppen_climate_zone\": \"Af/Am (Equatorial / Tropical Monsoon)\",\n  \"continent_region\": \"Africa\",\n  \"main_cause\": \"Heavy rain\",\n  \"max_24h_precipitation_mm\": 80,\n  \"antecedent_7day_precip_mm\": 120,\n  \"mean_temp_2m_c\": 19,\n  \"max_temp_2m_c\": 24,\n  \"min_temp_2m_c\": 14,\n  \"max_wind_gust_10m_kmh\": 40,\n  \"min_sea_level_pressure_hpa\": 1010,\n  \"mean_relative_humidity_pct\": 85,\n  \"topsoil_moisture_0_7cm_m3m3\": 0.4\n}",
+              "raw": "{\n  \"start_date\": \"2021-07-14\",\n  \"latitude\": 50.6021,\n  \"longitude\": 5.887,\n  \"continent_region\": \"Europe\",\n  \"main_cause\": \"Torrential rain\",\n  \"elevation_m\": 174,\n  \"precip_antecedent_7d_mm\": 34.7,\n  \"precip_antecedent_14d_mm\": 77.4,\n  \"soil_moisture_before_m3m3\": 0.423,\n  \"precip_max_1d_first3d_mm\": 66.7,\n  \"precip_first3d_mm\": 90.1,\n  \"wind_gust_max_first3d_kmh\": 65.9,\n  \"temp_mean_first3d_c\": 16.833,\n  \"pressure_min_first3d_hpa\": 1008.3\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -158,7 +158,7 @@
                   "",
                   "pm.test(\"variant no_size\", () => pm.expect(body.variant).to.eql(\"no_size\"));",
                   "pm.test(\"no formula without area, end date and severity\", () => pm.expect(body.dfo_formula).to.be.null);",
-                  "pm.test(\"reading flags synthetic training weather\", () => pm.expect(body.reading).to.include(\"synthetic\"));"
+                  "pm.test(\"reading calls it an early estimate\", () => pm.expect(body.reading).to.include(\"early estimate\"));"
                 ]
               }
             }
@@ -196,7 +196,7 @@
             "description": "Up to 500 events. One bad event fails the call and names its index.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"events\": [\n    {\n      \"start_date\": \"2023-10-15\",\n      \"end_date\": \"2023-11-11\",\n      \"area_km2\": 229835,\n      \"severity\": 1.5,\n      \"latitude\": -1.503,\n      \"longitude\": 40.03,\n      \"koppen_climate_zone\": \"Af/Am (Equatorial / Tropical Monsoon)\",\n      \"continent_region\": \"Africa\",\n      \"main_cause\": \"Heavy rain\",\n      \"total_precipitation_mm\": 793.3,\n      \"max_24h_precipitation_mm\": 375.3,\n      \"total_liquid_rain_mm\": 793.3,\n      \"snow_melt_equiv_mm\": 0.0,\n      \"antecedent_7day_precip_mm\": 121.5,\n      \"estimated_surface_runoff_mm\": 502.0,\n      \"mean_temp_2m_c\": 30.7,\n      \"max_temp_2m_c\": 35.4,\n      \"min_temp_2m_c\": 26.9,\n      \"max_wind_gust_10m_kmh\": 51.4,\n      \"min_sea_level_pressure_hpa\": 1008.6,\n      \"mean_relative_humidity_pct\": 78.2,\n      \"topsoil_moisture_0_7cm_m3m3\": 0.452,\n      \"cumulative_et0_evapotranspiration_mm\": 145.7\n    },\n    {\n      \"start_date\": \"2023-10-15\",\n      \"end_date\": \"2023-11-11\",\n      \"area_km2\": 10,\n      \"severity\": 1.5,\n      \"latitude\": -1.503,\n      \"longitude\": 40.03,\n      \"koppen_climate_zone\": \"Af/Am (Equatorial / Tropical Monsoon)\",\n      \"continent_region\": \"Africa\",\n      \"main_cause\": \"Heavy rain\",\n      \"total_precipitation_mm\": 793.3,\n      \"max_24h_precipitation_mm\": 375.3,\n      \"total_liquid_rain_mm\": 793.3,\n      \"snow_melt_equiv_mm\": 0.0,\n      \"antecedent_7day_precip_mm\": 121.5,\n      \"estimated_surface_runoff_mm\": 502.0,\n      \"mean_temp_2m_c\": 30.7,\n      \"max_temp_2m_c\": 35.4,\n      \"min_temp_2m_c\": 26.9,\n      \"max_wind_gust_10m_kmh\": 51.4,\n      \"min_sea_level_pressure_hpa\": 1008.6,\n      \"mean_relative_humidity_pct\": 78.2,\n      \"topsoil_moisture_0_7cm_m3m3\": 0.452,\n      \"cumulative_et0_evapotranspiration_mm\": 145.7\n    }\n  ]\n}",
+              "raw": "{\n  \"events\": [\n    {\n      \"start_date\": \"2023-10-15\",\n      \"end_date\": \"2023-11-11\",\n      \"area_km2\": 229835,\n      \"severity\": 1.5,\n      \"continent_region\": \"Africa\",\n      \"elevation_m\": 244,\n      \"precip_antecedent_7d_mm\": 0.0,\n      \"precip_antecedent_14d_mm\": 1.2,\n      \"soil_moisture_before_m3m3\": 0.115,\n      \"precip_max_1d_first3d_mm\": 5.3,\n      \"precip_first3d_mm\": 9.5,\n      \"wind_gust_max_first3d_kmh\": 40,\n      \"temp_mean_first3d_c\": 29.5,\n      \"pressure_min_first3d_hpa\": 1007.7,\n      \"precip_event_mm\": 200.9,\n      \"rain_event_mm\": 200.9,\n      \"snowfall_event_cm\": 0.0,\n      \"precip_max_1d_mm\": 23.6,\n      \"et0_event_mm\": 135.4,\n      \"temp_max_c\": 36.1,\n      \"rh_mean_pct\": 68.536,\n      \"soil_moisture_event_max_m3m3\": 0.414\n    },\n    {\n      \"start_date\": \"2023-10-15\",\n      \"end_date\": \"2023-11-11\",\n      \"area_km2\": 10,\n      \"severity\": 1.5,\n      \"continent_region\": \"Africa\",\n      \"elevation_m\": 244,\n      \"precip_antecedent_7d_mm\": 0.0,\n      \"precip_antecedent_14d_mm\": 1.2,\n      \"soil_moisture_before_m3m3\": 0.115,\n      \"precip_max_1d_first3d_mm\": 5.3,\n      \"precip_first3d_mm\": 9.5,\n      \"wind_gust_max_first3d_kmh\": 40,\n      \"temp_mean_first3d_c\": 29.5,\n      \"pressure_min_first3d_hpa\": 1007.7,\n      \"precip_event_mm\": 200.9,\n      \"rain_event_mm\": 200.9,\n      \"snowfall_event_cm\": 0.0,\n      \"precip_max_1d_mm\": 23.6,\n      \"et0_event_mm\": 135.4,\n      \"temp_max_c\": 36.1,\n      \"rh_mean_pct\": 68.536,\n      \"soil_moisture_event_max_m3m3\": 0.414\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -291,7 +291,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"start_date\": \"2023-10-15\",\n  \"end_date\": \"2023-11-11\",\n  \"severity\": 1.5,\n  \"latitude\": -1.503,\n  \"longitude\": 40.03,\n  \"koppen_climate_zone\": \"Af/Am (Equatorial / Tropical Monsoon)\",\n  \"continent_region\": \"Africa\",\n  \"main_cause\": \"Heavy rain\",\n  \"total_precipitation_mm\": 793.3,\n  \"max_24h_precipitation_mm\": 375.3,\n  \"total_liquid_rain_mm\": 793.3,\n  \"snow_melt_equiv_mm\": 0.0,\n  \"antecedent_7day_precip_mm\": 121.5,\n  \"estimated_surface_runoff_mm\": 502.0,\n  \"mean_temp_2m_c\": 30.7,\n  \"max_temp_2m_c\": 35.4,\n  \"min_temp_2m_c\": 26.9,\n  \"max_wind_gust_10m_kmh\": 51.4,\n  \"min_sea_level_pressure_hpa\": 1008.6,\n  \"mean_relative_humidity_pct\": 78.2,\n  \"topsoil_moisture_0_7cm_m3m3\": 0.452,\n  \"cumulative_et0_evapotranspiration_mm\": 145.7\n}",
+              "raw": "{\n  \"start_date\": \"2023-10-15\",\n  \"end_date\": \"2023-11-11\",\n  \"severity\": 1.5,\n  \"continent_region\": \"Africa\",\n  \"elevation_m\": 244,\n  \"precip_antecedent_7d_mm\": 0.0,\n  \"precip_antecedent_14d_mm\": 1.2,\n  \"soil_moisture_before_m3m3\": 0.115,\n  \"precip_max_1d_first3d_mm\": 5.3,\n  \"precip_first3d_mm\": 9.5,\n  \"wind_gust_max_first3d_kmh\": 40,\n  \"temp_mean_first3d_c\": 29.5,\n  \"pressure_min_first3d_hpa\": 1007.7,\n  \"precip_event_mm\": 200.9,\n  \"rain_event_mm\": 200.9,\n  \"snowfall_event_cm\": 0.0,\n  \"precip_max_1d_mm\": 23.6,\n  \"et0_event_mm\": 135.4,\n  \"temp_max_c\": 36.1,\n  \"rh_mean_pct\": 68.536,\n  \"soil_moisture_event_max_m3m3\": 0.414\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -313,7 +313,7 @@
           ]
         },
         {
-          "name": "Error - unknown climate zone",
+          "name": "Error - unknown continent",
           "request": {
             "method": "POST",
             "header": [
@@ -337,7 +337,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"start_date\": \"2023-10-15\",\n  \"end_date\": \"2023-11-11\",\n  \"area_km2\": 229835,\n  \"severity\": 1.5,\n  \"latitude\": -1.503,\n  \"longitude\": 40.03,\n  \"koppen_climate_zone\": \"BWh\",\n  \"continent_region\": \"Africa\",\n  \"main_cause\": \"Heavy rain\",\n  \"total_precipitation_mm\": 793.3,\n  \"max_24h_precipitation_mm\": 375.3,\n  \"total_liquid_rain_mm\": 793.3,\n  \"snow_melt_equiv_mm\": 0.0,\n  \"antecedent_7day_precip_mm\": 121.5,\n  \"estimated_surface_runoff_mm\": 502.0,\n  \"mean_temp_2m_c\": 30.7,\n  \"max_temp_2m_c\": 35.4,\n  \"min_temp_2m_c\": 26.9,\n  \"max_wind_gust_10m_kmh\": 51.4,\n  \"min_sea_level_pressure_hpa\": 1008.6,\n  \"mean_relative_humidity_pct\": 78.2,\n  \"topsoil_moisture_0_7cm_m3m3\": 0.452,\n  \"cumulative_et0_evapotranspiration_mm\": 145.7\n}",
+              "raw": "{\n  \"start_date\": \"2023-10-15\",\n  \"end_date\": \"2023-11-11\",\n  \"area_km2\": 229835,\n  \"severity\": 1.5,\n  \"continent_region\": \"Atlantis\",\n  \"elevation_m\": 244,\n  \"precip_antecedent_7d_mm\": 0.0,\n  \"precip_antecedent_14d_mm\": 1.2,\n  \"soil_moisture_before_m3m3\": 0.115,\n  \"precip_max_1d_first3d_mm\": 5.3,\n  \"precip_first3d_mm\": 9.5,\n  \"wind_gust_max_first3d_kmh\": 40,\n  \"temp_mean_first3d_c\": 29.5,\n  \"pressure_min_first3d_hpa\": 1007.7,\n  \"precip_event_mm\": 200.9,\n  \"rain_event_mm\": 200.9,\n  \"snowfall_event_cm\": 0.0,\n  \"precip_max_1d_mm\": 23.6,\n  \"et0_event_mm\": 135.4,\n  \"temp_max_c\": 36.1,\n  \"rh_mean_pct\": 68.536,\n  \"soil_moisture_event_max_m3m3\": 0.414\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -352,7 +352,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
-                  "pm.test(\"lists the allowed zones\", () => pm.expect(pm.response.json().detail).to.include(\"koppen_climate_zone must be one of\"));"
+                  "pm.test(\"lists the allowed regions\", () => pm.expect(pm.response.json().detail).to.include(\"continent_region must be one of\"));"
                 ]
               }
             }
@@ -383,7 +383,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"start_date\": \"2023-10-15\",\n  \"end_date\": \"2023-11-11\",\n  \"area_km2\": 229835,\n  \"severity\": 3,\n  \"latitude\": -1.503,\n  \"longitude\": 40.03,\n  \"koppen_climate_zone\": \"Af/Am (Equatorial / Tropical Monsoon)\",\n  \"continent_region\": \"Africa\",\n  \"main_cause\": \"Heavy rain\",\n  \"total_precipitation_mm\": 793.3,\n  \"max_24h_precipitation_mm\": 375.3,\n  \"total_liquid_rain_mm\": 793.3,\n  \"snow_melt_equiv_mm\": 0.0,\n  \"antecedent_7day_precip_mm\": 121.5,\n  \"estimated_surface_runoff_mm\": 502.0,\n  \"mean_temp_2m_c\": 30.7,\n  \"max_temp_2m_c\": 35.4,\n  \"min_temp_2m_c\": 26.9,\n  \"max_wind_gust_10m_kmh\": 51.4,\n  \"min_sea_level_pressure_hpa\": 1008.6,\n  \"mean_relative_humidity_pct\": 78.2,\n  \"topsoil_moisture_0_7cm_m3m3\": 0.452,\n  \"cumulative_et0_evapotranspiration_mm\": 145.7\n}",
+              "raw": "{\n  \"start_date\": \"2023-10-15\",\n  \"end_date\": \"2023-11-11\",\n  \"area_km2\": 229835,\n  \"severity\": 3,\n  \"continent_region\": \"Africa\",\n  \"elevation_m\": 244,\n  \"precip_antecedent_7d_mm\": 0.0,\n  \"precip_antecedent_14d_mm\": 1.2,\n  \"soil_moisture_before_m3m3\": 0.115,\n  \"precip_max_1d_first3d_mm\": 5.3,\n  \"precip_first3d_mm\": 9.5,\n  \"wind_gust_max_first3d_kmh\": 40,\n  \"temp_mean_first3d_c\": 29.5,\n  \"pressure_min_first3d_hpa\": 1007.7,\n  \"precip_event_mm\": 200.9,\n  \"rain_event_mm\": 200.9,\n  \"snowfall_event_cm\": 0.0,\n  \"precip_max_1d_mm\": 23.6,\n  \"et0_event_mm\": 135.4,\n  \"temp_max_c\": 36.1,\n  \"rh_mean_pct\": 68.536,\n  \"soil_moisture_event_max_m3m3\": 0.414\n}",
               "options": {
                 "raw": {
                   "language": "json"

@@ -43,7 +43,7 @@ SHAP values on the map are `shap.LinearExplainer` on the log-odds. Mean absolute
 
 A second, separate model. `model/impact.py` trains the CatBoost regressor from `data/CatBoost_Model_Executive_Brief.pdf` (depth 7, learning rate 0.03, L2 5.0, MVS subsample 0.8, up to 1,200 trees) on the 5,503 records in `data/Enriched_Global_Flood_Records-v2.csv`. It does not feed the map. The notebook `model/notebooks/catboost_flood_impact.ipynb` walks through the same steps.
 
-The target, `Flood impact index`, is the DFO magnitude: log10(days × severity × area_km2), rounded to 0.1, with days counting the start and end date. That formula matches 5,499 of 5,503 rows after rounding. The 14 weather columns came from an enrichment step that is not in this repo, and they look synthetic: 376 distinct points for 5,503 events, and spot checks against the Open-Meteo archive disagree.
+The target, `Flood impact index`, is the DFO magnitude: log10(days × severity × area_km2), rounded to 0.1, with days counting the start and end date. That formula matches 5,499 of 5,503 rows after rounding. The CSV's 14 weather columns came from an enrichment step that is not in this repo, and they look synthetic: 376 distinct points for 5,503 events, a median 541 km from the flood. The model does not use them. `model/weather.py` takes daily Open-Meteo reanalysis (ERA5 / ERA5-Land) at the centre of each event's footprint in the DFO GeoPackage instead: 14 days before the start, and up to 45 days of the event. Two footprints are stored a whole turn off in longitude (5161 Thailand, 5228 Cuba) and are wrapped back into ±180°. Fetch the weather with `python -m model.weather` (resumable, about 9,300 Open-Meteo calls for all events).
 
 Source file: `model/artifacts/impact/impact_metrics.json`. Temporal test: start years 2019–2024, 792 events. The trees are counted on 2016–2018 and the model is refit on 1985–2018.
 
@@ -51,11 +51,11 @@ Source file: `model/artifacts/impact/impact_metrics.json`. Temporal test: start 
 |---|---|---|---|
 | DFO formula | days, severity, area | 0.029 | 0.999 |
 | Linear regression | log area, log days | 0.114 | 0.991 |
-| CatBoost `brief` | log area, duration, 14 weather columns, climate zone, continent | 0.162 | 0.982 |
-| CatBoost `no_size` | weather that is not summed over the event, location, month, cause, zone | 0.899 | 0.456 |
+| CatBoost `brief` | log area, duration, 17 observed weather values, continent | 0.173 | 0.980 |
+| CatBoost `no_size` | weather before the event and in its first three days, location, month, cause, continent | 1.102 | 0.184 |
 | Training mean | none | 1.233 | −0.022 |
 
-The brief's own protocol, a random 80/20 split that picks the best iteration on the test rows, gives test RMSE 0.104 here against the 0.0985 the brief reports (`brief_reproduction`).
+The brief's own protocol, a random 80/20 split that picks the best iteration on the test rows, gives test RMSE 0.131 here against the 0.0985 the brief reports (`brief_reproduction`).
 
 API:
 
@@ -66,7 +66,7 @@ API:
 | `POST /api/v1/impact/predict/batch?variant=…` | Up to 500 events in one call |
 | `GET /api/v1/impact/test-events?country=&limit=` | Held-out 2019–2024 records with the index, the formula and both holdout predictions (`limit` up to 1000) |
 
-Swagger UI is at `/docs` on a running API (ReDoc at `/redoc`, raw schema at `/openapi.json`). The same schema is committed as `api/openapi.json`; regenerate it with `python -m api.export_openapi` after changing a route, and `tests/test_impact_api.py` fails if it drifts. Request bodies carry two examples: the Kenya flood of Oct–Nov 2023 (event 5477) for `brief`, and illustrative inputs for `no_size`.
+Swagger UI is at `/docs` on a running API (ReDoc at `/redoc`, raw schema at `/openapi.json`). The same schema is committed as `api/openapi.json`; regenerate it with `python -m api.export_openapi` after changing a route, and `tests/test_impact_api.py` fails if it drifts. Request bodies carry two examples from the event table: the Kenya flood of Oct–Nov 2023 (event 5477) for `brief`, and the July 2021 floods in Germany and Belgium (event 5095) for `no_size`.
 
 Postman: import `api/postman/DrainSense.postman_collection.json` and `api/postman/DrainSense.local.postman_environment.json`. 24 requests in three folders (impact model, risk map, drainage log) with 55 test assertions. Run the folders in order; the risk map folder stores `cell_id` and the drainage log chains report and inspection ids. From the command line:
 
@@ -86,11 +86,11 @@ Dashboard: the desk's **Impact** page (`web/app/impact/page.js`, http://localhos
 
 Each section loads on its own, so one failing call does not blank the page.
 
-Retrain from the committed event table, or rebuild that table from `data/` first:
+Retrain from the committed event table, or rebuild that table from `data/` and the weather cache first:
 
 ```bash
 python3 -m model.impact
-python3 -m model.impact --rebuild
+python3 -m model.weather && python3 -m model.impact --rebuild
 ```
 
 ## Production

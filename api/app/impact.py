@@ -217,50 +217,48 @@ class ModelCard(BaseModel):
     weather_fields: dict[str, str]
 
 
-# Request examples for the OpenAPI schema. Event 5477 is the Kenya flood of Oct-Nov 2023,
-# with the values as they stand in event_features.csv.
+# Request examples for the OpenAPI schema, from event_features.csv (weather rounded to 3 decimals).
+# Event 5477 is the Kenya flood of Oct-Nov 2023.
 KENYA_2023 = {
     "start_date": "2023-10-15",
     "end_date": "2023-11-11",
     "area_km2": 229835,
     "severity": 1.5,
-    "latitude": -1.503,
-    "longitude": 40.03,
-    "koppen_climate_zone": "Af/Am (Equatorial / Tropical Monsoon)",
     "continent_region": "Africa",
-    "main_cause": "Heavy rain",
-    "total_precipitation_mm": 793.3,
-    "max_24h_precipitation_mm": 375.3,
-    "total_liquid_rain_mm": 793.3,
-    "snow_melt_equiv_mm": 0.0,
-    "antecedent_7day_precip_mm": 121.5,
-    "estimated_surface_runoff_mm": 502.0,
-    "mean_temp_2m_c": 30.7,
-    "max_temp_2m_c": 35.4,
-    "min_temp_2m_c": 26.9,
-    "max_wind_gust_10m_kmh": 51.4,
-    "min_sea_level_pressure_hpa": 1008.6,
-    "mean_relative_humidity_pct": 78.2,
-    "topsoil_moisture_0_7cm_m3m3": 0.452,
-    "cumulative_et0_evapotranspiration_mm": 145.7,
+    "elevation_m": 244,
+    "precip_antecedent_7d_mm": 0.0,
+    "precip_antecedent_14d_mm": 1.2,
+    "soil_moisture_before_m3m3": 0.115,
+    "precip_max_1d_first3d_mm": 5.3,
+    "precip_first3d_mm": 9.5,
+    "wind_gust_max_first3d_kmh": 40,
+    "temp_mean_first3d_c": 29.5,
+    "pressure_min_first3d_hpa": 1007.7,
+    "precip_event_mm": 200.9,
+    "rain_event_mm": 200.9,
+    "snowfall_event_cm": 0.0,
+    "precip_max_1d_mm": 23.6,
+    "et0_event_mm": 135.4,
+    "temp_max_c": 36.1,
+    "rh_mean_pct": 68.536,
+    "soil_moisture_event_max_m3m3": 0.414,
 }
-# A made-up event with only the fields no_size needs. It is an input example, not a record.
-NO_SIZE_EXAMPLE = {
-    "start_date": "2024-04-20",
-    "latitude": -1.28,
-    "longitude": 36.82,
-    "koppen_climate_zone": "Af/Am (Equatorial / Tropical Monsoon)",
-    "continent_region": "Africa",
-    "main_cause": "Heavy rain",
-    "max_24h_precipitation_mm": 80,
-    "antecedent_7day_precip_mm": 120,
-    "mean_temp_2m_c": 19,
-    "max_temp_2m_c": 24,
-    "min_temp_2m_c": 14,
-    "max_wind_gust_10m_kmh": 40,
-    "min_sea_level_pressure_hpa": 1010,
-    "mean_relative_humidity_pct": 85,
-    "topsoil_moisture_0_7cm_m3m3": 0.4,
+# Event 5095, the July 2021 floods in Germany and Belgium, with only the fields no_size needs.
+EUROPE_2021_BY_DAY_3 = {
+    "start_date": "2021-07-14",
+    "latitude": 50.6021,
+    "longitude": 5.887,
+    "continent_region": "Europe",
+    "main_cause": "Torrential rain",
+    "elevation_m": 174,
+    "precip_antecedent_7d_mm": 34.7,
+    "precip_antecedent_14d_mm": 77.4,
+    "soil_moisture_before_m3m3": 0.423,
+    "precip_max_1d_first3d_mm": 66.7,
+    "precip_first3d_mm": 90.1,
+    "wind_gust_max_first3d_kmh": 65.9,
+    "temp_mean_first3d_c": 16.833,
+    "pressure_min_first3d_hpa": 1008.3,
 }
 PREDICT_EXAMPLES = {
     "brief": {
@@ -269,9 +267,9 @@ PREDICT_EXAMPLES = {
         "value": KENYA_2023,
     },
     "no_size": {
-        "summary": "no_size: no area, end date or severity",
-        "description": "Send with ?variant=no_size. Values are illustrative, not a recorded event.",
-        "value": NO_SIZE_EXAMPLE,
+        "summary": "no_size: Germany and Belgium, July 2021 (event 5095)",
+        "description": "Send with ?variant=no_size. No area, end date or severity: what is known by the third day.",
+        "value": EUROPE_2021_BY_DAY_3,
     },
 }
 BATCH_EXAMPLES = {
