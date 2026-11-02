@@ -25,6 +25,25 @@ def test_health_and_grid(client):
     assert all(0 <= p <= 1 for p in probs)
 
 
+def test_cells_carry_place_names_not_grid_codes(client):
+    grid = client.get("/api/v1/risk/grid").json()
+    names = {f["properties"]["cell_id"]: f["properties"]["place_name"] for f in grid["features"]}
+    assert all(names.values())
+    assert names["s45_w75"] == "Los Lagos Region, Chile"
+    detail = client.get("/api/v1/risk/cells/s45_w75").json()
+    assert detail["place_name"] == "Los Lagos Region, Chile"
+    assert detail["country_code"] == "CL"
+    plan = client.get("/api/v1/response/plan?limit=3").json()["plan"]
+    assert all(item["place_name"] for item in plan)
+
+
+def test_place_name_falls_back_to_coordinates():
+    from api.app import scoring
+
+    assert scoring._coords(-42.5, -72.5) == "42.5°S 72.5°W"
+    assert scoring._coords(2.5, 12.5) == "2.5°N 12.5°E"
+
+
 def test_cell_shap_and_derived_sector_language(client):
     hotspot = client.get("/api/v1/risk/hotspots?limit=1").json()["hotspots"][0]
     detail = client.get(f"/api/v1/risk/cells/{hotspot['cell_id']}").json()

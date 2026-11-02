@@ -160,7 +160,8 @@ python3 -m model.train --refit
 | Path | Role |
 |---|---|
 | `model/train.py` | Download, labels, leak checks, logistic regression, dummy baselines, SHAP |
-| `model/artifacts/` | Feature table, `metrics.json`, `scores.geojson` |
+| `model/artifacts/` | Feature table, `metrics.json`, `scores.geojson`, `cell_places.json` |
+| `model/geocode_cells.py` | Reverse-geocodes each 5° cell to a region and country name (OSM Nominatim, resumable). The API serves it as `place_name`. Rerun after `model.train` adds cells. |
 | `model/impact.py` | CatBoost flood-impact regressor from the executive brief, baselines, data checks |
 | `model/artifacts/impact/` | Event table, both `.cbm` models, `impact_metrics.json`, held-out predictions |
 | `model/notebooks/` | Walkthrough notebook for the impact model |

@@ -1,0 +1,4573 @@
+{
+ "source": "OpenStreetMap Nominatim reverse geocoding, zoom 5 (region level). Data © OpenStreetMap contributors, ODbL 1.0.",
+ "cells": {
+  "n0_e10": {
+   "name": "South, Cameroon",
+   "region": "South",
+   "country": "Cameroon",
+   "country_code": "CM",
+   "sampled_lat": 2.5,
+   "sampled_lon": 12.5
+  },
+  "n0_e100": {
+   "name": "Negeri Sembilan, Malaysia",
+   "region": "Negeri Sembilan",
+   "country": "Malaysia",
+   "country_code": "MY",
+   "sampled_lat": 2.5,
+   "sampled_lon": 102.5
+  },
+  "n0_e110": {
+   "name": "Sarawak, Malaysia",
+   "region": "Sarawak",
+   "country": "Malaysia",
+   "country_code": "MY",
+   "sampled_lat": 2.5,
+   "sampled_lon": 112.5
+  },
+  "n0_e115": {
+   "name": "East Kalimantan, Indonesia",
+   "region": "East Kalimantan",
+   "country": "Indonesia",
+   "country_code": "ID",
+   "sampled_lat": 2.5,
+   "sampled_lon": 117.5
+  },
+  "n0_e15": {
+   "name": "Likouala, Congo-Brazzaville",
+   "region": "Likouala",
+   "country": "Congo-Brazzaville",
+   "country_code": "CG",
+   "sampled_lat": 2.5,
+   "sampled_lon": 17.5
+  },
+  "n0_e20": {
+   "name": "Mongala, Democratic Republic of the Congo",
+   "region": "Mongala",
+   "country": "Democratic Republic of the Congo",
+   "country_code": "CD",
+   "sampled_lat": 2.5,
+   "sampled_lon": 22.5
+  },
+  "n0_e25": {
+   "name": "Upper Uele, Democratic Republic of the Congo",
+   "region": "Upper Uele",
+   "country": "Democratic Republic of the Congo",
+   "country_code": "CD",
+   "sampled_lat": 2.5,
+   "sampled_lon": 27.5
+  },
+  "n0_e30": {
+   "name": "Oyam, Uganda",
+   "region": "Oyam",
+   "country": "Uganda",
+   "country_code": "UG",
+   "sampled_lat": 2.5,
+   "sampled_lon": 32.5
+  },
+  "n0_e35": {
+   "name": "Marsabit County, Kenya",
+   "region": "Marsabit County",
+   "country": "Kenya",
+   "country_code": "KE",
+   "sampled_lat": 2.5,
+   "sampled_lon": 37.5
+  },
+  "n0_e40": {
+   "name": "South West, Somalia",
+   "region": "South West",
+   "country": "Somalia",
+   "country_code": "SO",
+   "sampled_lat": 2.5,
+   "sampled_lon": 42.5
+  },
+  "n0_w55": {
+   "name": "Amapá, Brazil",
+   "region": "Amapá",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": 2.5,
+   "sampled_lon": -52.5
+  },
+  "n0_w60": {
+   "name": "East Berbice-Corentyne, Guyana",
+   "region": "East Berbice-Corentyne",
+   "country": "Guyana",
+   "country_code": "GY",
+   "sampled_lat": 2.5,
+   "sampled_lon": -57.5
+  },
+  "n0_w65": {
+   "name": "Roraima, Brazil",
+   "region": "Roraima",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": 2.5,
+   "sampled_lon": -62.5
+  },
+  "n0_w70": {
+   "name": "Guainía, Colombia",
+   "region": "Guainía",
+   "country": "Colombia",
+   "country_code": "CO",
+   "sampled_lat": 2.5,
+   "sampled_lon": -67.5
+  },
+  "n0_w75": {
+   "name": "Guaviare, Colombia",
+   "region": "Guaviare",
+   "country": "Colombia",
+   "country_code": "CO",
+   "sampled_lat": 2.5,
+   "sampled_lon": -72.5
+  },
+  "n0_w80": {
+   "name": "Cauca, Colombia",
+   "region": "Cauca",
+   "country": "Colombia",
+   "country_code": "CO",
+   "sampled_lat": 2.5,
+   "sampled_lon": -77.5
+  },
+  "n10_e0": {
+   "name": "Tillabéri Region, Niger",
+   "region": "Tillabéri Region",
+   "country": "Niger",
+   "country_code": "NE",
+   "sampled_lat": 12.5,
+   "sampled_lon": 2.5
+  },
+  "n10_e10": {
+   "name": "Borno State, Nigeria",
+   "region": "Borno State",
+   "country": "Nigeria",
+   "country_code": "NG",
+   "sampled_lat": 12.5,
+   "sampled_lon": 12.5
+  },
+  "n10_e100": {
+   "name": "Trat Province, Thailand",
+   "region": "Trat Province",
+   "country": "Thailand",
+   "country_code": "TH",
+   "sampled_lat": 12.5,
+   "sampled_lon": 102.5
+  },
+  "n10_e105": {
+   "name": "Mondulkiri, Cambodia",
+   "region": "Mondulkiri",
+   "country": "Cambodia",
+   "country_code": "KH",
+   "sampled_lat": 12.5,
+   "sampled_lon": 107.5
+  },
+  "n10_e15": {
+   "name": "Batha, Chad",
+   "region": "Batha",
+   "country": "Chad",
+   "country_code": "TD",
+   "sampled_lat": 12.5,
+   "sampled_lon": 17.5
+  },
+  "n10_e20": {
+   "name": "West Darfur, Sudan",
+   "region": "West Darfur",
+   "country": "Sudan",
+   "country_code": "SD",
+   "sampled_lat": 12.5,
+   "sampled_lon": 22.5
+  },
+  "n10_e25": {
+   "name": "West Kordufan, Sudan",
+   "region": "West Kordufan",
+   "country": "Sudan",
+   "country_code": "SD",
+   "sampled_lat": 12.5,
+   "sampled_lon": 27.5
+  },
+  "n10_e30": {
+   "name": "White Nile, Sudan",
+   "region": "White Nile",
+   "country": "Sudan",
+   "country_code": "SD",
+   "sampled_lat": 12.5,
+   "sampled_lon": 32.5
+  },
+  "n10_e35": {
+   "name": "Amhara Region, Ethiopia",
+   "region": "Amhara Region",
+   "country": "Ethiopia",
+   "country_code": "ET",
+   "sampled_lat": 12.5,
+   "sampled_lon": 37.5
+  },
+  "n10_e40": {
+   "name": "Tadjourah, Djibouti",
+   "region": "Tadjourah",
+   "country": "Djibouti",
+   "country_code": "DJ",
+   "sampled_lat": 12.5,
+   "sampled_lon": 42.5
+  },
+  "n10_e5": {
+   "name": "Katsina State, Nigeria",
+   "region": "Katsina State",
+   "country": "Nigeria",
+   "country_code": "NG",
+   "sampled_lat": 12.5,
+   "sampled_lon": 7.5
+  },
+  "n10_e75": {
+   "name": "Karnataka, India",
+   "region": "Karnataka",
+   "country": "India",
+   "country_code": "IN",
+   "sampled_lat": 12.5,
+   "sampled_lon": 77.5
+  },
+  "n10_w10": {
+   "name": "Koulikoro, Mali",
+   "region": "Koulikoro",
+   "country": "Mali",
+   "country_code": "ML",
+   "sampled_lat": 12.5,
+   "sampled_lon": -7.5
+  },
+  "n10_w15": {
+   "name": "Kédougou Region, Senegal",
+   "region": "Kédougou Region",
+   "country": "Senegal",
+   "country_code": "SN",
+   "sampled_lat": 12.5,
+   "sampled_lon": -12.5
+  },
+  "n10_w5": {
+   "name": "Central-West, Burkina Faso",
+   "region": "Central-West",
+   "country": "Burkina Faso",
+   "country_code": "BF",
+   "sampled_lat": 12.5,
+   "sampled_lon": -2.5
+  },
+  "n15_e0": {
+   "name": "Ménaka, Mali",
+   "region": "Ménaka",
+   "country": "Mali",
+   "country_code": "ML",
+   "sampled_lat": 17.5,
+   "sampled_lon": 2.5
+  },
+  "n15_e10": {
+   "name": "Diffa Region, Niger",
+   "region": "Diffa Region",
+   "country": "Niger",
+   "country_code": "NE",
+   "sampled_lat": 17.5,
+   "sampled_lon": 12.5
+  },
+  "n15_e100": {
+   "name": "Udon Thani Province, Thailand",
+   "region": "Udon Thani Province",
+   "country": "Thailand",
+   "country_code": "TH",
+   "sampled_lat": 17.5,
+   "sampled_lon": 102.5
+  },
+  "n15_e15": {
+   "name": "Borkou, Chad",
+   "region": "Borkou",
+   "country": "Chad",
+   "country_code": "TD",
+   "sampled_lat": 17.5,
+   "sampled_lon": 17.5
+  },
+  "n15_e20": {
+   "name": "East Ennedi, Chad",
+   "region": "East Ennedi",
+   "country": "Chad",
+   "country_code": "TD",
+   "sampled_lat": 17.5,
+   "sampled_lon": 22.5
+  },
+  "n15_e25": {
+   "name": "North Darfur, Sudan",
+   "region": "North Darfur",
+   "country": "Sudan",
+   "country_code": "SD",
+   "sampled_lat": 17.5,
+   "sampled_lon": 27.5
+  },
+  "n15_e30": {
+   "name": "River Nile State, Sudan",
+   "region": "River Nile State",
+   "country": "Sudan",
+   "country_code": "SD",
+   "sampled_lat": 17.5,
+   "sampled_lon": 32.5
+  },
+  "n15_e35": {
+   "name": "Red Sea State, Sudan",
+   "region": "Red Sea State",
+   "country": "Sudan",
+   "country_code": "SD",
+   "sampled_lat": 17.5,
+   "sampled_lon": 37.5
+  },
+  "n15_e40": {
+   "name": "Jazan Province, Saudi Arabia",
+   "region": "Jazan Province",
+   "country": "Saudi Arabia",
+   "country_code": "SA",
+   "sampled_lat": 17.5,
+   "sampled_lon": 42.5
+  },
+  "n15_e45": {
+   "name": "Najran Region, Saudi Arabia",
+   "region": "Najran Region",
+   "country": "Saudi Arabia",
+   "country_code": "SA",
+   "sampled_lat": 17.5,
+   "sampled_lon": 47.5
+  },
+  "n15_e5": {
+   "name": "Agadez Region, Niger",
+   "region": "Agadez Region",
+   "country": "Niger",
+   "country_code": "NE",
+   "sampled_lat": 17.5,
+   "sampled_lon": 7.5
+  },
+  "n15_e50": {
+   "name": "Al Mahrah Governorate, Yemen",
+   "region": "Al Mahrah Governorate",
+   "country": "Yemen",
+   "country_code": "YE",
+   "sampled_lat": 17.5,
+   "sampled_lon": 52.5
+  },
+  "n15_e75": {
+   "name": "Karnataka, India",
+   "region": "Karnataka",
+   "country": "India",
+   "country_code": "IN",
+   "sampled_lat": 17.5,
+   "sampled_lon": 77.5
+  },
+  "n15_e80": {
+   "name": "Andhra Pradesh, India",
+   "region": "Andhra Pradesh",
+   "country": "India",
+   "country_code": "IN",
+   "sampled_lat": 17.5,
+   "sampled_lon": 82.5
+  },
+  "n15_e95": {
+   "name": "Kayin State, Myanmar",
+   "region": "Kayin State",
+   "country": "Myanmar",
+   "country_code": "MM",
+   "sampled_lat": 17.5,
+   "sampled_lon": 97.5
+  },
+  "n15_w10": {
+   "name": "Hodh Ech Chargui, Mauritania",
+   "region": "Hodh Ech Chargui",
+   "country": "Mauritania",
+   "country_code": "MR",
+   "sampled_lat": 17.5,
+   "sampled_lon": -7.5
+  },
+  "n15_w100": {
+   "name": "Oaxaca, Mexico",
+   "region": "Oaxaca",
+   "country": "Mexico",
+   "country_code": "MX",
+   "sampled_lat": 17.5,
+   "sampled_lon": -97.5
+  },
+  "n15_w15": {
+   "name": "Tagant, Mauritania",
+   "region": "Tagant",
+   "country": "Mauritania",
+   "country_code": "MR",
+   "sampled_lat": 17.5,
+   "sampled_lon": -12.5
+  },
+  "n15_w5": {
+   "name": "Taoudénit Region, Mali",
+   "region": "Taoudénit Region",
+   "country": "Mali",
+   "country_code": "ML",
+   "sampled_lat": 17.5,
+   "sampled_lon": -2.5
+  },
+  "n15_w95": {
+   "name": "Chiapas, Mexico",
+   "region": "Chiapas",
+   "country": "Mexico",
+   "country_code": "MX",
+   "sampled_lat": 17.5,
+   "sampled_lon": -92.5
+  },
+  "n20_e0": {
+   "name": "Tamanrasset, Algeria",
+   "region": "Tamanrasset",
+   "country": "Algeria",
+   "country_code": "DZ",
+   "sampled_lat": 22.5,
+   "sampled_lon": 2.5
+  },
+  "n20_e10": {
+   "name": "Agadez Region, Niger",
+   "region": "Agadez Region",
+   "country": "Niger",
+   "country_code": "NE",
+   "sampled_lat": 22.5,
+   "sampled_lon": 12.5
+  },
+  "n20_e100": {
+   "name": "Lai Châu Province, Vietnam",
+   "region": "Lai Châu Province",
+   "country": "Vietnam",
+   "country_code": "VN",
+   "sampled_lat": 22.5,
+   "sampled_lon": 102.5
+  },
+  "n20_e105": {
+   "name": "Guangxi, China",
+   "region": "Guangxi",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 22.5,
+   "sampled_lon": 107.5
+  },
+  "n20_e110": {
+   "name": "Guangdong, China",
+   "region": "Guangdong",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 22.5,
+   "sampled_lon": 112.5
+  },
+  "n20_e15": {
+   "name": "Tibesti, Chad",
+   "region": "Tibesti",
+   "country": "Chad",
+   "country_code": "TD",
+   "sampled_lat": 22.5,
+   "sampled_lon": 17.5
+  },
+  "n20_e20": {
+   "name": "Kufra, Libya",
+   "region": "Kufra",
+   "country": "Libya",
+   "country_code": "LY",
+   "sampled_lat": 22.5,
+   "sampled_lon": 22.5
+  },
+  "n20_e25": {
+   "name": "New Valley, Egypt",
+   "region": "New Valley",
+   "country": "Egypt",
+   "country_code": "EG",
+   "sampled_lat": 22.5,
+   "sampled_lon": 27.5
+  },
+  "n20_e30": {
+   "name": "Aswan, Egypt",
+   "region": "Aswan",
+   "country": "Egypt",
+   "country_code": "EG",
+   "sampled_lat": 22.5,
+   "sampled_lon": 32.5
+  },
+  "n20_e40": {
+   "name": "Makkah Region, Saudi Arabia",
+   "region": "Makkah Region",
+   "country": "Saudi Arabia",
+   "country_code": "SA",
+   "sampled_lat": 22.5,
+   "sampled_lon": 42.5
+  },
+  "n20_e45": {
+   "name": "Riyadh Region, Saudi Arabia",
+   "region": "Riyadh Region",
+   "country": "Saudi Arabia",
+   "country_code": "SA",
+   "sampled_lat": 22.5,
+   "sampled_lon": 47.5
+  },
+  "n20_e5": {
+   "name": "Tamanrasset, Algeria",
+   "region": "Tamanrasset",
+   "country": "Algeria",
+   "country_code": "DZ",
+   "sampled_lat": 22.5,
+   "sampled_lon": 7.5
+  },
+  "n20_e50": {
+   "name": "Eastern Province, Saudi Arabia",
+   "region": "Eastern Province",
+   "country": "Saudi Arabia",
+   "country_code": "SA",
+   "sampled_lat": 22.5,
+   "sampled_lon": 52.5
+  },
+  "n20_e55": {
+   "name": "Ad Dakhiliyah Governorate, Oman",
+   "region": "Ad Dakhiliyah Governorate",
+   "country": "Oman",
+   "country_code": "OM",
+   "sampled_lat": 22.5,
+   "sampled_lon": 57.5
+  },
+  "n20_e70": {
+   "name": "Gujarat, India",
+   "region": "Gujarat",
+   "country": "India",
+   "country_code": "IN",
+   "sampled_lat": 22.5,
+   "sampled_lon": 72.5
+  },
+  "n20_e75": {
+   "name": "Madhya Pradesh, India",
+   "region": "Madhya Pradesh",
+   "country": "India",
+   "country_code": "IN",
+   "sampled_lat": 22.5,
+   "sampled_lon": 77.5
+  },
+  "n20_e80": {
+   "name": "Chhattisgarh, India",
+   "region": "Chhattisgarh",
+   "country": "India",
+   "country_code": "IN",
+   "sampled_lat": 22.5,
+   "sampled_lon": 82.5
+  },
+  "n20_e85": {
+   "name": "West Bengal, India",
+   "region": "West Bengal",
+   "country": "India",
+   "country_code": "IN",
+   "sampled_lat": 22.5,
+   "sampled_lon": 87.5
+  },
+  "n20_e90": {
+   "name": "Chattogram Division, Bangladesh",
+   "region": "Chattogram Division",
+   "country": "Bangladesh",
+   "country_code": "BD",
+   "sampled_lat": 22.5,
+   "sampled_lon": 92.5
+  },
+  "n20_e95": {
+   "name": "Shan State, Myanmar",
+   "region": "Shan State",
+   "country": "Myanmar",
+   "country_code": "MM",
+   "sampled_lat": 22.5,
+   "sampled_lon": 97.5
+  },
+  "n20_w10": {
+   "name": "Adrar, Mauritania",
+   "region": "Adrar",
+   "country": "Mauritania",
+   "country_code": "MR",
+   "sampled_lat": 22.5,
+   "sampled_lon": -7.5
+  },
+  "n20_w105": {
+   "name": "Zacatecas, Mexico",
+   "region": "Zacatecas",
+   "country": "Mexico",
+   "country_code": "MX",
+   "sampled_lat": 22.5,
+   "sampled_lon": -102.5
+  },
+  "n20_w15": {
+   "name": "Tiris Zemmour, Mauritania",
+   "region": "Tiris Zemmour",
+   "country": "Mauritania",
+   "country_code": "MR",
+   "sampled_lat": 22.5,
+   "sampled_lon": -12.5
+  },
+  "n20_w5": {
+   "name": "Taoudénit Region, Mali",
+   "region": "Taoudénit Region",
+   "country": "Mali",
+   "country_code": "ML",
+   "sampled_lat": 22.5,
+   "sampled_lon": -2.5
+  },
+  "n25_e0": {
+   "name": "In Salah, Algeria",
+   "region": "In Salah",
+   "country": "Algeria",
+   "country_code": "DZ",
+   "sampled_lat": 27.5,
+   "sampled_lon": 2.5
+  },
+  "n25_e10": {
+   "name": "Wadi al Shatii, Libya",
+   "region": "Wadi al Shatii",
+   "country": "Libya",
+   "country_code": "LY",
+   "sampled_lat": 27.5,
+   "sampled_lon": 12.5
+  },
+  "n25_e100": {
+   "name": "Sichuan, China",
+   "region": "Sichuan",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 27.5,
+   "sampled_lon": 102.5
+  },
+  "n25_e105": {
+   "name": "Guizhou, China",
+   "region": "Guizhou",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 27.5,
+   "sampled_lon": 107.5
+  },
+  "n25_e110": {
+   "name": "Hunan, China",
+   "region": "Hunan",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 27.5,
+   "sampled_lon": 112.5
+  },
+  "n25_e115": {
+   "name": "Fujian, China",
+   "region": "Fujian",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 27.5,
+   "sampled_lon": 117.5
+  },
+  "n25_e15": {
+   "name": "District of Al-Jufra, Libya",
+   "region": "District of Al-Jufra",
+   "country": "Libya",
+   "country_code": "LY",
+   "sampled_lat": 27.5,
+   "sampled_lon": 17.5
+  },
+  "n25_e20": {
+   "name": "Al Wahat, Libya",
+   "region": "Al Wahat",
+   "country": "Libya",
+   "country_code": "LY",
+   "sampled_lat": 27.5,
+   "sampled_lon": 22.5
+  },
+  "n25_e25": {
+   "name": "New Valley, Egypt",
+   "region": "New Valley",
+   "country": "Egypt",
+   "country_code": "EG",
+   "sampled_lat": 27.5,
+   "sampled_lon": 27.5
+  },
+  "n25_e30": {
+   "name": "Asyut, Egypt",
+   "region": "Asyut",
+   "country": "Egypt",
+   "country_code": "EG",
+   "sampled_lat": 27.5,
+   "sampled_lon": 32.5
+  },
+  "n25_e35": {
+   "name": "Tabuk Province, Saudi Arabia",
+   "region": "Tabuk Province",
+   "country": "Saudi Arabia",
+   "country_code": "SA",
+   "sampled_lat": 27.5,
+   "sampled_lon": 37.5
+  },
+  "n25_e40": {
+   "name": "Ḥa'il Province, Saudi Arabia",
+   "region": "Ḥa'il Province",
+   "country": "Saudi Arabia",
+   "country_code": "SA",
+   "sampled_lat": 27.5,
+   "sampled_lon": 42.5
+  },
+  "n25_e45": {
+   "name": "Eastern Province, Saudi Arabia",
+   "region": "Eastern Province",
+   "country": "Saudi Arabia",
+   "country_code": "SA",
+   "sampled_lat": 27.5,
+   "sampled_lon": 47.5
+  },
+  "n25_e5": {
+   "name": "Illizi, Algeria",
+   "region": "Illizi",
+   "country": "Algeria",
+   "country_code": "DZ",
+   "sampled_lat": 27.5,
+   "sampled_lon": 7.5
+  },
+  "n25_e55": {
+   "name": "Kerman Province, Iran",
+   "region": "Kerman Province",
+   "country": "Iran",
+   "country_code": "IR",
+   "sampled_lat": 27.5,
+   "sampled_lon": 57.5
+  },
+  "n25_e60": {
+   "name": "Sistan and Baluchestan Province, Iran",
+   "region": "Sistan and Baluchestan Province",
+   "country": "Iran",
+   "country_code": "IR",
+   "sampled_lat": 27.5,
+   "sampled_lon": 62.5
+  },
+  "n25_e65": {
+   "name": "Sindh, Pakistan",
+   "region": "Sindh",
+   "country": "Pakistan",
+   "country_code": "PK",
+   "sampled_lat": 27.5,
+   "sampled_lon": 67.5
+  },
+  "n25_e70": {
+   "name": "Rajasthan, India",
+   "region": "Rajasthan",
+   "country": "India",
+   "country_code": "IN",
+   "sampled_lat": 27.5,
+   "sampled_lon": 72.5
+  },
+  "n25_e75": {
+   "name": "Uttar Pradesh, India",
+   "region": "Uttar Pradesh",
+   "country": "India",
+   "country_code": "IN",
+   "sampled_lat": 27.5,
+   "sampled_lon": 77.5
+  },
+  "n25_e80": {
+   "name": "Uttar Pradesh, India",
+   "region": "Uttar Pradesh",
+   "country": "India",
+   "country_code": "IN",
+   "sampled_lat": 27.5,
+   "sampled_lon": 82.5
+  },
+  "n25_e85": {
+   "name": "Koshi Province, Nepal",
+   "region": "Koshi Province",
+   "country": "Nepal",
+   "country_code": "NP",
+   "sampled_lat": 27.5,
+   "sampled_lon": 87.5
+  },
+  "n25_e90": {
+   "name": "Arunachal Pradesh, India",
+   "region": "Arunachal Pradesh",
+   "country": "India",
+   "country_code": "IN",
+   "sampled_lat": 27.5,
+   "sampled_lon": 92.5
+  },
+  "n25_e95": {
+   "name": "Kachin State, Myanmar",
+   "region": "Kachin State",
+   "country": "Myanmar",
+   "country_code": "MM",
+   "sampled_lat": 27.5,
+   "sampled_lon": 97.5
+  },
+  "n25_w10": {
+   "name": "Tinduf, Algeria",
+   "region": "Tinduf",
+   "country": "Algeria",
+   "country_code": "DZ",
+   "sampled_lat": 27.5,
+   "sampled_lon": -7.5
+  },
+  "n25_w100": {
+   "name": "Texas, United States",
+   "region": "Texas",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 27.5,
+   "sampled_lon": -97.5
+  },
+  "n25_w105": {
+   "name": "Coahuila, Mexico",
+   "region": "Coahuila",
+   "country": "Mexico",
+   "country_code": "MX",
+   "sampled_lat": 27.5,
+   "sampled_lon": -102.5
+  },
+  "n25_w110": {
+   "name": "Chihuahua, Mexico",
+   "region": "Chihuahua",
+   "country": "Mexico",
+   "country_code": "MX",
+   "sampled_lat": 27.5,
+   "sampled_lon": -107.5
+  },
+  "n25_w115": {
+   "name": "Baja California Sur, Mexico",
+   "region": "Baja California Sur",
+   "country": "Mexico",
+   "country_code": "MX",
+   "sampled_lat": 27.5,
+   "sampled_lon": -112.5
+  },
+  "n25_w15": {
+   "name": "Laâyoune-Sakia El Hamra, Sahrawi Arab Democratic Republic",
+   "region": "Laâyoune-Sakia El Hamra",
+   "country": "Sahrawi Arab Democratic Republic",
+   "country_code": "EH",
+   "sampled_lat": 27.5,
+   "sampled_lon": -12.5
+  },
+  "n25_w5": {
+   "name": "Adrar, Algeria",
+   "region": "Adrar",
+   "country": "Algeria",
+   "country_code": "DZ",
+   "sampled_lat": 27.5,
+   "sampled_lon": -2.5
+  },
+  "n25_w85": {
+   "name": "Florida, United States",
+   "region": "Florida",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 27.5,
+   "sampled_lon": -82.5
+  },
+  "n30_e0": {
+   "name": "Ghardaia, Algeria",
+   "region": "Ghardaia",
+   "country": "Algeria",
+   "country_code": "DZ",
+   "sampled_lat": 32.5,
+   "sampled_lon": 2.5
+  },
+  "n30_e10": {
+   "name": "Az Zawiya District, Libya",
+   "region": "Az Zawiya District",
+   "country": "Libya",
+   "country_code": "LY",
+   "sampled_lat": 32.5,
+   "sampled_lon": 12.5
+  },
+  "n30_e100": {
+   "name": "Sichuan, China",
+   "region": "Sichuan",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 32.5,
+   "sampled_lon": 102.5
+  },
+  "n30_e105": {
+   "name": "Shaanxi, China",
+   "region": "Shaanxi",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 32.5,
+   "sampled_lon": 107.5
+  },
+  "n30_e110": {
+   "name": "Henan, China",
+   "region": "Henan",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 32.5,
+   "sampled_lon": 112.5
+  },
+  "n30_e115": {
+   "name": "Anhui, China",
+   "region": "Anhui",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 32.5,
+   "sampled_lon": 117.5
+  },
+  "n30_e20": {
+   "name": "Derna, Libya",
+   "region": "Derna",
+   "country": "Libya",
+   "country_code": "LY",
+   "sampled_lat": 32.5,
+   "sampled_lon": 22.5
+  },
+  "n30_e35": {
+   "name": "Mafraq, Jordan",
+   "region": "Mafraq",
+   "country": "Jordan",
+   "country_code": "JO",
+   "sampled_lat": 32.5,
+   "sampled_lon": 37.5
+  },
+  "n30_e40": {
+   "name": "Al-Anbar Governorate, Iraq",
+   "region": "Al-Anbar Governorate",
+   "country": "Iraq",
+   "country_code": "IQ",
+   "sampled_lat": 32.5,
+   "sampled_lon": 42.5
+  },
+  "n30_e45": {
+   "name": "Ilam Province, Iran",
+   "region": "Ilam Province",
+   "country": "Iran",
+   "country_code": "IR",
+   "sampled_lat": 32.5,
+   "sampled_lon": 47.5
+  },
+  "n30_e5": {
+   "name": "El Oued, Algeria",
+   "region": "El Oued",
+   "country": "Algeria",
+   "country_code": "DZ",
+   "sampled_lat": 32.5,
+   "sampled_lon": 7.5
+  },
+  "n30_e50": {
+   "name": "Isfahan Province, Iran",
+   "region": "Isfahan Province",
+   "country": "Iran",
+   "country_code": "IR",
+   "sampled_lat": 32.5,
+   "sampled_lon": 52.5
+  },
+  "n30_e55": {
+   "name": "South Khorasan Province, Iran",
+   "region": "South Khorasan Province",
+   "country": "Iran",
+   "country_code": "IR",
+   "sampled_lat": 32.5,
+   "sampled_lon": 57.5
+  },
+  "n30_e60": {
+   "name": "Farah Province, Afghanistan",
+   "region": "Farah Province",
+   "country": "Afghanistan",
+   "country_code": "AF",
+   "sampled_lat": 32.5,
+   "sampled_lon": 62.5
+  },
+  "n30_e65": {
+   "name": "Zabul Province, Afghanistan",
+   "region": "Zabul Province",
+   "country": "Afghanistan",
+   "country_code": "AF",
+   "sampled_lat": 32.5,
+   "sampled_lon": 67.5
+  },
+  "n30_e70": {
+   "name": "Punjab, Pakistan",
+   "region": "Punjab",
+   "country": "Pakistan",
+   "country_code": "PK",
+   "sampled_lat": 32.5,
+   "sampled_lon": 72.5
+  },
+  "n30_e75": {
+   "name": "Himachal Pradesh, India",
+   "region": "Himachal Pradesh",
+   "country": "India",
+   "country_code": "IN",
+   "sampled_lat": 32.5,
+   "sampled_lon": 77.5
+  },
+  "n30_e80": {
+   "name": "Xizang, China",
+   "region": "Xizang",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 32.5,
+   "sampled_lon": 82.5
+  },
+  "n30_e85": {
+   "name": "Xizang, China",
+   "region": "Xizang",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 32.5,
+   "sampled_lon": 87.5
+  },
+  "n30_e90": {
+   "name": "Xizang, China",
+   "region": "Xizang",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 32.5,
+   "sampled_lon": 92.5
+  },
+  "n30_e95": {
+   "name": "Xizang, China",
+   "region": "Xizang",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 32.5,
+   "sampled_lon": 97.5
+  },
+  "n30_w10": {
+   "name": "Casablanca-Settat, Morocco",
+   "region": "Casablanca-Settat",
+   "country": "Morocco",
+   "country_code": "MA",
+   "sampled_lat": 32.5,
+   "sampled_lon": -7.5
+  },
+  "n30_w100": {
+   "name": "Texas, United States",
+   "region": "Texas",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 32.5,
+   "sampled_lon": -97.5
+  },
+  "n30_w105": {
+   "name": "Texas, United States",
+   "region": "Texas",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 32.5,
+   "sampled_lon": -102.5
+  },
+  "n30_w110": {
+   "name": "New Mexico, United States",
+   "region": "New Mexico",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 32.5,
+   "sampled_lon": -107.5
+  },
+  "n30_w115": {
+   "name": "Arizona, United States",
+   "region": "Arizona",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 32.5,
+   "sampled_lon": -112.5
+  },
+  "n30_w5": {
+   "name": "Oriental, Morocco",
+   "region": "Oriental",
+   "country": "Morocco",
+   "country_code": "MA",
+   "sampled_lat": 32.5,
+   "sampled_lon": -2.5
+  },
+  "n30_w85": {
+   "name": "Georgia, United States",
+   "region": "Georgia",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 32.5,
+   "sampled_lon": -82.5
+  },
+  "n30_w90": {
+   "name": "Alabama, United States",
+   "region": "Alabama",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 32.5,
+   "sampled_lon": -87.5
+  },
+  "n30_w95": {
+   "name": "Louisiana, United States",
+   "region": "Louisiana",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 32.5,
+   "sampled_lon": -92.5
+  },
+  "n35_e100": {
+   "name": "Gansu, China",
+   "region": "Gansu",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 37.5,
+   "sampled_lon": 102.5
+  },
+  "n35_e105": {
+   "name": "Shaanxi, China",
+   "region": "Shaanxi",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 37.5,
+   "sampled_lon": 107.5
+  },
+  "n35_e110": {
+   "name": "Shanxi, China",
+   "region": "Shanxi",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 37.5,
+   "sampled_lon": 112.5
+  },
+  "n35_e115": {
+   "name": "Shandong, China",
+   "region": "Shandong",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 37.5,
+   "sampled_lon": 117.5
+  },
+  "n35_e125": {
+   "name": "Gyeonggi, South Korea",
+   "region": "Gyeonggi",
+   "country": "South Korea",
+   "country_code": "KR",
+   "sampled_lat": 37.5,
+   "sampled_lon": 127.5
+  },
+  "n35_e20": {
+   "name": "Peloponnese, Western Greece and the Ionian, Greece",
+   "region": "Peloponnese, Western Greece and the Ionian",
+   "country": "Greece",
+   "country_code": "GR",
+   "sampled_lat": 37.5,
+   "sampled_lon": 22.5
+  },
+  "n35_e25": {
+   "name": "Aegean Region, Turkey",
+   "region": "Aegean Region",
+   "country": "Turkey",
+   "country_code": "TR",
+   "sampled_lat": 37.5,
+   "sampled_lon": 27.5
+  },
+  "n35_e30": {
+   "name": "Central Anatolia Region, Turkey",
+   "region": "Central Anatolia Region",
+   "country": "Turkey",
+   "country_code": "TR",
+   "sampled_lat": 37.5,
+   "sampled_lon": 32.5
+  },
+  "n35_e35": {
+   "name": "Mediterranean Region, Turkey",
+   "region": "Mediterranean Region",
+   "country": "Turkey",
+   "country_code": "TR",
+   "sampled_lat": 37.5,
+   "sampled_lon": 37.5
+  },
+  "n35_e40": {
+   "name": "Southeastern Anatolia Region, Turkey",
+   "region": "Southeastern Anatolia Region",
+   "country": "Turkey",
+   "country_code": "TR",
+   "sampled_lat": 37.5,
+   "sampled_lon": 42.5
+  },
+  "n35_e45": {
+   "name": "East Azerbaijan Province, Iran",
+   "region": "East Azerbaijan Province",
+   "country": "Iran",
+   "country_code": "IR",
+   "sampled_lat": 37.5,
+   "sampled_lon": 47.5
+  },
+  "n35_e55": {
+   "name": "North Khorasan Province, Iran",
+   "region": "North Khorasan Province",
+   "country": "Iran",
+   "country_code": "IR",
+   "sampled_lat": 37.5,
+   "sampled_lon": 57.5
+  },
+  "n35_e60": {
+   "name": "Mary Province, Turkmenistan",
+   "region": "Mary Province",
+   "country": "Turkmenistan",
+   "country_code": "TM",
+   "sampled_lat": 37.5,
+   "sampled_lon": 62.5
+  },
+  "n35_e65": {
+   "name": "Surxondaryo Region, Uzbekistan",
+   "region": "Surxondaryo Region",
+   "country": "Uzbekistan",
+   "country_code": "UZ",
+   "sampled_lat": 37.5,
+   "sampled_lon": 67.5
+  },
+  "n35_e70": {
+   "name": "Gorno-Badakhshan Autonomous Region, Tajikistan",
+   "region": "Gorno-Badakhshan Autonomous Region",
+   "country": "Tajikistan",
+   "country_code": "TJ",
+   "sampled_lat": 37.5,
+   "sampled_lon": 72.5
+  },
+  "n35_e75": {
+   "name": "Xinjiang, China",
+   "region": "Xinjiang",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 37.5,
+   "sampled_lon": 77.5
+  },
+  "n35_e80": {
+   "name": "Xinjiang, China",
+   "region": "Xinjiang",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 37.5,
+   "sampled_lon": 82.5
+  },
+  "n35_e85": {
+   "name": "Xinjiang, China",
+   "region": "Xinjiang",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 37.5,
+   "sampled_lon": 87.5
+  },
+  "n35_e90": {
+   "name": "Qinghai, China",
+   "region": "Qinghai",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 37.5,
+   "sampled_lon": 92.5
+  },
+  "n35_e95": {
+   "name": "Qinghai, China",
+   "region": "Qinghai",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 37.5,
+   "sampled_lon": 97.5
+  },
+  "n35_w10": {
+   "name": "Portugal",
+   "region": null,
+   "country": "Portugal",
+   "country_code": "PT",
+   "sampled_lat": 37.5,
+   "sampled_lon": -7.5
+  },
+  "n35_w100": {
+   "name": "Kansas, United States",
+   "region": "Kansas",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 37.5,
+   "sampled_lon": -97.5
+  },
+  "n35_w105": {
+   "name": "Colorado, United States",
+   "region": "Colorado",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 37.5,
+   "sampled_lon": -102.5
+  },
+  "n35_w110": {
+   "name": "Colorado, United States",
+   "region": "Colorado",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 37.5,
+   "sampled_lon": -107.5
+  },
+  "n35_w115": {
+   "name": "Utah, United States",
+   "region": "Utah",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 37.5,
+   "sampled_lon": -112.5
+  },
+  "n35_w120": {
+   "name": "Nevada, United States",
+   "region": "Nevada",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 37.5,
+   "sampled_lon": -117.5
+  },
+  "n35_w5": {
+   "name": "Andalusia, Spain",
+   "region": "Andalusia",
+   "country": "Spain",
+   "country_code": "ES",
+   "sampled_lat": 37.5,
+   "sampled_lon": -2.5
+  },
+  "n35_w80": {
+   "name": "Virginia, United States",
+   "region": "Virginia",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 37.5,
+   "sampled_lon": -77.5
+  },
+  "n35_w85": {
+   "name": "Kentucky, United States",
+   "region": "Kentucky",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 37.5,
+   "sampled_lon": -82.5
+  },
+  "n35_w90": {
+   "name": "Kentucky, United States",
+   "region": "Kentucky",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 37.5,
+   "sampled_lon": -87.5
+  },
+  "n35_w95": {
+   "name": "Missouri, United States",
+   "region": "Missouri",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 37.5,
+   "sampled_lon": -92.5
+  },
+  "n40_e0": {
+   "name": "Occitania, France",
+   "region": "Occitania",
+   "country": "France",
+   "country_code": "FR",
+   "sampled_lat": 42.5,
+   "sampled_lon": 2.5
+  },
+  "n40_e10": {
+   "name": "Umbria, Italy",
+   "region": "Umbria",
+   "country": "Italy",
+   "country_code": "IT",
+   "sampled_lat": 42.5,
+   "sampled_lon": 12.5
+  },
+  "n40_e100": {
+   "name": "Ömnögovi, Mongolia",
+   "region": "Ömnögovi",
+   "country": "Mongolia",
+   "country_code": "MN",
+   "sampled_lat": 42.5,
+   "sampled_lon": 102.5
+  },
+  "n40_e105": {
+   "name": "Ömnögovi, Mongolia",
+   "region": "Ömnögovi",
+   "country": "Mongolia",
+   "country_code": "MN",
+   "sampled_lat": 42.5,
+   "sampled_lon": 107.5
+  },
+  "n40_e110": {
+   "name": "Inner Mongolia, China",
+   "region": "Inner Mongolia",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 42.5,
+   "sampled_lon": 112.5
+  },
+  "n40_e115": {
+   "name": "Hebei, China",
+   "region": "Hebei",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 42.5,
+   "sampled_lon": 117.5
+  },
+  "n40_e120": {
+   "name": "Liaoning, China",
+   "region": "Liaoning",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 42.5,
+   "sampled_lon": 122.5
+  },
+  "n40_e125": {
+   "name": "Jilin, China",
+   "region": "Jilin",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 42.5,
+   "sampled_lon": 127.5
+  },
+  "n40_e140": {
+   "name": "Hokkaido Region, Japan",
+   "region": "Hokkaido Region",
+   "country": "Japan",
+   "country_code": "JP",
+   "sampled_lat": 42.5,
+   "sampled_lon": 142.5
+  },
+  "n40_e20": {
+   "name": "Central Serbia, Serbia",
+   "region": "Central Serbia",
+   "country": "Serbia",
+   "country_code": "RS",
+   "sampled_lat": 42.5,
+   "sampled_lon": 22.5
+  },
+  "n40_e40": {
+   "name": "Imereti, Georgia",
+   "region": "Imereti",
+   "country": "Georgia",
+   "country_code": "GE",
+   "sampled_lat": 42.5,
+   "sampled_lon": 42.5
+  },
+  "n40_e45": {
+   "name": "Dagestan, Russia",
+   "region": "Dagestan",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 42.5,
+   "sampled_lon": 47.5
+  },
+  "n40_e55": {
+   "name": "Republic of Karakalpakstan, Uzbekistan",
+   "region": "Republic of Karakalpakstan",
+   "country": "Uzbekistan",
+   "country_code": "UZ",
+   "sampled_lat": 42.5,
+   "sampled_lon": 57.5
+  },
+  "n40_e60": {
+   "name": "Navoiy Region, Uzbekistan",
+   "region": "Navoiy Region",
+   "country": "Uzbekistan",
+   "country_code": "UZ",
+   "sampled_lat": 42.5,
+   "sampled_lon": 62.5
+  },
+  "n40_e65": {
+   "name": "Turkistan Region, Kazakhstan",
+   "region": "Turkistan Region",
+   "country": "Kazakhstan",
+   "country_code": "KZ",
+   "sampled_lat": 42.5,
+   "sampled_lon": 67.5
+  },
+  "n40_e70": {
+   "name": "Talas Region, Kyrgyzstan",
+   "region": "Talas Region",
+   "country": "Kyrgyzstan",
+   "country_code": "KG",
+   "sampled_lat": 42.5,
+   "sampled_lon": 72.5
+  },
+  "n40_e75": {
+   "name": "Issyk-Kul Region, Kyrgyzstan",
+   "region": "Issyk-Kul Region",
+   "country": "Kyrgyzstan",
+   "country_code": "KG",
+   "sampled_lat": 42.5,
+   "sampled_lon": 77.5
+  },
+  "n40_e80": {
+   "name": "Xinjiang, China",
+   "region": "Xinjiang",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 42.5,
+   "sampled_lon": 82.5
+  },
+  "n40_e85": {
+   "name": "Xinjiang, China",
+   "region": "Xinjiang",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 42.5,
+   "sampled_lon": 87.5
+  },
+  "n40_e90": {
+   "name": "Xinjiang, China",
+   "region": "Xinjiang",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 42.5,
+   "sampled_lon": 92.5
+  },
+  "n40_e95": {
+   "name": "Inner Mongolia, China",
+   "region": "Inner Mongolia",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 42.5,
+   "sampled_lon": 97.5
+  },
+  "n40_w10": {
+   "name": "Galicia, Spain",
+   "region": "Galicia",
+   "country": "Spain",
+   "country_code": "ES",
+   "sampled_lat": 42.5,
+   "sampled_lon": -7.5
+  },
+  "n40_w100": {
+   "name": "Nebraska, United States",
+   "region": "Nebraska",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 42.5,
+   "sampled_lon": -97.5
+  },
+  "n40_w105": {
+   "name": "Nebraska, United States",
+   "region": "Nebraska",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 42.5,
+   "sampled_lon": -102.5
+  },
+  "n40_w110": {
+   "name": "Wyoming, United States",
+   "region": "Wyoming",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 42.5,
+   "sampled_lon": -107.5
+  },
+  "n40_w115": {
+   "name": "Idaho, United States",
+   "region": "Idaho",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 42.5,
+   "sampled_lon": -112.5
+  },
+  "n40_w120": {
+   "name": "Oregon, United States",
+   "region": "Oregon",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 42.5,
+   "sampled_lon": -117.5
+  },
+  "n40_w125": {
+   "name": "Oregon, United States",
+   "region": "Oregon",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 42.5,
+   "sampled_lon": -122.5
+  },
+  "n40_w5": {
+   "name": "Autonomous Community of the Basque Country, Spain",
+   "region": "Autonomous Community of the Basque Country",
+   "country": "Spain",
+   "country_code": "ES",
+   "sampled_lat": 42.5,
+   "sampled_lon": -2.5
+  },
+  "n40_w75": {
+   "name": "Massachusetts, United States",
+   "region": "Massachusetts",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 42.5,
+   "sampled_lon": -72.5
+  },
+  "n40_w80": {
+   "name": "New York, United States",
+   "region": "New York",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 42.5,
+   "sampled_lon": -77.5
+  },
+  "n40_w85": {
+   "name": "Ontario, Canada",
+   "region": "Ontario",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 42.5,
+   "sampled_lon": -82.5
+  },
+  "n40_w90": {
+   "name": "Wisconsin, United States",
+   "region": "Wisconsin",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 42.5,
+   "sampled_lon": -87.5
+  },
+  "n40_w95": {
+   "name": "Iowa, United States",
+   "region": "Iowa",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 42.5,
+   "sampled_lon": -92.5
+  },
+  "n45_e0": {
+   "name": "Centre-Val de Loire, France",
+   "region": "Centre-Val de Loire",
+   "country": "France",
+   "country_code": "FR",
+   "sampled_lat": 47.5,
+   "sampled_lon": 2.5
+  },
+  "n45_e10": {
+   "name": "Tyrol, Austria",
+   "region": "Tyrol",
+   "country": "Austria",
+   "country_code": "AT",
+   "sampled_lat": 47.5,
+   "sampled_lon": 12.5
+  },
+  "n45_e100": {
+   "name": "Arkhangai, Mongolia",
+   "region": "Arkhangai",
+   "country": "Mongolia",
+   "country_code": "MN",
+   "sampled_lat": 47.5,
+   "sampled_lon": 102.5
+  },
+  "n45_e105": {
+   "name": "Töv, Mongolia",
+   "region": "Töv",
+   "country": "Mongolia",
+   "country_code": "MN",
+   "sampled_lat": 47.5,
+   "sampled_lon": 107.5
+  },
+  "n45_e110": {
+   "name": "Sükhbaatar, Mongolia",
+   "region": "Sükhbaatar",
+   "country": "Mongolia",
+   "country_code": "MN",
+   "sampled_lat": 47.5,
+   "sampled_lon": 112.5
+  },
+  "n45_e115": {
+   "name": "Dornod, Mongolia",
+   "region": "Dornod",
+   "country": "Mongolia",
+   "country_code": "MN",
+   "sampled_lat": 47.5,
+   "sampled_lon": 117.5
+  },
+  "n45_e120": {
+   "name": "Inner Mongolia, China",
+   "region": "Inner Mongolia",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 47.5,
+   "sampled_lon": 122.5
+  },
+  "n45_e125": {
+   "name": "Heilongjiang, China",
+   "region": "Heilongjiang",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 47.5,
+   "sampled_lon": 127.5
+  },
+  "n45_e130": {
+   "name": "Heilongjiang, China",
+   "region": "Heilongjiang",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 47.5,
+   "sampled_lon": 132.5
+  },
+  "n45_e135": {
+   "name": "Khabarovsk Krai, Russia",
+   "region": "Khabarovsk Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 47.5,
+   "sampled_lon": 137.5
+  },
+  "n45_e140": {
+   "name": "Sakhalin Oblast, Russia",
+   "region": "Sakhalin Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 47.5,
+   "sampled_lon": 142.5
+  },
+  "n45_e15": {
+   "name": "Transdanubia, Hungary",
+   "region": "Transdanubia",
+   "country": "Hungary",
+   "country_code": "HU",
+   "sampled_lat": 47.5,
+   "sampled_lon": 17.5
+  },
+  "n45_e20": {
+   "name": "Satu Mare, Romania",
+   "region": "Satu Mare",
+   "country": "Romania",
+   "country_code": "RO",
+   "sampled_lat": 47.5,
+   "sampled_lon": 22.5
+  },
+  "n45_e25": {
+   "name": "Fălești District, Moldova",
+   "region": "Fălești District",
+   "country": "Moldova",
+   "country_code": "MD",
+   "sampled_lat": 47.5,
+   "sampled_lon": 27.5
+  },
+  "n45_e30": {
+   "name": "Mykolaiv Oblast, Ukraine",
+   "region": "Mykolaiv Oblast",
+   "country": "Ukraine",
+   "country_code": "UA",
+   "sampled_lat": 47.5,
+   "sampled_lon": 32.5
+  },
+  "n45_e35": {
+   "name": "Donetsk Oblast, Ukraine",
+   "region": "Donetsk Oblast",
+   "country": "Ukraine",
+   "country_code": "UA",
+   "sampled_lat": 47.5,
+   "sampled_lon": 37.5
+  },
+  "n45_e40": {
+   "name": "Rostov Oblast, Russia",
+   "region": "Rostov Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 47.5,
+   "sampled_lon": 42.5
+  },
+  "n45_e5": {
+   "name": "Grand Est, France",
+   "region": "Grand Est",
+   "country": "France",
+   "country_code": "FR",
+   "sampled_lat": 47.5,
+   "sampled_lon": 7.5
+  },
+  "n45_e55": {
+   "name": "Aqtöbe Region, Kazakhstan",
+   "region": "Aqtöbe Region",
+   "country": "Kazakhstan",
+   "country_code": "KZ",
+   "sampled_lat": 47.5,
+   "sampled_lon": 57.5
+  },
+  "n45_e60": {
+   "name": "Aqtöbe Region, Kazakhstan",
+   "region": "Aqtöbe Region",
+   "country": "Kazakhstan",
+   "country_code": "KZ",
+   "sampled_lat": 47.5,
+   "sampled_lon": 62.5
+  },
+  "n45_e65": {
+   "name": "Ulytau Region, Kazakhstan",
+   "region": "Ulytau Region",
+   "country": "Kazakhstan",
+   "country_code": "KZ",
+   "sampled_lat": 47.5,
+   "sampled_lon": 67.5
+  },
+  "n45_e70": {
+   "name": "Karaganda Region, Kazakhstan",
+   "region": "Karaganda Region",
+   "country": "Kazakhstan",
+   "country_code": "KZ",
+   "sampled_lat": 47.5,
+   "sampled_lon": 72.5
+  },
+  "n45_e75": {
+   "name": "Abay Region, Kazakhstan",
+   "region": "Abay Region",
+   "country": "Kazakhstan",
+   "country_code": "KZ",
+   "sampled_lat": 47.5,
+   "sampled_lon": 77.5
+  },
+  "n45_e80": {
+   "name": "Abay Region, Kazakhstan",
+   "region": "Abay Region",
+   "country": "Kazakhstan",
+   "country_code": "KZ",
+   "sampled_lat": 47.5,
+   "sampled_lon": 82.5
+  },
+  "n45_e85": {
+   "name": "Xinjiang, China",
+   "region": "Xinjiang",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 47.5,
+   "sampled_lon": 87.5
+  },
+  "n45_e90": {
+   "name": "Khovd, Mongolia",
+   "region": "Khovd",
+   "country": "Mongolia",
+   "country_code": "MN",
+   "sampled_lat": 47.5,
+   "sampled_lon": 92.5
+  },
+  "n45_e95": {
+   "name": "Zavkhan, Mongolia",
+   "region": "Zavkhan",
+   "country": "Mongolia",
+   "country_code": "MN",
+   "sampled_lat": 47.5,
+   "sampled_lon": 97.5
+  },
+  "n45_w100": {
+   "name": "North Dakota, United States",
+   "region": "North Dakota",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 47.5,
+   "sampled_lon": -97.5
+  },
+  "n45_w105": {
+   "name": "North Dakota, United States",
+   "region": "North Dakota",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 47.5,
+   "sampled_lon": -102.5
+  },
+  "n45_w110": {
+   "name": "Montana, United States",
+   "region": "Montana",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 47.5,
+   "sampled_lon": -107.5
+  },
+  "n45_w115": {
+   "name": "Montana, United States",
+   "region": "Montana",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 47.5,
+   "sampled_lon": -112.5
+  },
+  "n45_w120": {
+   "name": "Washington, United States",
+   "region": "Washington",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 47.5,
+   "sampled_lon": -117.5
+  },
+  "n45_w70": {
+   "name": "New Brunswick, Canada",
+   "region": "New Brunswick",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 47.5,
+   "sampled_lon": -67.5
+  },
+  "n45_w75": {
+   "name": "Quebec, Canada",
+   "region": "Quebec",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 47.5,
+   "sampled_lon": -72.5
+  },
+  "n45_w80": {
+   "name": "Quebec, Canada",
+   "region": "Quebec",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 47.5,
+   "sampled_lon": -77.5
+  },
+  "n45_w85": {
+   "name": "Ontario, Canada",
+   "region": "Ontario",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 47.5,
+   "sampled_lon": -82.5
+  },
+  "n45_w90": {
+   "name": "Michigan, United States",
+   "region": "Michigan",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 47.5,
+   "sampled_lon": -87.5
+  },
+  "n45_w95": {
+   "name": "Minnesota, United States",
+   "region": "Minnesota",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 47.5,
+   "sampled_lon": -92.5
+  },
+  "n50_e10": {
+   "name": "Brandenburg, Germany",
+   "region": "Brandenburg",
+   "country": "Germany",
+   "country_code": "DE",
+   "sampled_lat": 52.5,
+   "sampled_lon": 12.5
+  },
+  "n50_e100": {
+   "name": "Irkutsk Oblast, Russia",
+   "region": "Irkutsk Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 102.5
+  },
+  "n50_e105": {
+   "name": "Buryatia, Russia",
+   "region": "Buryatia",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 107.5
+  },
+  "n50_e110": {
+   "name": "Buryatia, Russia",
+   "region": "Buryatia",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 112.5
+  },
+  "n50_e115": {
+   "name": "Zabaykalsky Krai, Russia",
+   "region": "Zabaykalsky Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 117.5
+  },
+  "n50_e120": {
+   "name": "Heilongjiang, China",
+   "region": "Heilongjiang",
+   "country": "China",
+   "country_code": "CN",
+   "sampled_lat": 52.5,
+   "sampled_lon": 122.5
+  },
+  "n50_e125": {
+   "name": "Amur Oblast, Russia",
+   "region": "Amur Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 127.5
+  },
+  "n50_e130": {
+   "name": "Amur Oblast, Russia",
+   "region": "Amur Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 132.5
+  },
+  "n50_e135": {
+   "name": "Khabarovsk Krai, Russia",
+   "region": "Khabarovsk Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 137.5
+  },
+  "n50_e140": {
+   "name": "Sakhalin Oblast, Russia",
+   "region": "Sakhalin Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 142.5
+  },
+  "n50_e15": {
+   "name": "Greater Poland Voivodeship, Poland",
+   "region": "Greater Poland Voivodeship",
+   "country": "Poland",
+   "country_code": "PL",
+   "sampled_lat": 52.5,
+   "sampled_lon": 17.5
+  },
+  "n50_e155": {
+   "name": "Kamchatka Krai, Russia",
+   "region": "Kamchatka Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 157.5
+  },
+  "n50_e20": {
+   "name": "Masovian Voivodeship, Poland",
+   "region": "Masovian Voivodeship",
+   "country": "Poland",
+   "country_code": "PL",
+   "sampled_lat": 52.5,
+   "sampled_lon": 22.5
+  },
+  "n50_e25": {
+   "name": "Homyel Region, Belarus",
+   "region": "Homyel Region",
+   "country": "Belarus",
+   "country_code": "BY",
+   "sampled_lat": 52.5,
+   "sampled_lon": 27.5
+  },
+  "n50_e30": {
+   "name": "Bryansk Oblast, Russia",
+   "region": "Bryansk Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 32.5
+  },
+  "n50_e35": {
+   "name": "Oryol Oblast, Russia",
+   "region": "Oryol Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 37.5
+  },
+  "n50_e40": {
+   "name": "Tambov Oblast, Russia",
+   "region": "Tambov Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 42.5
+  },
+  "n50_e45": {
+   "name": "Saratov Oblast, Russia",
+   "region": "Saratov Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 47.5
+  },
+  "n50_e5": {
+   "name": "Lower Saxony, Germany",
+   "region": "Lower Saxony",
+   "country": "Germany",
+   "country_code": "DE",
+   "sampled_lat": 52.5,
+   "sampled_lon": 7.5
+  },
+  "n50_e50": {
+   "name": "Orenburg Oblast, Russia",
+   "region": "Orenburg Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 52.5
+  },
+  "n50_e55": {
+   "name": "Bashkortostan, Russia",
+   "region": "Bashkortostan",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 57.5
+  },
+  "n50_e60": {
+   "name": "Kostanay Region, Kazakhstan",
+   "region": "Kostanay Region",
+   "country": "Kazakhstan",
+   "country_code": "KZ",
+   "sampled_lat": 52.5,
+   "sampled_lon": 62.5
+  },
+  "n50_e65": {
+   "name": "North Kazakhstan Region, Kazakhstan",
+   "region": "North Kazakhstan Region",
+   "country": "Kazakhstan",
+   "country_code": "KZ",
+   "sampled_lat": 52.5,
+   "sampled_lon": 67.5
+  },
+  "n50_e70": {
+   "name": "Akmola Region, Kazakhstan",
+   "region": "Akmola Region",
+   "country": "Kazakhstan",
+   "country_code": "KZ",
+   "sampled_lat": 52.5,
+   "sampled_lon": 72.5
+  },
+  "n50_e75": {
+   "name": "Pavlodar Region, Kazakhstan",
+   "region": "Pavlodar Region",
+   "country": "Kazakhstan",
+   "country_code": "KZ",
+   "sampled_lat": 52.5,
+   "sampled_lon": 77.5
+  },
+  "n50_e80": {
+   "name": "Altai Krai, Russia",
+   "region": "Altai Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 82.5
+  },
+  "n50_e85": {
+   "name": "Kemerovo Oblast–Kuzbass, Russia",
+   "region": "Kemerovo Oblast–Kuzbass",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 87.5
+  },
+  "n50_e90": {
+   "name": "Krasnoyarsk Krai, Russia",
+   "region": "Krasnoyarsk Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 92.5
+  },
+  "n50_e95": {
+   "name": "Tuva Republic, Russia",
+   "region": "Tuva Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 52.5,
+   "sampled_lon": 97.5
+  },
+  "n50_w10": {
+   "name": "Ireland",
+   "region": null,
+   "country": "Ireland",
+   "country_code": "IE",
+   "sampled_lat": 52.5,
+   "sampled_lon": -7.5
+  },
+  "n50_w100": {
+   "name": "Manitoba, Canada",
+   "region": "Manitoba",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 52.5,
+   "sampled_lon": -97.5
+  },
+  "n50_w105": {
+   "name": "Saskatchewan, Canada",
+   "region": "Saskatchewan",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 52.5,
+   "sampled_lon": -102.5
+  },
+  "n50_w110": {
+   "name": "Saskatchewan, Canada",
+   "region": "Saskatchewan",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 52.5,
+   "sampled_lon": -107.5
+  },
+  "n50_w115": {
+   "name": "Alberta, Canada",
+   "region": "Alberta",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 52.5,
+   "sampled_lon": -112.5
+  },
+  "n50_w120": {
+   "name": "Alberta, Canada",
+   "region": "Alberta",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 52.5,
+   "sampled_lon": -117.5
+  },
+  "n50_w125": {
+   "name": "British Columbia, Canada",
+   "region": "British Columbia",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 52.5,
+   "sampled_lon": -122.5
+  },
+  "n50_w130": {
+   "name": "British Columbia, Canada",
+   "region": "British Columbia",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 52.5,
+   "sampled_lon": -127.5
+  },
+  "n50_w5": {
+   "name": "England, United Kingdom",
+   "region": "England",
+   "country": "United Kingdom",
+   "country_code": "GB",
+   "sampled_lat": 52.5,
+   "sampled_lon": -2.5
+  },
+  "n50_w60": {
+   "name": "Newfoundland and Labrador, Canada",
+   "region": "Newfoundland and Labrador",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 52.5,
+   "sampled_lon": -57.5
+  },
+  "n50_w65": {
+   "name": "Newfoundland and Labrador, Canada",
+   "region": "Newfoundland and Labrador",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 52.5,
+   "sampled_lon": -62.5
+  },
+  "n50_w70": {
+   "name": "Quebec, Canada",
+   "region": "Quebec",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 52.5,
+   "sampled_lon": -67.5
+  },
+  "n50_w75": {
+   "name": "Quebec, Canada",
+   "region": "Quebec",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 52.5,
+   "sampled_lon": -72.5
+  },
+  "n50_w80": {
+   "name": "Quebec, Canada",
+   "region": "Quebec",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 52.5,
+   "sampled_lon": -77.5
+  },
+  "n50_w85": {
+   "name": "Ontario, Canada",
+   "region": "Ontario",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 52.5,
+   "sampled_lon": -82.5
+  },
+  "n50_w90": {
+   "name": "Ontario, Canada",
+   "region": "Ontario",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 52.5,
+   "sampled_lon": -87.5
+  },
+  "n50_w95": {
+   "name": "Ontario, Canada",
+   "region": "Ontario",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 52.5,
+   "sampled_lon": -92.5
+  },
+  "n55_e10": {
+   "name": "Sweden",
+   "region": null,
+   "country": "Sweden",
+   "country_code": "SE",
+   "sampled_lat": 57.5,
+   "sampled_lon": 12.5
+  },
+  "n55_e100": {
+   "name": "Irkutsk Oblast, Russia",
+   "region": "Irkutsk Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 102.5
+  },
+  "n55_e105": {
+   "name": "Irkutsk Oblast, Russia",
+   "region": "Irkutsk Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 107.5
+  },
+  "n55_e110": {
+   "name": "Irkutsk Oblast, Russia",
+   "region": "Irkutsk Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 112.5
+  },
+  "n55_e115": {
+   "name": "Zabaykalsky Krai, Russia",
+   "region": "Zabaykalsky Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 117.5
+  },
+  "n55_e120": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 122.5
+  },
+  "n55_e125": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 127.5
+  },
+  "n55_e130": {
+   "name": "Khabarovsk Krai, Russia",
+   "region": "Khabarovsk Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 132.5
+  },
+  "n55_e135": {
+   "name": "Khabarovsk Krai, Russia",
+   "region": "Khabarovsk Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 137.5
+  },
+  "n55_e155": {
+   "name": "Kamchatka Krai, Russia",
+   "region": "Kamchatka Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 157.5
+  },
+  "n55_e160": {
+   "name": "Kamchatka Krai, Russia",
+   "region": "Kamchatka Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 162.5
+  },
+  "n55_e20": {
+   "name": "Latvia",
+   "region": null,
+   "country": "Latvia",
+   "country_code": "LV",
+   "sampled_lat": 57.5,
+   "sampled_lon": 22.5
+  },
+  "n55_e25": {
+   "name": "Latvia",
+   "region": null,
+   "country": "Latvia",
+   "country_code": "LV",
+   "sampled_lat": 57.5,
+   "sampled_lon": 27.5
+  },
+  "n55_e30": {
+   "name": "Novgorod Oblast, Russia",
+   "region": "Novgorod Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 32.5
+  },
+  "n55_e35": {
+   "name": "Tver Oblast, Russia",
+   "region": "Tver Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 37.5
+  },
+  "n55_e40": {
+   "name": "Ivanovo Oblast, Russia",
+   "region": "Ivanovo Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 42.5
+  },
+  "n55_e45": {
+   "name": "Kirov Oblast, Russia",
+   "region": "Kirov Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 47.5
+  },
+  "n55_e50": {
+   "name": "Udmurtia, Russia",
+   "region": "Udmurtia",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 52.5
+  },
+  "n55_e55": {
+   "name": "Perm Krai, Russia",
+   "region": "Perm Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 57.5
+  },
+  "n55_e60": {
+   "name": "Sverdlovsk Oblast, Russia",
+   "region": "Sverdlovsk Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 62.5
+  },
+  "n55_e65": {
+   "name": "Tyumen Oblast, Russia",
+   "region": "Tyumen Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 67.5
+  },
+  "n55_e70": {
+   "name": "Omsk Oblast, Russia",
+   "region": "Omsk Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 72.5
+  },
+  "n55_e75": {
+   "name": "Tomsk Oblast, Russia",
+   "region": "Tomsk Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 77.5
+  },
+  "n55_e80": {
+   "name": "Tomsk Oblast, Russia",
+   "region": "Tomsk Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 82.5
+  },
+  "n55_e85": {
+   "name": "Tomsk Oblast, Russia",
+   "region": "Tomsk Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 87.5
+  },
+  "n55_e90": {
+   "name": "Krasnoyarsk Krai, Russia",
+   "region": "Krasnoyarsk Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 92.5
+  },
+  "n55_e95": {
+   "name": "Krasnoyarsk Krai, Russia",
+   "region": "Krasnoyarsk Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 57.5,
+   "sampled_lon": 97.5
+  },
+  "n55_w100": {
+   "name": "Manitoba, Canada",
+   "region": "Manitoba",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 57.5,
+   "sampled_lon": -97.5
+  },
+  "n55_w105": {
+   "name": "Saskatchewan, Canada",
+   "region": "Saskatchewan",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 57.5,
+   "sampled_lon": -102.5
+  },
+  "n55_w110": {
+   "name": "Saskatchewan, Canada",
+   "region": "Saskatchewan",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 57.5,
+   "sampled_lon": -107.5
+  },
+  "n55_w115": {
+   "name": "Alberta, Canada",
+   "region": "Alberta",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 57.5,
+   "sampled_lon": -112.5
+  },
+  "n55_w120": {
+   "name": "Alberta, Canada",
+   "region": "Alberta",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 57.5,
+   "sampled_lon": -117.5
+  },
+  "n55_w125": {
+   "name": "British Columbia, Canada",
+   "region": "British Columbia",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 57.5,
+   "sampled_lon": -122.5
+  },
+  "n55_w130": {
+   "name": "British Columbia, Canada",
+   "region": "British Columbia",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 57.5,
+   "sampled_lon": -127.5
+  },
+  "n55_w135": {
+   "name": "British Columbia, Canada",
+   "region": "British Columbia",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 57.5,
+   "sampled_lon": -132.5
+  },
+  "n55_w155": {
+   "name": "Alaska, United States",
+   "region": "Alaska",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 57.5,
+   "sampled_lon": -152.5
+  },
+  "n55_w160": {
+   "name": "Alaska, United States",
+   "region": "Alaska",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 57.5,
+   "sampled_lon": -157.5
+  },
+  "n55_w5": {
+   "name": "Scotland, United Kingdom",
+   "region": "Scotland",
+   "country": "United Kingdom",
+   "country_code": "GB",
+   "sampled_lat": 57.5,
+   "sampled_lon": -2.5
+  },
+  "n55_w65": {
+   "name": "Newfoundland and Labrador, Canada",
+   "region": "Newfoundland and Labrador",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 57.5,
+   "sampled_lon": -62.5
+  },
+  "n55_w70": {
+   "name": "Quebec, Canada",
+   "region": "Quebec",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 57.5,
+   "sampled_lon": -67.5
+  },
+  "n55_w75": {
+   "name": "Quebec, Canada",
+   "region": "Quebec",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 57.5,
+   "sampled_lon": -72.5
+  },
+  "n55_w95": {
+   "name": "Manitoba, Canada",
+   "region": "Manitoba",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 57.5,
+   "sampled_lon": -92.5
+  },
+  "n5_e0": {
+   "name": "Plateau Department, Benin",
+   "region": "Plateau Department",
+   "country": "Benin",
+   "country_code": "BJ",
+   "sampled_lat": 7.5,
+   "sampled_lon": 2.5
+  },
+  "n5_e10": {
+   "name": "Adamawa, Cameroon",
+   "region": "Adamawa",
+   "country": "Cameroon",
+   "country_code": "CM",
+   "sampled_lat": 7.5,
+   "sampled_lon": 12.5
+  },
+  "n5_e15": {
+   "name": "Ouham, Central African Republic",
+   "region": "Ouham",
+   "country": "Central African Republic",
+   "country_code": "CF",
+   "sampled_lat": 7.5,
+   "sampled_lon": 17.5
+  },
+  "n5_e20": {
+   "name": "Haute-Kotto, Central African Republic",
+   "region": "Haute-Kotto",
+   "country": "Central African Republic",
+   "country_code": "CF",
+   "sampled_lat": 7.5,
+   "sampled_lon": 22.5
+  },
+  "n5_e25": {
+   "name": "Western Bahr el Ghazal State, South Sudan",
+   "region": "Western Bahr el Ghazal State",
+   "country": "South Sudan",
+   "country_code": "SS",
+   "sampled_lat": 7.5,
+   "sampled_lon": 27.5
+  },
+  "n5_e30": {
+   "name": "Jonglei, South Sudan",
+   "region": "Jonglei",
+   "country": "South Sudan",
+   "country_code": "SS",
+   "sampled_lat": 7.5,
+   "sampled_lon": 32.5
+  },
+  "n5_e35": {
+   "name": "Central Ethiopia Regional State, Ethiopia",
+   "region": "Central Ethiopia Regional State",
+   "country": "Ethiopia",
+   "country_code": "ET",
+   "sampled_lat": 7.5,
+   "sampled_lon": 37.5
+  },
+  "n5_e40": {
+   "name": "Somali Region, Ethiopia",
+   "region": "Somali Region",
+   "country": "Ethiopia",
+   "country_code": "ET",
+   "sampled_lat": 7.5,
+   "sampled_lon": 42.5
+  },
+  "n5_e45": {
+   "name": "Galmudug, Somalia",
+   "region": "Galmudug",
+   "country": "Somalia",
+   "country_code": "SO",
+   "sampled_lat": 7.5,
+   "sampled_lon": 47.5
+  },
+  "n5_e5": {
+   "name": "Kogi State, Nigeria",
+   "region": "Kogi State",
+   "country": "Nigeria",
+   "country_code": "NG",
+   "sampled_lat": 7.5,
+   "sampled_lon": 7.5
+  },
+  "n5_w10": {
+   "name": "Montagnes, Ivory Coast",
+   "region": "Montagnes",
+   "country": "Ivory Coast",
+   "country_code": "CI",
+   "sampled_lat": 7.5,
+   "sampled_lon": -7.5
+  },
+  "n5_w15": {
+   "name": "Southern Province, Sierra Leone, Sierra Leone",
+   "region": "Southern Province, Sierra Leone",
+   "country": "Sierra Leone",
+   "country_code": "SL",
+   "sampled_lat": 7.5,
+   "sampled_lon": -12.5
+  },
+  "n5_w5": {
+   "name": "Bono Region, Ghana",
+   "region": "Bono Region",
+   "country": "Ghana",
+   "country_code": "GH",
+   "sampled_lat": 7.5,
+   "sampled_lon": -2.5
+  },
+  "n5_w65": {
+   "name": "Bolivar State, Venezuela",
+   "region": "Bolivar State",
+   "country": "Venezuela",
+   "country_code": "VE",
+   "sampled_lat": 7.5,
+   "sampled_lon": -62.5
+  },
+  "n5_w70": {
+   "name": "Apure State, Venezuela",
+   "region": "Apure State",
+   "country": "Venezuela",
+   "country_code": "VE",
+   "sampled_lat": 7.5,
+   "sampled_lon": -67.5
+  },
+  "n5_w75": {
+   "name": "Norte de Santander, Colombia",
+   "region": "Norte de Santander",
+   "country": "Colombia",
+   "country_code": "CO",
+   "sampled_lat": 7.5,
+   "sampled_lon": -72.5
+  },
+  "n5_w80": {
+   "name": "Chocó, Colombia",
+   "region": "Chocó",
+   "country": "Colombia",
+   "country_code": "CO",
+   "sampled_lat": 7.5,
+   "sampled_lon": -77.5
+  },
+  "n60_e10": {
+   "name": "Sweden",
+   "region": null,
+   "country": "Sweden",
+   "country_code": "SE",
+   "sampled_lat": 62.5,
+   "sampled_lon": 12.5
+  },
+  "n60_e100": {
+   "name": "Krasnoyarsk Krai, Russia",
+   "region": "Krasnoyarsk Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 102.5
+  },
+  "n60_e105": {
+   "name": "Irkutsk Oblast, Russia",
+   "region": "Irkutsk Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 107.5
+  },
+  "n60_e110": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 112.5
+  },
+  "n60_e115": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 117.5
+  },
+  "n60_e120": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 122.5
+  },
+  "n60_e125": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 127.5
+  },
+  "n60_e130": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 132.5
+  },
+  "n60_e135": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 137.5
+  },
+  "n60_e140": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 142.5
+  },
+  "n60_e145": {
+   "name": "Magadan Oblast, Russia",
+   "region": "Magadan Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 147.5
+  },
+  "n60_e15": {
+   "name": "Sweden",
+   "region": null,
+   "country": "Sweden",
+   "country_code": "SE",
+   "sampled_lat": 62.5,
+   "sampled_lon": 17.5
+  },
+  "n60_e150": {
+   "name": "Magadan Oblast, Russia",
+   "region": "Magadan Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 152.5
+  },
+  "n60_e155": {
+   "name": "Magadan Oblast, Russia",
+   "region": "Magadan Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 157.5
+  },
+  "n60_e160": {
+   "name": "Magadan Oblast, Russia",
+   "region": "Magadan Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 162.5
+  },
+  "n60_e165": {
+   "name": "Kamchatka Krai, Russia",
+   "region": "Kamchatka Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 167.5
+  },
+  "n60_e170": {
+   "name": "Chukotka Autonomous Okrug, Russia",
+   "region": "Chukotka Autonomous Okrug",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 172.5
+  },
+  "n60_e20": {
+   "name": "South Ostrobothnia, Finland",
+   "region": "South Ostrobothnia",
+   "country": "Finland",
+   "country_code": "FI",
+   "sampled_lat": 62.5,
+   "sampled_lon": 22.5
+  },
+  "n60_e25": {
+   "name": "North Savo, Finland",
+   "region": "North Savo",
+   "country": "Finland",
+   "country_code": "FI",
+   "sampled_lat": 62.5,
+   "sampled_lon": 27.5
+  },
+  "n60_e30": {
+   "name": "Karelia, Russia",
+   "region": "Karelia",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 32.5
+  },
+  "n60_e35": {
+   "name": "Karelia, Russia",
+   "region": "Karelia",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 37.5
+  },
+  "n60_e40": {
+   "name": "Arkhangelsk Oblast, Russia",
+   "region": "Arkhangelsk Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 42.5
+  },
+  "n60_e45": {
+   "name": "Komi Republic, Russia",
+   "region": "Komi Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 47.5
+  },
+  "n60_e5": {
+   "name": "Norway",
+   "region": null,
+   "country": "Norway",
+   "country_code": "NO",
+   "sampled_lat": 62.5,
+   "sampled_lon": 7.5
+  },
+  "n60_e50": {
+   "name": "Komi Republic, Russia",
+   "region": "Komi Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 52.5
+  },
+  "n60_e55": {
+   "name": "Komi Republic, Russia",
+   "region": "Komi Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 57.5
+  },
+  "n60_e60": {
+   "name": "Khanty-Mansiysk Autonomous Okrug – Ugra, Russia",
+   "region": "Khanty-Mansiysk Autonomous Okrug – Ugra",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 62.5
+  },
+  "n60_e65": {
+   "name": "Khanty-Mansiysk Autonomous Okrug – Ugra, Russia",
+   "region": "Khanty-Mansiysk Autonomous Okrug – Ugra",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 67.5
+  },
+  "n60_e70": {
+   "name": "Khanty-Mansiysk Autonomous Okrug – Ugra, Russia",
+   "region": "Khanty-Mansiysk Autonomous Okrug – Ugra",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 72.5
+  },
+  "n60_e75": {
+   "name": "Khanty-Mansiysk Autonomous Okrug – Ugra, Russia",
+   "region": "Khanty-Mansiysk Autonomous Okrug – Ugra",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 77.5
+  },
+  "n60_e80": {
+   "name": "Khanty-Mansiysk Autonomous Okrug – Ugra, Russia",
+   "region": "Khanty-Mansiysk Autonomous Okrug – Ugra",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 82.5
+  },
+  "n60_e85": {
+   "name": "Krasnoyarsk Krai, Russia",
+   "region": "Krasnoyarsk Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 87.5
+  },
+  "n60_e90": {
+   "name": "Krasnoyarsk Krai, Russia",
+   "region": "Krasnoyarsk Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 92.5
+  },
+  "n60_e95": {
+   "name": "Krasnoyarsk Krai, Russia",
+   "region": "Krasnoyarsk Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 62.5,
+   "sampled_lon": 97.5
+  },
+  "n60_w100": {
+   "name": "Nunavut, Canada",
+   "region": "Nunavut",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 62.5,
+   "sampled_lon": -97.5
+  },
+  "n60_w105": {
+   "name": "Northwest Territories, Canada",
+   "region": "Northwest Territories",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 62.5,
+   "sampled_lon": -102.5
+  },
+  "n60_w110": {
+   "name": "Northwest Territories, Canada",
+   "region": "Northwest Territories",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 62.5,
+   "sampled_lon": -107.5
+  },
+  "n60_w115": {
+   "name": "Northwest Territories, Canada",
+   "region": "Northwest Territories",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 62.5,
+   "sampled_lon": -112.5
+  },
+  "n60_w120": {
+   "name": "Northwest Territories, Canada",
+   "region": "Northwest Territories",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 62.5,
+   "sampled_lon": -117.5
+  },
+  "n60_w125": {
+   "name": "Northwest Territories, Canada",
+   "region": "Northwest Territories",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 62.5,
+   "sampled_lon": -122.5
+  },
+  "n60_w130": {
+   "name": "Northwest Territories, Canada",
+   "region": "Northwest Territories",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 62.5,
+   "sampled_lon": -127.5
+  },
+  "n60_w135": {
+   "name": "Yukon, Canada",
+   "region": "Yukon",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 62.5,
+   "sampled_lon": -132.5
+  },
+  "n60_w140": {
+   "name": "Yukon, Canada",
+   "region": "Yukon",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 62.5,
+   "sampled_lon": -137.5
+  },
+  "n60_w145": {
+   "name": "Alaska, United States",
+   "region": "Alaska",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 62.5,
+   "sampled_lon": -142.5
+  },
+  "n60_w150": {
+   "name": "Alaska, United States",
+   "region": "Alaska",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 62.5,
+   "sampled_lon": -147.5
+  },
+  "n60_w155": {
+   "name": "Alaska, United States",
+   "region": "Alaska",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 62.5,
+   "sampled_lon": -152.5
+  },
+  "n60_w160": {
+   "name": "Alaska, United States",
+   "region": "Alaska",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 62.5,
+   "sampled_lon": -157.5
+  },
+  "n60_w165": {
+   "name": "Alaska, United States",
+   "region": "Alaska",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 62.5,
+   "sampled_lon": -162.5
+  },
+  "n60_w50": {
+   "name": "Greenland",
+   "region": null,
+   "country": "Greenland",
+   "country_code": "GL",
+   "sampled_lat": 62.5,
+   "sampled_lon": -47.5
+  },
+  "n60_w70": {
+   "name": "Nunavut, Canada",
+   "region": "Nunavut",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 62.5,
+   "sampled_lon": -67.5
+  },
+  "n60_w80": {
+   "name": "Quebec, Canada",
+   "region": "Quebec",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 62.5,
+   "sampled_lon": -77.5
+  },
+  "n60_w85": {
+   "name": "Nunavut, Canada",
+   "region": "Nunavut",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 62.5,
+   "sampled_lon": -82.5
+  },
+  "n65_e100": {
+   "name": "Krasnoyarsk Krai, Russia",
+   "region": "Krasnoyarsk Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 102.5
+  },
+  "n65_e105": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 107.5
+  },
+  "n65_e110": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 112.5
+  },
+  "n65_e115": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 117.5
+  },
+  "n65_e120": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 122.5
+  },
+  "n65_e125": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 127.5
+  },
+  "n65_e130": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 132.5
+  },
+  "n65_e135": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 137.5
+  },
+  "n65_e140": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 142.5
+  },
+  "n65_e145": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 147.5
+  },
+  "n65_e15": {
+   "name": "Sweden",
+   "region": null,
+   "country": "Sweden",
+   "country_code": "SE",
+   "sampled_lat": 67.5,
+   "sampled_lon": 17.5
+  },
+  "n65_e150": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 152.5
+  },
+  "n65_e155": {
+   "name": "Sakha Republic, Russia",
+   "region": "Sakha Republic",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 157.5
+  },
+  "n65_e160": {
+   "name": "Chukotka Autonomous Okrug, Russia",
+   "region": "Chukotka Autonomous Okrug",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 162.5
+  },
+  "n65_e165": {
+   "name": "Chukotka Autonomous Okrug, Russia",
+   "region": "Chukotka Autonomous Okrug",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 167.5
+  },
+  "n65_e170": {
+   "name": "Chukotka Autonomous Okrug, Russia",
+   "region": "Chukotka Autonomous Okrug",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 172.5
+  },
+  "n65_e175": {
+   "name": "Chukotka Autonomous Okrug, Russia",
+   "region": "Chukotka Autonomous Okrug",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 177.5
+  },
+  "n65_e20": {
+   "name": "Sweden",
+   "region": null,
+   "country": "Sweden",
+   "country_code": "SE",
+   "sampled_lat": 67.5,
+   "sampled_lon": 22.5
+  },
+  "n65_e25": {
+   "name": "Lapland, Finland",
+   "region": "Lapland",
+   "country": "Finland",
+   "country_code": "FI",
+   "sampled_lat": 67.5,
+   "sampled_lon": 27.5
+  },
+  "n65_e30": {
+   "name": "Murmansk Oblast, Russia",
+   "region": "Murmansk Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 32.5
+  },
+  "n65_e35": {
+   "name": "Murmansk Oblast, Russia",
+   "region": "Murmansk Oblast",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 37.5
+  },
+  "n65_e50": {
+   "name": "Nenets Autonomous Okrug, Russia",
+   "region": "Nenets Autonomous Okrug",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 52.5
+  },
+  "n65_e55": {
+   "name": "Nenets Autonomous Okrug, Russia",
+   "region": "Nenets Autonomous Okrug",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 57.5
+  },
+  "n65_e60": {
+   "name": "Nenets Autonomous Okrug, Russia",
+   "region": "Nenets Autonomous Okrug",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 62.5
+  },
+  "n65_e65": {
+   "name": "Yamalo-Nenets Autonomous Okrug, Russia",
+   "region": "Yamalo-Nenets Autonomous Okrug",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 67.5
+  },
+  "n65_e70": {
+   "name": "Yamalo-Nenets Autonomous Okrug, Russia",
+   "region": "Yamalo-Nenets Autonomous Okrug",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 72.5
+  },
+  "n65_e75": {
+   "name": "Yamalo-Nenets Autonomous Okrug, Russia",
+   "region": "Yamalo-Nenets Autonomous Okrug",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 77.5
+  },
+  "n65_e80": {
+   "name": "Krasnoyarsk Krai, Russia",
+   "region": "Krasnoyarsk Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 82.5
+  },
+  "n65_e85": {
+   "name": "Krasnoyarsk Krai, Russia",
+   "region": "Krasnoyarsk Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 87.5
+  },
+  "n65_e90": {
+   "name": "Krasnoyarsk Krai, Russia",
+   "region": "Krasnoyarsk Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 92.5
+  },
+  "n65_e95": {
+   "name": "Krasnoyarsk Krai, Russia",
+   "region": "Krasnoyarsk Krai",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": 97.5
+  },
+  "n65_w100": {
+   "name": "Nunavut, Canada",
+   "region": "Nunavut",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 67.5,
+   "sampled_lon": -97.5
+  },
+  "n65_w105": {
+   "name": "Nunavut, Canada",
+   "region": "Nunavut",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 67.5,
+   "sampled_lon": -102.5
+  },
+  "n65_w110": {
+   "name": "Nunavut, Canada",
+   "region": "Nunavut",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 67.5,
+   "sampled_lon": -107.5
+  },
+  "n65_w115": {
+   "name": "Nunavut, Canada",
+   "region": "Nunavut",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 67.5,
+   "sampled_lon": -112.5
+  },
+  "n65_w120": {
+   "name": "Nunavut, Canada",
+   "region": "Nunavut",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 67.5,
+   "sampled_lon": -117.5
+  },
+  "n65_w125": {
+   "name": "Northwest Territories, Canada",
+   "region": "Northwest Territories",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 67.5,
+   "sampled_lon": -122.5
+  },
+  "n65_w130": {
+   "name": "Northwest Territories, Canada",
+   "region": "Northwest Territories",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 67.5,
+   "sampled_lon": -127.5
+  },
+  "n65_w135": {
+   "name": "Northwest Territories, Canada",
+   "region": "Northwest Territories",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 67.5,
+   "sampled_lon": -132.5
+  },
+  "n65_w140": {
+   "name": "Yukon, Canada",
+   "region": "Yukon",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 67.5,
+   "sampled_lon": -137.5
+  },
+  "n65_w145": {
+   "name": "Alaska, United States",
+   "region": "Alaska",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 67.5,
+   "sampled_lon": -142.5
+  },
+  "n65_w150": {
+   "name": "Alaska, United States",
+   "region": "Alaska",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 67.5,
+   "sampled_lon": -147.5
+  },
+  "n65_w155": {
+   "name": "Alaska, United States",
+   "region": "Alaska",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 67.5,
+   "sampled_lon": -152.5
+  },
+  "n65_w160": {
+   "name": "Alaska, United States",
+   "region": "Alaska",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 67.5,
+   "sampled_lon": -157.5
+  },
+  "n65_w165": {
+   "name": "Alaska, United States",
+   "region": "Alaska",
+   "country": "United States",
+   "country_code": "US",
+   "sampled_lat": 67.5,
+   "sampled_lon": -162.5
+  },
+  "n65_w180": {
+   "name": "Chukotka Autonomous Okrug, Russia",
+   "region": "Chukotka Autonomous Okrug",
+   "country": "Russia",
+   "country_code": "RU",
+   "sampled_lat": 67.5,
+   "sampled_lon": -177.5
+  },
+  "n65_w40": {
+   "name": "Greenland",
+   "region": null,
+   "country": "Greenland",
+   "country_code": "GL",
+   "sampled_lat": 67.5,
+   "sampled_lon": -37.5
+  },
+  "n65_w45": {
+   "name": "Greenland",
+   "region": null,
+   "country": "Greenland",
+   "country_code": "GL",
+   "sampled_lat": 67.5,
+   "sampled_lon": -42.5
+  },
+  "n65_w50": {
+   "name": "Greenland",
+   "region": null,
+   "country": "Greenland",
+   "country_code": "GL",
+   "sampled_lat": 67.5,
+   "sampled_lon": -47.5
+  },
+  "n65_w55": {
+   "name": "Greenland",
+   "region": null,
+   "country": "Greenland",
+   "country_code": "GL",
+   "sampled_lat": 67.5,
+   "sampled_lon": -52.5
+  },
+  "n65_w70": {
+   "name": "Nunavut, Canada",
+   "region": "Nunavut",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 67.5,
+   "sampled_lon": -67.5
+  },
+  "n65_w85": {
+   "name": "Nunavut, Canada",
+   "region": "Nunavut",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 67.5,
+   "sampled_lon": -82.5
+  },
+  "n65_w95": {
+   "name": "Nunavut, Canada",
+   "region": "Nunavut",
+   "country": "Canada",
+   "country_code": "CA",
+   "sampled_lat": 67.5,
+   "sampled_lon": -92.5
+  },
+  "s10_e105": {
+   "name": "West Java, Indonesia",
+   "region": "West Java",
+   "country": "Indonesia",
+   "country_code": "ID",
+   "sampled_lat": -7.5,
+   "sampled_lon": 107.5
+  },
+  "s10_e110": {
+   "name": "East Java, Indonesia",
+   "region": "East Java",
+   "country": "Indonesia",
+   "country_code": "ID",
+   "sampled_lat": -7.5,
+   "sampled_lon": 112.5
+  },
+  "s10_e140": {
+   "name": "Western, Papua New Guinea",
+   "region": "Western",
+   "country": "Papua New Guinea",
+   "country_code": "PG",
+   "sampled_lat": -7.5,
+   "sampled_lon": 142.5
+  },
+  "s10_e15": {
+   "name": "Kwango, Democratic Republic of the Congo",
+   "region": "Kwango",
+   "country": "Democratic Republic of the Congo",
+   "country_code": "CD",
+   "sampled_lat": -7.5,
+   "sampled_lon": 17.5
+  },
+  "s10_e20": {
+   "name": "Central Kasai, Democratic Republic of the Congo",
+   "region": "Central Kasai",
+   "country": "Democratic Republic of the Congo",
+   "country_code": "CD",
+   "sampled_lat": -7.5,
+   "sampled_lon": 22.5
+  },
+  "s10_e25": {
+   "name": "Tanganyika, Democratic Republic of the Congo",
+   "region": "Tanganyika",
+   "country": "Democratic Republic of the Congo",
+   "country_code": "CD",
+   "sampled_lat": -7.5,
+   "sampled_lon": 27.5
+  },
+  "s10_e30": {
+   "name": "Songwe Region, Tanzania",
+   "region": "Songwe Region",
+   "country": "Tanzania",
+   "country_code": "TZ",
+   "sampled_lat": -7.5,
+   "sampled_lon": 32.5
+  },
+  "s10_e35": {
+   "name": "Morogoro Region, Tanzania",
+   "region": "Morogoro Region",
+   "country": "Tanzania",
+   "country_code": "TZ",
+   "sampled_lat": -7.5,
+   "sampled_lon": 37.5
+  },
+  "s10_w40": {
+   "name": "Pernambuco, Brazil",
+   "region": "Pernambuco",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -7.5,
+   "sampled_lon": -37.5
+  },
+  "s10_w45": {
+   "name": "Piauí, Brazil",
+   "region": "Piauí",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -7.5,
+   "sampled_lon": -42.5
+  },
+  "s10_w50": {
+   "name": "Tocantins, Brazil",
+   "region": "Tocantins",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -7.5,
+   "sampled_lon": -47.5
+  },
+  "s10_w55": {
+   "name": "Pará, Brazil",
+   "region": "Pará",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -7.5,
+   "sampled_lon": -52.5
+  },
+  "s10_w60": {
+   "name": "Pará, Brazil",
+   "region": "Pará",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -7.5,
+   "sampled_lon": -57.5
+  },
+  "s10_w65": {
+   "name": "Amazonas, Brazil",
+   "region": "Amazonas",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -7.5,
+   "sampled_lon": -62.5
+  },
+  "s10_w70": {
+   "name": "Amazonas, Brazil",
+   "region": "Amazonas",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -7.5,
+   "sampled_lon": -67.5
+  },
+  "s10_w75": {
+   "name": "Amazonas, Brazil",
+   "region": "Amazonas",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -7.5,
+   "sampled_lon": -72.5
+  },
+  "s10_w80": {
+   "name": "San Martín, Peru",
+   "region": "San Martín",
+   "country": "Peru",
+   "country_code": "PE",
+   "sampled_lat": -7.5,
+   "sampled_lon": -77.5
+  },
+  "s15_e130": {
+   "name": "Australia",
+   "region": null,
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -12.5,
+   "sampled_lon": 132.5
+  },
+  "s15_e140": {
+   "name": "Queensland, Australia",
+   "region": "Queensland",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -12.5,
+   "sampled_lon": 142.5
+  },
+  "s15_e15": {
+   "name": "Bié Province, Angola",
+   "region": "Bié Province",
+   "country": "Angola",
+   "country_code": "AO",
+   "sampled_lat": -12.5,
+   "sampled_lon": 17.5
+  },
+  "s15_e20": {
+   "name": "Moxico Leste, Angola",
+   "region": "Moxico Leste",
+   "country": "Angola",
+   "country_code": "AO",
+   "sampled_lat": -12.5,
+   "sampled_lon": 22.5
+  },
+  "s15_e25": {
+   "name": "Copperbelt Province, Zambia",
+   "region": "Copperbelt Province",
+   "country": "Zambia",
+   "country_code": "ZM",
+   "sampled_lat": -12.5,
+   "sampled_lon": 27.5
+  },
+  "s15_e30": {
+   "name": "Eastern Province, Zambia",
+   "region": "Eastern Province",
+   "country": "Zambia",
+   "country_code": "ZM",
+   "sampled_lat": -12.5,
+   "sampled_lon": 32.5
+  },
+  "s15_e35": {
+   "name": "Niassa Province, Mozambique",
+   "region": "Niassa Province",
+   "country": "Mozambique",
+   "country_code": "MZ",
+   "sampled_lat": -12.5,
+   "sampled_lon": 37.5
+  },
+  "s15_w45": {
+   "name": "Bahia, Brazil",
+   "region": "Bahia",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -12.5,
+   "sampled_lon": -42.5
+  },
+  "s15_w50": {
+   "name": "Tocantins, Brazil",
+   "region": "Tocantins",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -12.5,
+   "sampled_lon": -47.5
+  },
+  "s15_w55": {
+   "name": "Mato Grosso, Brazil",
+   "region": "Mato Grosso",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -12.5,
+   "sampled_lon": -52.5
+  },
+  "s15_w60": {
+   "name": "Mato Grosso, Brazil",
+   "region": "Mato Grosso",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -12.5,
+   "sampled_lon": -57.5
+  },
+  "s15_w65": {
+   "name": "Rondônia, Brazil",
+   "region": "Rondônia",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -12.5,
+   "sampled_lon": -62.5
+  },
+  "s15_w70": {
+   "name": "La Paz, Bolivia",
+   "region": "La Paz",
+   "country": "Bolivia",
+   "country_code": "BO",
+   "sampled_lat": -12.5,
+   "sampled_lon": -67.5
+  },
+  "s15_w75": {
+   "name": "Cusco, Peru",
+   "region": "Cusco",
+   "country": "Peru",
+   "country_code": "PE",
+   "sampled_lat": -12.5,
+   "sampled_lon": -72.5
+  },
+  "s20_e10": {
+   "name": "Kunene Region, Namibia",
+   "region": "Kunene Region",
+   "country": "Namibia",
+   "country_code": "NA",
+   "sampled_lat": -17.5,
+   "sampled_lon": 12.5
+  },
+  "s20_e120": {
+   "name": "Western Australia, Australia",
+   "region": "Western Australia",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -17.5,
+   "sampled_lon": 122.5
+  },
+  "s20_e125": {
+   "name": "Western Australia, Australia",
+   "region": "Western Australia",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -17.5,
+   "sampled_lon": 127.5
+  },
+  "s20_e130": {
+   "name": "Australia",
+   "region": null,
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -17.5,
+   "sampled_lon": 132.5
+  },
+  "s20_e135": {
+   "name": "Australia",
+   "region": null,
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -17.5,
+   "sampled_lon": 137.5
+  },
+  "s20_e140": {
+   "name": "Queensland, Australia",
+   "region": "Queensland",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -17.5,
+   "sampled_lon": 142.5
+  },
+  "s20_e15": {
+   "name": "Ohangwena, Namibia",
+   "region": "Ohangwena",
+   "country": "Namibia",
+   "country_code": "NA",
+   "sampled_lat": -17.5,
+   "sampled_lon": 17.5
+  },
+  "s20_e20": {
+   "name": "Cuando Cubango Province, Angola",
+   "region": "Cuando Cubango Province",
+   "country": "Angola",
+   "country_code": "AO",
+   "sampled_lat": -17.5,
+   "sampled_lon": 22.5
+  },
+  "s20_e25": {
+   "name": "Matabeleland North Province, Zimbabwe",
+   "region": "Matabeleland North Province",
+   "country": "Zimbabwe",
+   "country_code": "ZW",
+   "sampled_lat": -17.5,
+   "sampled_lon": 27.5
+  },
+  "s20_e30": {
+   "name": "Mashonaland East Province, Zimbabwe",
+   "region": "Mashonaland East Province",
+   "country": "Zimbabwe",
+   "country_code": "ZW",
+   "sampled_lat": -17.5,
+   "sampled_lon": 32.5
+  },
+  "s20_e35": {
+   "name": "Zambezia Province, Mozambique",
+   "region": "Zambezia Province",
+   "country": "Mozambique",
+   "country_code": "MZ",
+   "sampled_lat": -17.5,
+   "sampled_lon": 37.5
+  },
+  "s20_e45": {
+   "name": "Betsiboka, Madagascar",
+   "region": "Betsiboka",
+   "country": "Madagascar",
+   "country_code": "MG",
+   "sampled_lat": -17.5,
+   "sampled_lon": 47.5
+  },
+  "s20_w45": {
+   "name": "Minas Gerais, Brazil",
+   "region": "Minas Gerais",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -17.5,
+   "sampled_lon": -42.5
+  },
+  "s20_w50": {
+   "name": "Minas Gerais, Brazil",
+   "region": "Minas Gerais",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -17.5,
+   "sampled_lon": -47.5
+  },
+  "s20_w55": {
+   "name": "Goiás, Brazil",
+   "region": "Goiás",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -17.5,
+   "sampled_lon": -52.5
+  },
+  "s20_w60": {
+   "name": "Mato Grosso, Brazil",
+   "region": "Mato Grosso",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -17.5,
+   "sampled_lon": -57.5
+  },
+  "s20_w65": {
+   "name": "Santa Cruz, Bolivia",
+   "region": "Santa Cruz",
+   "country": "Bolivia",
+   "country_code": "BO",
+   "sampled_lat": -17.5,
+   "sampled_lon": -62.5
+  },
+  "s20_w70": {
+   "name": "La Paz, Bolivia",
+   "region": "La Paz",
+   "country": "Bolivia",
+   "country_code": "BO",
+   "sampled_lat": -17.5,
+   "sampled_lon": -67.5
+  },
+  "s25_e115": {
+   "name": "Western Australia, Australia",
+   "region": "Western Australia",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -22.5,
+   "sampled_lon": 117.5
+  },
+  "s25_e120": {
+   "name": "Western Australia, Australia",
+   "region": "Western Australia",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -22.5,
+   "sampled_lon": 122.5
+  },
+  "s25_e125": {
+   "name": "Western Australia, Australia",
+   "region": "Western Australia",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -22.5,
+   "sampled_lon": 127.5
+  },
+  "s25_e130": {
+   "name": "Australia",
+   "region": null,
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -22.5,
+   "sampled_lon": 132.5
+  },
+  "s25_e135": {
+   "name": "Australia",
+   "region": null,
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -22.5,
+   "sampled_lon": 137.5
+  },
+  "s25_e140": {
+   "name": "Queensland, Australia",
+   "region": "Queensland",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -22.5,
+   "sampled_lon": 142.5
+  },
+  "s25_e145": {
+   "name": "Queensland, Australia",
+   "region": "Queensland",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -22.5,
+   "sampled_lon": 147.5
+  },
+  "s25_e15": {
+   "name": "Khomas, Namibia",
+   "region": "Khomas",
+   "country": "Namibia",
+   "country_code": "NA",
+   "sampled_lat": -22.5,
+   "sampled_lon": 17.5
+  },
+  "s25_e20": {
+   "name": "Ghanzi District, Botswana",
+   "region": "Ghanzi District",
+   "country": "Botswana",
+   "country_code": "BW",
+   "sampled_lat": -22.5,
+   "sampled_lon": 22.5
+  },
+  "s25_e25": {
+   "name": "Central District, Botswana",
+   "region": "Central District",
+   "country": "Botswana",
+   "country_code": "BW",
+   "sampled_lat": -22.5,
+   "sampled_lon": 27.5
+  },
+  "s25_e30": {
+   "name": "Gaza Province, Mozambique",
+   "region": "Gaza Province",
+   "country": "Mozambique",
+   "country_code": "MZ",
+   "sampled_lat": -22.5,
+   "sampled_lon": 32.5
+  },
+  "s25_e45": {
+   "name": "Atsimo-Atsinanana, Madagascar",
+   "region": "Atsimo-Atsinanana",
+   "country": "Madagascar",
+   "country_code": "MG",
+   "sampled_lat": -22.5,
+   "sampled_lon": 47.5
+  },
+  "s25_w45": {
+   "name": "Rio de Janeiro, Brazil",
+   "region": "Rio de Janeiro",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -22.5,
+   "sampled_lon": -42.5
+  },
+  "s25_w50": {
+   "name": "São Paulo, Brazil",
+   "region": "São Paulo",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -22.5,
+   "sampled_lon": -47.5
+  },
+  "s25_w55": {
+   "name": "São Paulo, Brazil",
+   "region": "São Paulo",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -22.5,
+   "sampled_lon": -52.5
+  },
+  "s25_w60": {
+   "name": "Concepción, Paraguay",
+   "region": "Concepción",
+   "country": "Paraguay",
+   "country_code": "PY",
+   "sampled_lat": -22.5,
+   "sampled_lon": -57.5
+  },
+  "s25_w65": {
+   "name": "Salta, Argentina",
+   "region": "Salta",
+   "country": "Argentina",
+   "country_code": "AR",
+   "sampled_lat": -22.5,
+   "sampled_lon": -62.5
+  },
+  "s25_w70": {
+   "name": "Potosí, Bolivia",
+   "region": "Potosí",
+   "country": "Bolivia",
+   "country_code": "BO",
+   "sampled_lat": -22.5,
+   "sampled_lon": -67.5
+  },
+  "s30_e115": {
+   "name": "Western Australia, Australia",
+   "region": "Western Australia",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -27.5,
+   "sampled_lon": 117.5
+  },
+  "s30_e120": {
+   "name": "Western Australia, Australia",
+   "region": "Western Australia",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -27.5,
+   "sampled_lon": 122.5
+  },
+  "s30_e125": {
+   "name": "Western Australia, Australia",
+   "region": "Western Australia",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -27.5,
+   "sampled_lon": 127.5
+  },
+  "s30_e130": {
+   "name": "South Australia, Australia",
+   "region": "South Australia",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -27.5,
+   "sampled_lon": 132.5
+  },
+  "s30_e140": {
+   "name": "Queensland, Australia",
+   "region": "Queensland",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -27.5,
+   "sampled_lon": 142.5
+  },
+  "s30_e145": {
+   "name": "Queensland, Australia",
+   "region": "Queensland",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -27.5,
+   "sampled_lon": 147.5
+  },
+  "s30_e15": {
+   "name": "Karas, Namibia",
+   "region": "Karas",
+   "country": "Namibia",
+   "country_code": "NA",
+   "sampled_lat": -27.5,
+   "sampled_lon": 17.5
+  },
+  "s30_e150": {
+   "name": "Queensland, Australia",
+   "region": "Queensland",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -27.5,
+   "sampled_lon": 152.5
+  },
+  "s30_e20": {
+   "name": "Northern Cape, South Africa",
+   "region": "Northern Cape",
+   "country": "South Africa",
+   "country_code": "ZA",
+   "sampled_lat": -27.5,
+   "sampled_lon": 22.5
+  },
+  "s30_e25": {
+   "name": "Free State, South Africa",
+   "region": "Free State",
+   "country": "South Africa",
+   "country_code": "ZA",
+   "sampled_lat": -27.5,
+   "sampled_lon": 27.5
+  },
+  "s30_e30": {
+   "name": "KwaZulu-Natal, South Africa",
+   "region": "KwaZulu-Natal",
+   "country": "South Africa",
+   "country_code": "ZA",
+   "sampled_lat": -27.5,
+   "sampled_lon": 32.5
+  },
+  "s30_w55": {
+   "name": "Rio Grande do Sul, Brazil",
+   "region": "Rio Grande do Sul",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -27.5,
+   "sampled_lon": -52.5
+  },
+  "s30_w60": {
+   "name": "Corrientes, Argentina",
+   "region": "Corrientes",
+   "country": "Argentina",
+   "country_code": "AR",
+   "sampled_lat": -27.5,
+   "sampled_lon": -57.5
+  },
+  "s30_w65": {
+   "name": "Santiago del Estero, Argentina",
+   "region": "Santiago del Estero",
+   "country": "Argentina",
+   "country_code": "AR",
+   "sampled_lat": -27.5,
+   "sampled_lon": -62.5
+  },
+  "s30_w70": {
+   "name": "Catamarca, Argentina",
+   "region": "Catamarca",
+   "country": "Argentina",
+   "country_code": "AR",
+   "sampled_lat": -27.5,
+   "sampled_lon": -67.5
+  },
+  "s35_e115": {
+   "name": "Western Australia, Australia",
+   "region": "Western Australia",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -32.5,
+   "sampled_lon": 117.5
+  },
+  "s35_e120": {
+   "name": "Western Australia, Australia",
+   "region": "Western Australia",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -32.5,
+   "sampled_lon": 122.5
+  },
+  "s35_e135": {
+   "name": "South Australia, Australia",
+   "region": "South Australia",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -32.5,
+   "sampled_lon": 137.5
+  },
+  "s35_e140": {
+   "name": "New South Wales, Australia",
+   "region": "New South Wales",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -32.5,
+   "sampled_lon": 142.5
+  },
+  "s35_e145": {
+   "name": "New South Wales, Australia",
+   "region": "New South Wales",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -32.5,
+   "sampled_lon": 147.5
+  },
+  "s35_e20": {
+   "name": "Western Cape, South Africa",
+   "region": "Western Cape",
+   "country": "South Africa",
+   "country_code": "ZA",
+   "sampled_lat": -32.5,
+   "sampled_lon": 22.5
+  },
+  "s35_e25": {
+   "name": "Eastern Cape, South Africa",
+   "region": "Eastern Cape",
+   "country": "South Africa",
+   "country_code": "ZA",
+   "sampled_lat": -32.5,
+   "sampled_lon": 27.5
+  },
+  "s35_w55": {
+   "name": "Rio Grande do Sul, Brazil",
+   "region": "Rio Grande do Sul",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -32.5,
+   "sampled_lon": -52.5
+  },
+  "s35_w60": {
+   "name": "Río Negro, Uruguay",
+   "region": "Río Negro",
+   "country": "Uruguay",
+   "country_code": "UY",
+   "sampled_lat": -32.5,
+   "sampled_lon": -57.5
+  },
+  "s35_w65": {
+   "name": "Córdoba, Argentina",
+   "region": "Córdoba",
+   "country": "Argentina",
+   "country_code": "AR",
+   "sampled_lat": -32.5,
+   "sampled_lon": -62.5
+  },
+  "s35_w70": {
+   "name": "Mendoza, Argentina",
+   "region": "Mendoza",
+   "country": "Argentina",
+   "country_code": "AR",
+   "sampled_lat": -32.5,
+   "sampled_lon": -67.5
+  },
+  "s40_e140": {
+   "name": "Victoria, Australia",
+   "region": "Victoria",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -37.5,
+   "sampled_lon": 142.5
+  },
+  "s40_e145": {
+   "name": "Victoria, Australia",
+   "region": "Victoria",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -37.5,
+   "sampled_lon": 147.5
+  },
+  "s40_w60": {
+   "name": "Buenos Aires, Argentina",
+   "region": "Buenos Aires",
+   "country": "Argentina",
+   "country_code": "AR",
+   "sampled_lat": -37.5,
+   "sampled_lon": -57.5
+  },
+  "s40_w65": {
+   "name": "Buenos Aires, Argentina",
+   "region": "Buenos Aires",
+   "country": "Argentina",
+   "country_code": "AR",
+   "sampled_lat": -37.5,
+   "sampled_lon": -62.5
+  },
+  "s40_w70": {
+   "name": "La Pampa, Argentina",
+   "region": "La Pampa",
+   "country": "Argentina",
+   "country_code": "AR",
+   "sampled_lat": -37.5,
+   "sampled_lon": -67.5
+  },
+  "s40_w75": {
+   "name": "Biobio Region, Chile",
+   "region": "Biobio Region",
+   "country": "Chile",
+   "country_code": "CL",
+   "sampled_lat": -37.5,
+   "sampled_lon": -72.5
+  },
+  "s45_e145": {
+   "name": "Tasmania, Australia",
+   "region": "Tasmania",
+   "country": "Australia",
+   "country_code": "AU",
+   "sampled_lat": -42.5,
+   "sampled_lon": 147.5
+  },
+  "s45_e170": {
+   "name": "Canterbury, New Zealand",
+   "region": "Canterbury",
+   "country": "New Zealand",
+   "country_code": "NZ",
+   "sampled_lat": -42.5,
+   "sampled_lon": 172.5
+  },
+  "s45_w70": {
+   "name": "Chubut, Argentina",
+   "region": "Chubut",
+   "country": "Argentina",
+   "country_code": "AR",
+   "sampled_lat": -42.5,
+   "sampled_lon": -67.5
+  },
+  "s45_w75": {
+   "name": "Los Lagos Region, Chile",
+   "region": "Los Lagos Region",
+   "country": "Chile",
+   "country_code": "CL",
+   "sampled_lat": -42.5,
+   "sampled_lon": -72.5
+  },
+  "s50_w70": {
+   "name": "Santa Cruz, Argentina",
+   "region": "Santa Cruz",
+   "country": "Argentina",
+   "country_code": "AR",
+   "sampled_lat": -47.5,
+   "sampled_lon": -67.5
+  },
+  "s50_w75": {
+   "name": "Aysen del General Carlos Ibanez del Campo Region, Chile",
+   "region": "Aysen del General Carlos Ibanez del Campo Region",
+   "country": "Chile",
+   "country_code": "CL",
+   "sampled_lat": -47.5,
+   "sampled_lon": -72.5
+  },
+  "s55_w75": {
+   "name": "Magallanes and Chilean Antarctica Region, Chile",
+   "region": "Magallanes and Chilean Antarctica Region",
+   "country": "Chile",
+   "country_code": "CL",
+   "sampled_lat": -52.5,
+   "sampled_lon": -72.5
+  },
+  "s5_e10": {
+   "name": "Niari Department, Congo-Brazzaville",
+   "region": "Niari Department",
+   "country": "Congo-Brazzaville",
+   "country_code": "CG",
+   "sampled_lat": -2.5,
+   "sampled_lon": 12.5
+  },
+  "s5_e100": {
+   "name": "Jambi, Indonesia",
+   "region": "Jambi",
+   "country": "Indonesia",
+   "country_code": "ID",
+   "sampled_lat": -2.5,
+   "sampled_lon": 102.5
+  },
+  "s5_e110": {
+   "name": "Central Kalimantan, Indonesia",
+   "region": "Central Kalimantan",
+   "country": "Indonesia",
+   "country_code": "ID",
+   "sampled_lat": -2.5,
+   "sampled_lon": 112.5
+  },
+  "s5_e135": {
+   "name": "Papua, Indonesia",
+   "region": "Papua",
+   "country": "Indonesia",
+   "country_code": "ID",
+   "sampled_lat": -2.5,
+   "sampled_lon": 137.5
+  },
+  "s5_e15": {
+   "name": "Mai-Ndombe, Democratic Republic of the Congo",
+   "region": "Mai-Ndombe",
+   "country": "Democratic Republic of the Congo",
+   "country_code": "CD",
+   "sampled_lat": -2.5,
+   "sampled_lon": 17.5
+  },
+  "s5_e20": {
+   "name": "Sankuru, Democratic Republic of the Congo",
+   "region": "Sankuru",
+   "country": "Democratic Republic of the Congo",
+   "country_code": "CD",
+   "sampled_lat": -2.5,
+   "sampled_lon": 22.5
+  },
+  "s5_e25": {
+   "name": "South Kivu, Democratic Republic of the Congo",
+   "region": "South Kivu",
+   "country": "Democratic Republic of the Congo",
+   "country_code": "CD",
+   "sampled_lat": -2.5,
+   "sampled_lon": 27.5
+  },
+  "s5_e30": {
+   "name": "Mwanza Region, Tanzania",
+   "region": "Mwanza Region",
+   "country": "Tanzania",
+   "country_code": "TZ",
+   "sampled_lat": -2.5,
+   "sampled_lon": 32.5
+  },
+  "s5_e35": {
+   "name": "Kajiado County, Kenya",
+   "region": "Kajiado County",
+   "country": "Kenya",
+   "country_code": "KE",
+   "sampled_lat": -2.5,
+   "sampled_lon": 37.5
+  },
+  "s5_w50": {
+   "name": "Pará, Brazil",
+   "region": "Pará",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -2.5,
+   "sampled_lon": -47.5
+  },
+  "s5_w55": {
+   "name": "Pará, Brazil",
+   "region": "Pará",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -2.5,
+   "sampled_lon": -52.5
+  },
+  "s5_w60": {
+   "name": "Amazonas, Brazil",
+   "region": "Amazonas",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -2.5,
+   "sampled_lon": -57.5
+  },
+  "s5_w65": {
+   "name": "Amazonas, Brazil",
+   "region": "Amazonas",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -2.5,
+   "sampled_lon": -62.5
+  },
+  "s5_w70": {
+   "name": "Amazonas, Brazil",
+   "region": "Amazonas",
+   "country": "Brazil",
+   "country_code": "BR",
+   "sampled_lat": -2.5,
+   "sampled_lon": -67.5
+  },
+  "s5_w75": {
+   "name": "Loreto, Peru",
+   "region": "Loreto",
+   "country": "Peru",
+   "country_code": "PE",
+   "sampled_lat": -2.5,
+   "sampled_lon": -72.5
+  },
+  "s5_w80": {
+   "name": "Morona Santiago, Ecuador",
+   "region": "Morona Santiago",
+   "country": "Ecuador",
+   "country_code": "EC",
+   "sampled_lat": -2.5,
+   "sampled_lon": -77.5
+  }
+ }
+}

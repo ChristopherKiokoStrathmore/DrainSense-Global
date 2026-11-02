@@ -79,7 +79,7 @@ export default function SectorsPage() {
             <table className="matrix">
               <thead>
                 <tr>
-                  <th>Rank</th><th>Cell</th><th className="num">Flood score</th>
+                  <th>Rank</th><th>Place</th><th className="num">Flood score</th>
                   {SECTORS.map((s) => <th key={s.key}>{s.title}</th>)}
                 </tr>
               </thead>
@@ -87,7 +87,7 @@ export default function SectorsPage() {
                 {cards.map((item, i) => (
                   <tr key={item.cell.cell_id} className={i === index ? "on" : ""}>
                     <td>{item.cell.rank}</td>
-                    <td><button type="button" className="link" onClick={() => setIndex(i)}>{item.cell.cell_id}</button></td>
+                    <td><button type="button" className="link" onClick={() => setIndex(i)} title={item.cell.cell_id}>{item.cell.place_name}</button></td>
                     <td className="num">{item.cell.probability.toFixed(2)}</td>
                     {SECTORS.map((s) => (
                       <td key={s.key}>
@@ -104,7 +104,7 @@ export default function SectorsPage() {
 
       {card && (
         <>
-          <h2>{card.cell.cell_id} · flood score {card.cell.probability.toFixed(2)}</h2>
+          <h2>{card.cell.place_name} · flood score {card.cell.probability.toFixed(2)}</h2>
           <div className="cards">
             {SECTORS.map((sector) => {
               const indicator = card.indicators[sector.key];

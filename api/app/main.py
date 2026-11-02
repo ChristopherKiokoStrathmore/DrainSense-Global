@@ -368,6 +368,7 @@ def response_plan(limit: int = 15):
         recurring_points = 10 * recurring
         plan.append({
             "cell_id": row["cell_id"],
+            "place_name": scoring.place_name(row["cell_id"]),
             "center_lat": row["center_lat"],
             "center_lon": row["center_lon"],
             "probability": row["probability"],

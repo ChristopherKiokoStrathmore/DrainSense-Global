@@ -105,10 +105,10 @@ a { color: inherit; }
 .cell-name {
   font-family: var(--display);
   font-weight: 700;
-  font-size: 38px;
-  line-height: 0.95;
-  margin: 0;
-  letter-spacing: -0.04em;
+  font-size: 30px;
+  line-height: 1.05;
+  margin: 0 0 4px;
+  letter-spacing: -0.03em;
 }
 .reading { font-size: 14px; line-height: 1.5; }
 /* The score, its gauge and the tags stay on one line; the explanation drops below at full width. */

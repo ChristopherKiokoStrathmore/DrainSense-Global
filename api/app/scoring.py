@@ -34,6 +34,32 @@ def _cells() -> dict[str, dict]:
     return cells
 
 
+@lru_cache(maxsize=1)
+def _places() -> dict[str, dict]:
+    """Reverse-geocoded names from model/geocode_cells.py. Missing file: every cell falls back to coordinates."""
+    path = ARTIFACTS / "cell_places.json"
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text())["cells"]
+
+
+def _coords(lat: float, lon: float) -> str:
+    return f"{abs(lat):g}°{'S' if lat < 0 else 'N'} {abs(lon):g}°{'W' if lon < 0 else 'E'}"
+
+
+def place_name(cell_id: str) -> str:
+    """A readable name for the cell: its region and country, or its centre's coordinates over open water."""
+    name = (_places().get(cell_id) or {}).get("name")
+    if name:
+        return name
+    row = _cells().get(cell_id)
+    return _coords(row["center_lat"], row["center_lon"]) if row else cell_id
+
+
+def place_names() -> dict[str, str]:
+    return {cell_id: place_name(cell_id) for cell_id in _cells()}
+
+
 def cells() -> list[dict]:
     return list(_cells().values())
 
@@ -52,6 +78,7 @@ def grid() -> dict:
             "geometry": feature["geometry"],
             "properties": {
                 "cell_id": props["cell_id"],
+                "place_name": place_name(props["cell_id"]),
                 "probability": props["probability"],
                 "above_threshold": props["above_threshold"],
                 "center_lat": props["center_lat"],
@@ -78,8 +105,11 @@ def _public_cell(row: dict) -> dict:
             "direction": "raises flood score" if value > 0 else "lowers flood score" if value < 0 else "no push",
         })
     shap.sort(key=lambda item: abs(item["log_odds"]), reverse=True)
+    place = _places().get(row["cell_id"]) or {}
     return {
         "cell_id": row["cell_id"],
+        "place_name": place_name(row["cell_id"]),
+        "country_code": place.get("country_code"),
         "center_lat": row["center_lat"],
         "center_lon": row["center_lon"],
         "elev_m": row["elev_m"],

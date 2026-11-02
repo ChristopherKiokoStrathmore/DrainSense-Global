@@ -122,7 +122,7 @@ export default function OverviewPage() {
         </div>
         <div className="stat">
           <span>First on the dispatch plan</span>
-          <b>{top ? top.cell_id : "—"}</b>
+          <b>{top ? top.place_name : "—"}</b>
           <small>{top ? `priority ${top.priority.toFixed(1)} · flood score ${top.probability.toFixed(2)}` : ""}</small>
         </div>
         <div className="stat">

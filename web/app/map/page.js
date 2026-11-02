@@ -84,6 +84,7 @@ export default function MapPage() {
       .filter((f) => open[f.properties.cell_id])
       .map((f) => ({
         cell_id: f.properties.cell_id,
+        place_name: f.properties.place_name,
         lon: f.properties.center_lon,
         lat: f.properties.center_lat,
         open: open[f.properties.cell_id],
@@ -121,8 +122,10 @@ export default function MapPage() {
         {!detail && !error && <p>Loading the flood desk…</p>}
         {detail && (
           <>
-            <h1 className="cell-name">{detail.cell_id.replace("_", " ")}</h1>
-            <p className="kicker">{detail.center_lat}°, {detail.center_lon}° · elev {detail.elev_m} m</p>
+            <h1 className="cell-name">{detail.place_name}</h1>
+            <p className="kicker">
+              Cell {detail.cell_id} · {detail.center_lat}°, {detail.center_lon}° · elev {detail.elev_m} m
+            </p>
             <div className="score-row">
               <p className="score">{detail.probability.toFixed(2)}</p>
               <div className="waterline" aria-hidden="true">
@@ -184,7 +187,7 @@ export default function MapPage() {
             <li key={spot.cell_id}>
               <button type="button" onClick={() => setSelectedId(spot.cell_id)}>
                 <strong>{String(spot.rank).padStart(2, "0")}</strong>
-                <span>{spot.cell_id}</span>
+                <span title={spot.cell_id}>{spot.place_name}</span>
                 <span>{spot.probability.toFixed(2)}</span>
               </button>
             </li>

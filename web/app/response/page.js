@@ -57,7 +57,7 @@ export default function ResponsePage() {
           <li key={item.cell_id}>
             <div className="plan-head">
               <span className="rank">{String(item.rank).padStart(2, "0")}</span>
-              <strong>{item.cell_id}</strong>
+              <strong title={`Cell ${item.cell_id}`}>{item.place_name}</strong>
               <span className="reading">
                 p {item.probability.toFixed(3)} · {item.components.open_reports.count} open{" "}
                 {item.components.open_reports.count === 1 ? "report" : "reports"} ·{" "}

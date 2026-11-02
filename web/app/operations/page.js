@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api, errorDetail } from "../../lib/api";
 
 const FORMS = [
@@ -83,6 +83,9 @@ export default function OperationsPage() {
       .catch((err) => setError(errorDetail(err)));
   }, []);
 
+  // Ledger rows carry only the cell id; the grid has each cell's reverse-geocoded place name.
+  const placeOf = useMemo(() => Object.fromEntries(cells.map((c) => [c.cell_id, c.place_name])), [cells]);
+
   const draft = drafts[kind];
   const set = (patch) => setDrafts((cur) => ({ ...cur, [kind]: { ...cur[kind], ...patch } }));
 
@@ -119,7 +122,7 @@ export default function OperationsPage() {
     }
     try {
       const row = await api(ENDPOINT[kind], { method: "POST", body: JSON.stringify(body) });
-      setNotice(`${SAVED[kind]} #${row.id} saved for ${row.cell_id}.`);
+      setNotice(`${SAVED[kind]} #${row.id} saved for ${placeOf[row.cell_id] || row.cell_id}.`);
       setDrafts((cur) => ({
         ...cur,
         [kind]: { ...cur[kind], ...Object.fromEntries(CLEARED[kind].map((field) => [field, ""])) },
@@ -142,7 +145,7 @@ export default function OperationsPage() {
       <select value={draft.cell_id} disabled={linked} onChange={(event) => set({ cell_id: event.target.value })}>
         {cells.map((cell) => (
           <option key={cell.cell_id} value={cell.cell_id}>
-            {cell.cell_id} · rank {cell.rank} · p {cell.probability.toFixed(2)}
+            {cell.place_name} ({cell.cell_id}) · rank {cell.rank} · p {cell.probability.toFixed(2)}
           </option>
         ))}
       </select>
@@ -288,6 +291,7 @@ export default function OperationsPage() {
 
       <h2>Reports</h2>
       <Ledger
+        placeOf={placeOf}
         rows={log.reports}
         columns={["id", "cell_id", "severity", "status", "reporter", "note", "origin"]}
         action={(r) => r.status === "open" && (
@@ -298,6 +302,7 @@ export default function OperationsPage() {
       />
       <h2>Inspections</h2>
       <Ledger
+        placeOf={placeOf}
         rows={log.inspections}
         columns={["id", "report_id", "cell_id", "crew", "scheduled_for", "status", "origin"]}
         action={(i) => i.status === "scheduled" && (
@@ -308,9 +313,9 @@ export default function OperationsPage() {
         )}
       />
       <h2>Repairs</h2>
-      <Ledger rows={log.repairs} columns={["id", "inspection_id", "report_id", "cell_id", "action", "completed_on", "origin"]} />
+      <Ledger placeOf={placeOf} rows={log.repairs} columns={["id", "inspection_id", "report_id", "cell_id", "action", "completed_on", "origin"]} />
       <h2>Incidents</h2>
-      <Ledger rows={log.incidents} columns={["id", "cell_id", "kind", "occurred_on", "note", "origin"]} />
+      <Ledger placeOf={placeOf} rows={log.incidents} columns={["id", "cell_id", "kind", "occurred_on", "note", "origin"]} />
 
       <h2>Did the repair work?</h2>
       <p className="reading">
@@ -327,7 +332,7 @@ export default function OperationsPage() {
         <tbody>
           {effect.map((row) => (
             <tr key={row.repair_id}>
-              <td>{row.cell_id}</td>
+              <td title={row.cell_id}>{placeOf[row.cell_id] || row.cell_id}</td>
               <td>{row.completed_on}</td>
               <td>{row.incidents_365d_before}</td>
               <td>{row.incidents_365d_after}</td>
@@ -341,14 +346,14 @@ export default function OperationsPage() {
   );
 }
 
-function Ledger({ rows, columns, action }) {
+function Ledger({ rows, columns, action, placeOf }) {
   if (!rows.length) return <p>None logged.</p>;
   return (
     <div className="scroll">
       <table>
         <thead>
           <tr>
-            {columns.map((column) => <th key={column}>{column.replaceAll("_", " ")}</th>)}
+            {columns.map((column) => <th key={column}>{column === "cell_id" ? "place" : column.replaceAll("_", " ")}</th>)}
             {action && <th>Next step</th>}
           </tr>
         </thead>
@@ -359,7 +364,9 @@ function Ledger({ rows, columns, action }) {
                 <td key={column}>
                   {column === "origin"
                     ? <span className={`origin ${row.origin}`}>{row.origin}</span>
-                    : column === "status" ? row.status.replaceAll("_", " ") : row[column] ?? "—"}
+                    : column === "status" ? row.status.replaceAll("_", " ")
+                    : column === "cell_id" ? <span title={row.cell_id}>{placeOf[row.cell_id] || row.cell_id}</span>
+                    : row[column] ?? "—"}
                 </td>
               ))}
               {action && <td>{action(row)}</td>}

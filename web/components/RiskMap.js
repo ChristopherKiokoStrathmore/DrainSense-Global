@@ -149,7 +149,7 @@ function FlatMap({ features, marks, selectedId, onSelect, reason }) {
         {(marks || []).map((mark) => (
           <circle key={mark.cell_id} cx={(mark.lon + 180) * 2} cy={(75 - mark.lat) * 2} r={2.5 + Math.min(mark.open, 4)}
             fill="#ffffff" stroke="#081014" strokeWidth={1.2} onClick={() => onSelect(mark.cell_id)} style={{ cursor: "pointer" }}>
-            <title>{mark.cell_id} · {mark.open} open drain {mark.open === 1 ? "report" : "reports"}</title>
+            <title>{mark.place_name || mark.cell_id} · {mark.open} open drain {mark.open === 1 ? "report" : "reports"}</title>
           </circle>
         ))}
       </svg>
@@ -293,7 +293,7 @@ export default function RiskMap({ features, marks, selectedId, onSelect }) {
       }
       map.on("mousemove", "cells", (event) => {
         const props = event.features?.[0]?.properties;
-        if (props) tip.setLngLat(event.lngLat).setText(`${props.cell_id} · ${Number(props.probability).toFixed(2)}`).addTo(map);
+        if (props) tip.setLngLat(event.lngLat).setText(`${props.place_name || props.cell_id} · ${Number(props.probability).toFixed(2)}`).addTo(map);
       });
       map.on("mouseleave", "cells", () => tip.remove());
     });
