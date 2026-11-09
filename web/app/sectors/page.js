@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { api, errorDetail } from "../../lib/api";
 
 // The same rules as sector_indicators in api/app/scoring.py, in short. The API's own statement is shown per cell.
@@ -25,6 +25,37 @@ const SECTORS = [
   },
 ];
 
+// The usual list is the top 30 cells. With a cell picked on the map, fetch them all so that cell is found wherever it ranks.
+const TOP = 30;
+const ALL_CELLS = 500;
+
+// The cell picked on the map (written by RiskMap). Same key and event name as RiskMap.jsx and the other pages.
+const SELECTED_KEY = "drainsense:selected";
+const SELECTED_EVENT = "drainsense:selected-change";
+function subscribeSelected(callback) {
+  window.addEventListener("storage", callback); // another tab
+  window.addEventListener(SELECTED_EVENT, callback); // this tab
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(SELECTED_EVENT, callback);
+  };
+}
+function readSelected() {
+  try {
+    return window.localStorage.getItem(SELECTED_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+function clearSelected() {
+  try {
+    window.localStorage.removeItem(SELECTED_KEY);
+  } catch {
+    // Storage can be blocked; the event below still resets this page.
+  }
+  window.dispatchEvent(new Event(SELECTED_EVENT));
+}
+
 const words = (field) => field.replaceAll("_", " ");
 const shown = (value) => (typeof value === "boolean" ? (value ? "yes" : "no") : typeof value === "number" ? Number(value.toFixed(3)).toLocaleString() : value);
 
@@ -32,14 +63,22 @@ export default function SectorsPage() {
   const [body, setBody] = useState(null);
   const [error, setError] = useState("");
   const [index, setIndex] = useState(0);
+  // null on the server and until the browser has read it, so the first render matches.
+  const selectedId = useSyncExternalStore(subscribeSelected, readSelected, () => null);
+  const scoped = Boolean(selectedId);
 
   useEffect(() => {
-    api("/api/v1/sectors?limit=30").then(setBody).catch((err) => setError(errorDetail(err)));
-  }, []);
+    api(`/api/v1/sectors?limit=${scoped ? ALL_CELLS : TOP}`).then(setBody).catch((err) => setError(errorDetail(err)));
+  }, [scoped]);
 
-  const cards = body?.cards || [];
-  const card = cards[index];
-  const first = cards[0]?.indicators;
+  const all = body?.cards || [];
+  const top = all.slice(0, TOP);
+  const first = all[0]?.indicators;
+
+  // With a cell picked: its row and its detail cards. Otherwise the top list, with a row to browse.
+  const pickedCard = scoped ? all.find((c) => c.cell.cell_id === selectedId) : null;
+  const rows = scoped ? (pickedCard ? [pickedCard] : []) : top;
+  const card = scoped ? pickedCard : top[index];
 
   return (
     <main className="sheet wide">
@@ -52,10 +91,26 @@ export default function SectorsPage() {
       </p>
       {error && <p className="error">{error}</p>}
 
+      {scoped && body && (
+        <p className="scope">
+          <b>{pickedCard ? pickedCard.cell.place_name : selectedId}</b>
+          <span>{pickedCard ? `picked on the map · rank ${pickedCard.cell.rank}` : "picked on the map · no sector card for this cell"}</span>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              clearSelected();
+            }}
+          >
+            Show all
+          </a>
+        </p>
+      )}
+
       {first && (
         <div className="cards" style={{ marginTop: 18 }}>
           {SECTORS.map((sector) => {
-            const flagged = cards.filter((c) => c.indicators[sector.key].active).length;
+            const flagged = top.filter((c) => c.indicators[sector.key].active).length;
             return (
               <article className="card" key={sector.key}>
                 <p className="kicker">{sector.who}</p>
@@ -64,17 +119,22 @@ export default function SectorsPage() {
                   threshold: body.threshold,
                   train_median_rain_mm: first.agri_suppliers.inputs.train_median_rain_mm,
                 })}</p>
-                <p className="reading">On in {flagged} of the {cards.length} highest-scoring cells.</p>
+                <p className="reading">On in {flagged} of the {top.length} highest-scoring cells.</p>
+                {pickedCard && (
+                  <p className="reading">
+                    This cell: <b>{pickedCard.indicators[sector.key].active ? "flag on" : "flag off"}</b>
+                  </p>
+                )}
               </article>
             );
           })}
         </div>
       )}
 
-      {cards.length > 0 && (
+      {rows.length > 0 && (
         <>
-          <h2>The {cards.length} highest-scoring cells</h2>
-          <p className="reading">Pick a row to see the inputs behind each flag.</p>
+          <h2>{scoped ? "The picked cell" : `The ${rows.length} highest-scoring cells`}</h2>
+          {!scoped && <p className="reading">Pick a row to see the inputs behind each flag.</p>}
           <div className="scroll">
             <table className="matrix">
               <thead>
@@ -84,10 +144,14 @@ export default function SectorsPage() {
                 </tr>
               </thead>
               <tbody>
-                {cards.map((item, i) => (
-                  <tr key={item.cell.cell_id} className={i === index ? "on" : ""}>
+                {rows.map((item, i) => (
+                  <tr key={item.cell.cell_id} className={item === card ? "on" : ""}>
                     <td>{item.cell.rank}</td>
-                    <td><button type="button" className="link" onClick={() => setIndex(i)} title={item.cell.cell_id}>{item.cell.place_name}</button></td>
+                    <td>
+                      <button type="button" className="link" onClick={() => !scoped && setIndex(i)} title={item.cell.cell_id}>
+                        {item.cell.place_name}
+                      </button>
+                    </td>
                     <td className="num">{item.cell.probability.toFixed(2)}</td>
                     {SECTORS.map((s) => (
                       <td key={s.key}>

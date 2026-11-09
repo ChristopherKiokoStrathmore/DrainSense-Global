@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { api, errorDetail } from "../../lib/api";
 
 // Slots 1-3 of the dataviz reference palette, validated on the paper surface. Orange and aqua are under 3:1
@@ -13,18 +13,53 @@ const PARTS = [
 ];
 // The longest bar spans this share of the row, leaving room for the value at its tip.
 const SPAN = 82;
+// With a cell picked on the map, fetch the whole ranking so that cell is found wherever it ranks.
+const ALL_CELLS = 500;
+
+// The cell picked on the map (written by RiskMap). Same key and event name as RiskMap.jsx and the other pages.
+const SELECTED_KEY = "drainsense:selected";
+const SELECTED_EVENT = "drainsense:selected-change";
+function subscribeSelected(callback) {
+  window.addEventListener("storage", callback); // another tab
+  window.addEventListener(SELECTED_EVENT, callback); // this tab
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(SELECTED_EVENT, callback);
+  };
+}
+function readSelected() {
+  try {
+    return window.localStorage.getItem(SELECTED_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+function clearSelected() {
+  try {
+    window.localStorage.removeItem(SELECTED_KEY);
+  } catch {
+    // Storage can be blocked; the event below still resets this page.
+  }
+  window.dispatchEvent(new Event(SELECTED_EVENT));
+}
 
 export default function ResponsePage() {
   const [plan, setPlan] = useState(null);
   const [limit, setLimit] = useState(12);
   const [error, setError] = useState("");
+  // null on the server and until the browser has read it, so the first render matches.
+  const selectedId = useSyncExternalStore(subscribeSelected, readSelected, () => null);
+  const scoped = Boolean(selectedId);
 
   useEffect(() => {
-    api(`/api/v1/response/plan?limit=${limit}`).then(setPlan).catch((err) => setError(errorDetail(err)));
-  }, [limit]);
+    api(`/api/v1/response/plan?limit=${scoped ? ALL_CELLS : limit}`).then(setPlan).catch((err) => setError(errorDetail(err)));
+  }, [limit, scoped]);
 
-  const items = plan?.plan || [];
-  const max = Math.max(...items.map((item) => item.priority), 1);
+  const all = plan?.plan || [];
+  // Bars stay on the scale of the whole ranking, so one cell still shows how it compares.
+  const max = Math.max(...all.map((item) => item.priority), 1);
+  const items = scoped ? all.filter((item) => item.cell_id === selectedId) : all;
+  const picked = scoped ? items[0] : null;
 
   return (
     <main className="sheet">
@@ -38,6 +73,24 @@ export default function ResponsePage() {
       {plan && <p className="reading"><code>{plan.rule}</code>. One open report adds 25 points, as much as 0.025 of model probability.</p>}
       {error && <p className="error">{error}</p>}
 
+      {scoped && plan && (
+        <p className="scope">
+          <b>{picked ? picked.place_name : selectedId}</b>
+          <span>
+            {picked ? `picked on the map · rank ${picked.rank} of ${all.length}` : "picked on the map · not on the dispatch plan"}
+          </span>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              clearSelected();
+            }}
+          >
+            Show all
+          </a>
+        </p>
+      )}
+
       <div className="plan-controls">
         <p className="plan-legend">
           {PARTS.map(([key, label, color]) => (
@@ -46,7 +99,7 @@ export default function ResponsePage() {
         </p>
         <label className="filter">
           Show
-          <select value={limit} onChange={(event) => setLimit(Number(event.target.value))}>
+          <select value={limit} disabled={scoped} onChange={(event) => setLimit(Number(event.target.value))}>
             {[12, 25, 40].map((n) => <option key={n} value={n}>top {n} cells</option>)}
           </select>
         </label>
