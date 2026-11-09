@@ -12,7 +12,8 @@
   --tide: #0b5fd1;          /* buttons, active states */
   --tide-hover: #094ca8;
   --accent-text: #0a56c2;   /* small text in the accent colour (4.5:1 on ground and white) */
-
+  --font-display: "Bricolage Grotesque Variable";
+  --font-sans: "Instrument Sans Variable";
   --flood: #e4572e;         /* fills and bars */
   --flood-text: #b8401d;    /* small text */
   --reed: #0f766e;          /* "lowers the score", community rows */
