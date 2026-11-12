@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { api, errorDetail } from "../../lib/api";
+import { useDesk } from "../desk";
 
 const FORMS = [
   ["report", "Report a blocked drain"],
@@ -38,7 +39,7 @@ function blankDrafts() {
   };
 }
 
-export default function OperationsPage() {
+export default function LedgerSection() {
   const [log, setLog] = useState({ reports: [], inspections: [], repairs: [], incidents: [] });
   const [effect, setEffect] = useState([]);
   const [cells, setCells] = useState([]);
@@ -47,6 +48,7 @@ export default function OperationsPage() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const { bump, formRequest } = useDesk();
 
   async function load() {
     const [reportBody, inspectionBody, repairBody, incidentBody, effectBody] = await Promise.all([
@@ -66,7 +68,7 @@ export default function OperationsPage() {
   }
 
   useEffect(() => {
-    // Links from the map and the dispatch list open a form on a cell: ?cell=s45_w75&form=inspection
+    // Old links still open a form on a cell: /operations?cell=s45_w75&form=inspection redirects here.
     const query = new URLSearchParams(window.location.search);
     if (FORMS.some(([key]) => key === query.get("form"))) setKind(query.get("form"));
     const wanted = query.get("cell");
@@ -82,6 +84,20 @@ export default function OperationsPage() {
       })
       .catch((err) => setError(errorDetail(err)));
   }, []);
+
+  // The map and the dispatch list open a form on a cell. The scroll is done by the desk.
+  useEffect(() => {
+    if (!formRequest) return;
+    setKind(formRequest.kind);
+    setNotice("");
+    setError("");
+    setDrafts((cur) => {
+      const draft = { ...cur[formRequest.kind], cell_id: formRequest.cellId };
+      // A linked report or inspection would lock the cell to another one, so the link is dropped.
+      for (const link of ["report_id", "inspection_id"]) if (link in draft) draft[link] = "";
+      return { ...cur, [formRequest.kind]: draft };
+    });
+  }, [formRequest]);
 
   // Ledger rows carry only the cell id; the grid has each cell's reverse-geocoded place name.
   const placeOf = useMemo(() => Object.fromEntries(cells.map((c) => [c.cell_id, c.place_name])), [cells]);
@@ -128,6 +144,7 @@ export default function OperationsPage() {
         [kind]: { ...cur[kind], ...Object.fromEntries(CLEARED[kind].map((field) => [field, ""])) },
       }));
       await load();
+      bump();
     } catch (err) {
       setError(errorDetail(err));
     } finally {
@@ -153,7 +170,7 @@ export default function OperationsPage() {
   );
 
   return (
-    <main className="sheet">
+    <div className="sheet">
       <p className="banner">Synthetic drill rows are marked. They are not field reports.</p>
       <h1>Drainage ledger</h1>
       <p className="reading">
@@ -342,7 +359,7 @@ export default function OperationsPage() {
           ))}
         </tbody>
       </table>
-    </main>
+    </div>
   );
 }
 

@@ -1,7 +1,9 @@
 """Load the committed flood-model artifacts. No fitting happens here."""
 from __future__ import annotations
 
+import csv
 import json
+import math
 from functools import lru_cache
 from pathlib import Path
 
@@ -202,3 +204,136 @@ def detail(cell_id: str) -> dict | None:
     public = _public_cell(row)
     public["sectors"] = sector_indicators(row)
     return public
+
+
+# Which part of the committed run each label year belongs to. The map model is fitted on 2014-2018 only.
+PHASES = [
+    {
+        "phase": "fit",
+        "label": "Fitted",
+        "note": "The model was fitted on these years. Its scores here are in-sample, so they flatter the model.",
+    },
+    {
+        "phase": "test",
+        "label": "Held-out test",
+        "note": "Later years the model never saw. Predicted from the previous year's rainfall, then checked against the DFO catalogue.",
+    },
+    {
+        "phase": "outlook",
+        "label": "Outlook",
+        "note": "The forward prediction. No DFO label in this run, so there is nothing yet to check it against.",
+    },
+]
+
+
+def _probability(model: dict, row: dict) -> float:
+    z = model["intercept"]
+    for name, mean, scale, coef in zip(model["feature_columns"], model["mean"], model["scale"], model["coef"]):
+        z += coef * (float(row[name]) - mean) / scale
+    return 1.0 / (1.0 + math.exp(-z))
+
+
+def _roc_auc(labels: list[int], scores: list[float]) -> float | None:
+    """Mann-Whitney ROC-AUC with tied scores sharing their average rank."""
+    pos = sum(labels)
+    neg = len(labels) - pos
+    if pos == 0 or neg == 0:
+        return None
+    order = sorted(range(len(scores)), key=scores.__getitem__)
+    ranks = [0.0] * len(scores)
+    i = 0
+    while i < len(order):
+        j = i
+        while j + 1 < len(order) and scores[order[j + 1]] == scores[order[i]]:
+            j += 1
+        for k in range(i, j + 1):
+            ranks[order[k]] = (i + j) / 2 + 1
+        i = j + 1
+    pos_rank_sum = sum(rank for rank, label in zip(ranks, labels) if label)
+    return (pos_rank_sum - pos * (pos + 1) / 2) / (pos * neg)
+
+
+@lru_cache(maxsize=1)
+def timeline() -> dict:
+    """The committed model applied to every label year in the feature table, beside the DFO label where one exists.
+
+    Same coefficients as the map (metrics.json), same inputs (cell_year_features.csv), so the outlook year
+    reproduces scores.geojson. Nothing is refitted.
+    """
+    card = metrics()
+    model = card["model"]
+    threshold = model["threshold"]
+    fit_years = set(card["split"]["train_label_years"])
+    test_years = set(card["split"]["test_label_years"])
+    outlook_year = card["split"]["outlook_label_year"]
+
+    by_cell: dict[str, dict[int, dict]] = {}
+    with (ARTIFACTS / "cell_year_features.csv").open(newline="") as handle:
+        for row in csv.DictReader(handle):
+            by_cell.setdefault(row["cell_id"], {})[int(row["label_year"])] = row
+    known = _cells()
+    years = sorted({year for rows in by_cell.values() for year in rows})
+
+    cells: dict[str, dict] = {}
+    for cell_id in sorted(by_cell):
+        if cell_id not in known:
+            continue
+        rows = by_cell[cell_id]
+        probability, flooded, rain = [], [], []
+        for year in years:
+            row = rows.get(year)
+            if row is None:
+                probability.append(None)
+                flooded.append(None)
+                rain.append(None)
+                continue
+            probability.append(round(_probability(model, row), 6))
+            flooded.append(None if row["flooded"] in ("", "nan") else int(float(row["flooded"])))
+            rain.append(round(float(row["annual_precip_mm"]), 1))
+        cells[cell_id] = {"probability": probability, "flooded": flooded, "previous_year_rain_mm": rain}
+
+    summary = []
+    for i, year in enumerate(years):
+        phase = "outlook" if year == outlook_year else "fit" if year in fit_years else "test" if year in test_years else "other"
+        scored = [(c["probability"][i], c["flooded"][i]) for c in cells.values() if c["probability"][i] is not None]
+        flagged = [p >= threshold for p, _ in scored]
+        labelled = [(p, f) for p, f in scored if f is not None]
+        entry = {
+            "year": year,
+            "feature_year": year - 1,
+            "phase": phase,
+            "cells": len(scored),
+            "mean_probability": round(sum(p for p, _ in scored) / len(scored), 6) if scored else None,
+            "cells_above_threshold": sum(flagged),
+            "recorded_flood_cells": None,
+            "hits": None,
+            "missed": None,
+            "false_alarms": None,
+            "roc_auc": None,
+        }
+        if labelled:
+            entry["recorded_flood_cells"] = sum(f for _, f in labelled)
+            entry["hits"] = sum(1 for p, f in labelled if f and p >= threshold)
+            entry["missed"] = sum(1 for p, f in labelled if f and p < threshold)
+            entry["false_alarms"] = sum(1 for p, f in labelled if not f and p >= threshold)
+            auc = _roc_auc([f for _, f in labelled], [p for p, _ in labelled])
+            entry["roc_auc"] = None if auc is None else round(auc, 4)
+        summary.append(entry)
+
+    return {
+        "years": years,
+        "outlook_year": outlook_year,
+        "threshold": threshold,
+        "phases": [
+            {**phase, "years": [s["year"] for s in summary if s["phase"] == phase["phase"]]} for phase in PHASES
+        ],
+        "summary": summary,
+        "cells": cells,
+        "reading": (
+            "Each label year is scored from the previous calendar year's rainfall and the cell's elevation, "
+            f"with the committed logistic model. Years {min(fit_years)}-{max(fit_years)} were used to fit it; "
+            f"{min(test_years)}-{max(test_years)} are held out and checked against the DFO catalogue; "
+            f"{outlook_year} is the outlook and has no label yet. A recorded flood means a DFO large-flood "
+            "bounding-box centre fell in the cell that year. Missing a record is not proof of no flood."
+        ),
+    }

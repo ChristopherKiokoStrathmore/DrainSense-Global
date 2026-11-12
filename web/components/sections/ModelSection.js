@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../../lib/api";
 
-export default function ModelPage() {
+export default function ModelSection() {
   const [metrics, setMetrics] = useState(null);
   const [error, setError] = useState("");
 
@@ -11,15 +11,15 @@ export default function ModelPage() {
     api("/api/v1/metrics").then(setMetrics).catch((err) => setError(err.message));
   }, []);
 
-  if (error) return <main className="sheet"><p className="error">{error}</p></main>;
-  if (!metrics) return <main className="sheet"><p>Loading the model card…</p></main>;
+  if (error) return <div className="sheet"><p className="error">{error}</p></div>;
+  if (!metrics) return <div className="sheet"><p>Loading the model card…</p></div>;
 
   const test = metrics.temporal_test;
   const dummy = metrics.dummy_prior;
   const fmt = (value) => (value == null ? "—" : Number(value).toFixed(3));
 
   return (
-    <main className="sheet">
+    <div className="sheet">
       <p className="kicker">Numbers from model/artifacts/metrics.json</p>
       <h1>Model card</h1>
       <p className="reading">{metrics.target}</p>
@@ -73,6 +73,6 @@ export default function ModelPage() {
       <ol>
         {metrics.limitations.map((line) => <li key={line} className="reading">{line}</li>)}
       </ol>
-    </main>
+    </div>
   );
 }

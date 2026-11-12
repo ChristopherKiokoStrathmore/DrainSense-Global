@@ -23,7 +23,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${display.variable} ${sans.variable}`}>
       <body>
         <header className="mast">
-          <a className="mark" href="/">
+          <a className="mark" href="/#overview">
             <Grate />
             <span>
               <strong>DrainSense</strong>
@@ -31,7 +31,7 @@ export default function RootLayout({ children }) {
             </span>
           </a>
           <Nav />
-          <p className="mast-note">5° cells · 2024 outlook from 2023 rainfall · not a warning</p>
+          <p className="mast-note">5° cells · scores 2014–2024 · not a warning</p>
         </header>
         <div className="frame">
           <div className="stage">{children}</div>

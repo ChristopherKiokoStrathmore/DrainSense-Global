@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api, errorDetail } from "../../lib/api";
+import { useDesk } from "../desk";
 
 // Slots 1-3 of the dataviz reference palette, validated on the paper surface. Orange and aqua are under 3:1
 // there, so each segment is named in the legend and its points are in the table under the bar.
@@ -14,20 +14,21 @@ const PARTS = [
 // The longest bar spans this share of the row, leaving room for the value at its tip.
 const SPAN = 82;
 
-export default function ResponsePage() {
+export default function DispatchSection() {
   const [plan, setPlan] = useState(null);
   const [limit, setLimit] = useState(12);
   const [error, setError] = useState("");
+  const { revision, openForm, showOnMap } = useDesk();
 
   useEffect(() => {
     api(`/api/v1/response/plan?limit=${limit}`).then(setPlan).catch((err) => setError(errorDetail(err)));
-  }, [limit]);
+  }, [limit, revision]);
 
   const items = plan?.plan || [];
   const max = Math.max(...items.map((item) => item.priority), 1);
 
   return (
-    <main className="sheet">
+    <div className="sheet">
       <p className="kicker">Where to send a crew first</p>
       <h1>Dispatch plan</h1>
       <p className="reading">
@@ -81,13 +82,13 @@ export default function ResponsePage() {
               </tbody>
             </table>
             <p className="actions">
-              <Link href={`/operations?cell=${item.cell_id}&form=inspection#record`}>Schedule an inspection</Link>
-              <Link href={`/map?cell=${item.cell_id}`}>Show on the map</Link>
+              <button type="button" className="link" onClick={() => openForm("inspection", item.cell_id)}>Schedule an inspection</button>
+              <button type="button" className="link" onClick={() => showOnMap(item.cell_id)}>Show on the map</button>
             </p>
           </li>
         ))}
       </ol>
-    </main>
+    </div>
   );
 }
 

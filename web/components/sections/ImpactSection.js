@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import BatchScorer from "../../components/BatchScorer";
-import { BarList, Contributions, NEUTRAL, ParityScatter, SERIES } from "../../components/ImpactCharts";
+import BatchScorer from "../BatchScorer";
+import { BarList, Contributions, NEUTRAL, ParityScatter, SERIES } from "../ImpactCharts";
 import { API, api, errorDetail } from "../../lib/api";
 
 const fmt = (value, places = 3) => (value == null ? "—" : Number(value).toFixed(places));
@@ -19,7 +19,7 @@ const PLACE_FIELDS = ["continent_region"];
 
 const words = (field) => field.replace(/_/g, " ").replace(/\b(mm|c|kmh|hpa|pct|m3m3|km2)\b/g, (u) => `(${u})`);
 
-export default function ImpactPage() {
+export default function ImpactSection() {
   const [card, setCard] = useState(null);
   const [events, setEvents] = useState([]);
   const [examples, setExamples] = useState({});
@@ -56,16 +56,16 @@ export default function ImpactPage() {
 
   if (problems.model) {
     return (
-      <main className="sheet">
+      <div className="sheet">
         <h1>Flood impact model</h1>
         <p className="error">Could not load the model card from {API || "this site"}: {problems.model}</p>
         {problems.unreachable && (
           <p className="reading">Start the API (see the README) or set NEXT_PUBLIC_API_URL, then reload.</p>
         )}
-      </main>
+      </div>
     );
   }
-  if (!card) return <main className="sheet"><p>Loading the impact model…</p></main>;
+  if (!card) return <div className="sheet"><p>Loading the impact model…</p></div>;
 
   const brief = card.variants.brief;
   const noSize = card.variants.no_size;
@@ -87,7 +87,7 @@ export default function ImpactPage() {
     .sort((a, b) => a.value - b.value);
 
   return (
-    <main className="sheet wide impact">
+    <div className="sheet wide impact">
       <p className="kicker">Numbers from model/artifacts/impact/impact_metrics.json · generated {card.generated_at.slice(0, 10)}</p>
       <p className="status">
         <i className={health ? "dot ok" : "dot down"} aria-hidden="true" />
@@ -178,7 +178,7 @@ export default function ImpactPage() {
           {card.limitations.map((line) => <li key={line} className="reading">{line}</li>)}
         </ol>
       </section>
-    </main>
+    </div>
   );
 }
 

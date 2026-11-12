@@ -28,7 +28,7 @@ const SECTORS = [
 const words = (field) => field.replaceAll("_", " ");
 const shown = (value) => (typeof value === "boolean" ? (value ? "yes" : "no") : typeof value === "number" ? Number(value.toFixed(3)).toLocaleString() : value);
 
-export default function SectorsPage() {
+export default function SectorsSection() {
   const [body, setBody] = useState(null);
   const [error, setError] = useState("");
   const [index, setIndex] = useState(0);
@@ -42,7 +42,7 @@ export default function SectorsPage() {
   const first = cards[0]?.indicators;
 
   return (
-    <main className="sheet wide">
+    <div className="sheet wide">
       <p className="banner">Derived indicators · not forecasts of yield, disease, or loss</p>
       <h1>Sector flags</h1>
       <p className="reading">
@@ -127,6 +127,6 @@ export default function SectorsPage() {
           </div>
         </>
       )}
-    </main>
+    </div>
   );
 }

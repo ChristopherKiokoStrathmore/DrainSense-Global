@@ -185,6 +185,17 @@ def risk_grid():
     return scoring.grid()
 
 
+@app.get("/api/v1/risk/timeline", tags=["risk map"])
+def risk_timeline():
+    """Every cell scored for every label year, 2014 to the outlook, beside the DFO label where one exists.
+
+    `cells[cell_id].probability[i]` and `.flooded[i]` line up with `years[i]`. `flooded` is null in the
+    outlook year. `summary` gives, per year, the cells at or above the threshold, the recorded flood cells,
+    hits, misses, false alarms and ROC-AUC.
+    """
+    return scoring.timeline()
+
+
 @app.get("/api/v1/risk/hotspots", tags=["risk map"])
 def risk_hotspots(limit: int = 12):
     limit = max(1, min(limit, 50))

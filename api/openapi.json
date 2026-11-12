@@ -360,6 +360,26 @@
         }
       }
     },
+    "/api/v1/risk/timeline": {
+      "get": {
+        "tags": [
+          "risk map"
+        ],
+        "summary": "Risk Timeline",
+        "description": "Every cell scored for every label year, 2014 to the outlook, beside the DFO label where one exists.\n\n`cells[cell_id].probability[i]` and `.flooded[i]` line up with `years[i]`. `flooded` is null in the\noutlook year. `summary` gives, per year, the cells at or above the threshold, the recorded flood cells,\nhits, misses, false alarms and ROC-AUC.",
+        "operationId": "risk_timeline_api_v1_risk_timeline_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/risk/hotspots": {
       "get": {
         "tags": [

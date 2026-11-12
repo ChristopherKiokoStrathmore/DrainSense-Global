@@ -487,3 +487,102 @@ pre.snippet {
   font-variant-numeric: tabular-nums; padding: 6px 10px; border-radius: var(--r-sm); box-shadow: none;
 }
 .maplibregl-popup-tip { display: none; }
+/* One-page desk: every section on one scroll, the masthead links jump between them */
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+.slot, #record { scroll-margin-top: var(--mast-h); }
+.slot + .slot { border-top: 1px solid var(--line); }
+.slot > .sheet { margin-inline: auto; }
+.slot-map { border-top: 0; }
+.slot-map + .slot { border-top: 0; }
+.actions button.link { font-size: 13px; }
+
+/* Map controls: zoom buttons sit under the view switches, leaving the bottom edge to the timeline */
+.maplibregl-ctrl-top-left { top: 52px; left: 6px; }
+
+/* Year strip floating on the map: one column per label year, drives the map colours */
+.timeline {
+  position: absolute; left: 16px; bottom: 36px; z-index: 2;
+  width: min(760px, calc(100% - 400px - 64px));
+  padding: 12px 14px 10px;
+  background: rgba(255, 255, 255, 0.97); backdrop-filter: blur(10px);
+  border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow-float);
+}
+.timeline-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-bottom: 8px; }
+.play {
+  display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 13px; font-weight: 500;
+  padding: 5px 12px 5px 10px; border-radius: 999px; border: 1px solid var(--tide); background: var(--tide); color: #fff; cursor: pointer;
+}
+.play:hover { background: var(--tide-hover); }
+.play svg { width: 12px; height: 12px; }
+.play[aria-pressed="true"] { background: var(--surface); color: var(--tide); }
+.timeline-legend, .trend-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; font-size: 12px; color: var(--muted); }
+.timeline-legend span, .trend-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.timeline-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.phases { display: grid; gap: 0 4px; margin-bottom: 4px; }
+.phase {
+  font-size: 11px; font-weight: 600; color: var(--muted); padding: 2px 0 3px;
+  border-bottom: 2px solid rgba(12, 31, 44, 0.25); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.phase.test { border-bottom-color: var(--ink); color: var(--ink); }
+.phase.outlook { border-bottom-color: var(--tide); color: var(--accent-text); }
+.years { display: grid; gap: 4px; }
+.year {
+  display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 4px 2px 2px;
+  font: inherit; color: var(--muted); background: transparent; border: 0; border-radius: var(--r-sm); cursor: pointer;
+}
+.year:hover { background: rgba(12, 31, 44, 0.05); }
+.year.on { background: rgba(11, 95, 209, 0.1); color: var(--ink); box-shadow: inset 0 -2px 0 var(--tide); }
+.year .bars { display: flex; align-items: flex-end; justify-content: center; gap: 2px; height: 46px; }
+.year .b { width: min(10px, 38%); min-height: 2px; border-radius: 3px 3px 0 0; }
+.year .b.pending { height: 100%; background: repeating-linear-gradient(135deg, rgba(12, 31, 44, 0.16) 0 2px, transparent 2px 5px); border-radius: 3px 3px 0 0; }
+.year .y { font-size: 11px; text-align: center; font-variant-numeric: tabular-nums; }
+.year.on .y { font-weight: 700; }
+.year.outlook .y { color: var(--accent-text); font-weight: 600; }
+.readout { display: flex; flex-wrap: wrap; gap: 2px 14px; align-items: baseline; margin: 8px 0 0; font-size: 12px; font-variant-numeric: tabular-nums; }
+.readout strong { font-family: var(--display); font-size: 16px; }
+.readout b { font-weight: 650; }
+
+/* The score's verdict against the flood record */
+.verdict { align-self: center; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; border: 1px solid; }
+.verdict.hit { color: var(--reed); border-color: var(--reed); }
+.verdict.miss, .verdict.alarm { color: var(--flood-text); border-color: var(--flood-text); }
+.verdict.quiet { color: var(--muted); border-color: rgba(12, 31, 44, 0.3); }
+.flood-ring { width: 11px; height: 11px; border-radius: 50%; border: 2px solid #1f8fc4; flex: none; margin-left: 6px; }
+.flood-ring.inline { display: inline-block; vertical-align: -1px; }
+.floodswitch i { background: transparent; border-color: #7fd6ff; box-shadow: none; }
+
+/* One cell's score across the years */
+.trend { margin: 6px 0 4px; }
+.trend .cursor { stroke: var(--tide); stroke-width: 1; opacity: 0.45; }
+.trend .tip { min-width: 0; }
+.trend-legend { margin-top: 2px; }
+.trend-legend i.line { width: 14px; height: 2px; border-radius: 1px; display: inline-block; }
+.trend-legend i.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.trend-legend i.dash { width: 14px; height: 0; border-top: 1px dashed var(--ink); opacity: 0.55; display: inline-block; }
+
+@media (max-width: 1100px) {
+  .timeline { width: calc(100% - 340px - 64px); }
+}
+@media (max-width: 980px) {
+  .timeline { position: static; width: auto; border-radius: 0; border-width: 1px 0 0; box-shadow: none; backdrop-filter: none; }
+}
+
+/* MapLibre's own stylesheet loads after this one, so the offset needs the extra class to win */
+.desk .maplibregl-ctrl-top-left { top: 52px; left: 6px; }
+
+/* Nothing on the one page may push it sideways: long cell names in selects, wide tables, long commands */
+.form > *, .form label { min-width: 0; }
+.form select, .form input:not([type="file"]), .form textarea { width: 100%; min-width: 0; text-overflow: ellipsis; }
+.reading code { overflow-wrap: anywhere; }
+@media (max-width: 980px) {
+  .sheet table:not(.parts) { display: block; overflow-x: auto; }
+}
+/* The hero's background grid runs past the sheet padding on purpose; stop it at the page edge */
+.slot { overflow-x: clip; }
+@media (max-width: 980px) {
+  /* The view switches wrap to two rows here; the zoom buttons go to the free bottom-left corner */
+  .desk .maplibregl-ctrl-top-left { top: auto; bottom: 24px; }
+}
+.spine { position: relative; }
+.reportswitch { min-height: 36px; }

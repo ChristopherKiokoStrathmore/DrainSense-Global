@@ -25,7 +25,7 @@ export default function DeskError({ error, reset }) {
       <p className="kicker">This page hit an error</p>
       <h1>Something broke on this page</h1>
       <p className="error">{stale ? "The desk was updated since this tab opened. Reloading…" : error?.message || "Unknown error"}</p>
-      <p className="reading">The rest of the desk still works from the menu on the left.</p>
+      <p className="reading">Reload to bring the desk back.</p>
       <p>
         <button className="solid" type="button" onClick={() => reset()}>Try again</button>{" "}
         <button className="ghost" type="button" onClick={() => window.location.reload()}>Reload the page</button>

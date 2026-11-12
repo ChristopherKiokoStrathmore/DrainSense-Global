@@ -140,3 +140,24 @@ def test_seed_can_be_disabled(tmp_path, monkeypatch):
     with TestClient(app) as test_client:
         assert test_client.get("/api/v1/reports").json()["reports"] == []
     os.environ.pop("DRAINSENSE_SEED", None)
+
+
+def test_timeline_scores_every_year_with_the_map_model(client):
+    body = client.get("/api/v1/risk/timeline").json()
+    years = body["years"]
+    assert years[0] == 2014 and years[-1] == body["outlook_year"] == 2024
+    grid = {f["properties"]["cell_id"]: f["properties"]["probability"] for f in client.get("/api/v1/risk/grid").json()["features"]}
+    assert set(body["cells"]) == set(grid)
+    # The outlook column is the map: same model, same inputs.
+    for cell_id, probability in grid.items():
+        assert abs(body["cells"][cell_id]["probability"][-1] - probability) < 1e-5
+        assert body["cells"][cell_id]["flooded"][-1] is None
+    # Test-year means are the ones in the committed metrics card.
+    means = {row["year"]: row["mean_predicted_probability"] for row in client.get("/api/v1/metrics").json()["temporal_test"]["by_year"]}
+    summary = {row["year"]: row for row in body["summary"]}
+    for year, mean in means.items():
+        assert abs(summary[year]["mean_probability"] - mean) < 1e-5
+        assert summary[year]["phase"] == "test"
+        row = summary[year]
+        assert row["hits"] + row["missed"] == row["recorded_flood_cells"]
+    assert summary[2024]["phase"] == "outlook" and summary[2024]["recorded_flood_cells"] is None

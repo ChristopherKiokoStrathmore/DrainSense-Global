@@ -103,6 +103,18 @@ function updatePicked(map, features, id) {
   source.setData(collection(feature ? [{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: cellCentre(feature) } }] : []));
 }
 
+// Ring colour for a recorded DFO flood. Light on the dark basemap and apart from the white report dots.
+const FLOOD_RING = "#7fd6ff";
+
+// Cells with a recorded DFO flood in the year on show. floods: [{cell_id, lon, lat, caught}]
+function floodPoints(floods) {
+  return collection((floods || []).map((flood) => ({
+    type: "Feature",
+    geometry: { type: "Point", coordinates: [flood.lon, flood.lat] },
+    properties: { cell_id: flood.cell_id, caught: flood.caught },
+  })));
+}
+
 // Open drain reports as points at the cell centers. marks: [{cell_id, lon, lat, open}]
 function points(marks) {
   return {
@@ -125,7 +137,7 @@ function webglAvailable() {
 }
 
 /** The risk cells on a plain lon/lat grid, for browsers where MapLibre cannot start. */
-function FlatMap({ features, marks, selectedId, onSelect, reason }) {
+function FlatMap({ features, marks, floods, selectedId, onSelect, reason }) {
   return (
     <div className="map flatmap">
       <svg viewBox="0 0 720 300" role="img" aria-label="Flood risk cells on a flat longitude-latitude grid">
@@ -146,6 +158,11 @@ function FlatMap({ features, marks, selectedId, onSelect, reason }) {
             </rect>
           );
         })}
+        {(floods || []).map((flood) => (
+          <circle key={`f-${flood.cell_id}`} cx={(flood.lon + 180) * 2} cy={(75 - flood.lat) * 2} r={4}
+            fill="none" stroke={FLOOD_RING} strokeWidth={flood.caught ? 1.6 : 1} strokeDasharray={flood.caught ? undefined : "2 1.5"}
+            pointerEvents="none" />
+        ))}
         {(marks || []).map((mark) => (
           <circle key={mark.cell_id} cx={(mark.lon + 180) * 2} cy={(75 - mark.lat) * 2} r={2.5 + Math.min(mark.open, 4)}
             fill="#ffffff" stroke="#081014" strokeWidth={1.2} onClick={() => onSelect(mark.cell_id)} style={{ cursor: "pointer" }}>
@@ -158,7 +175,7 @@ function FlatMap({ features, marks, selectedId, onSelect, reason }) {
   );
 }
 
-export default function RiskMap({ features, marks, selectedId, onSelect }) {
+export default function RiskMap({ features, marks, floods, year, selectedId, onSelect }) {
   const holder = useRef(null);
   const mapRef = useRef(null);
   const onSelectRef = useRef(onSelect);
@@ -175,6 +192,13 @@ export default function RiskMap({ features, marks, selectedId, onSelect }) {
   reportsRef.current = showReports;
   const featuresRef = useRef(features);
   featuresRef.current = features;
+  const floodsRef = useRef(floods);
+  floodsRef.current = floods;
+  const yearRef = useRef(year);
+  yearRef.current = year;
+  const [showFloods, setShowFloods] = useState(true);
+  const showFloodsRef = useRef(showFloods);
+  showFloodsRef.current = showFloods;
 
   useEffect(() => {
     if (!webglAvailable()) {
@@ -192,12 +216,14 @@ export default function RiskMap({ features, marks, selectedId, onSelect }) {
         fitBoundsOptions: { padding: 12 },
         renderWorldCopies: false,
         attributionControl: true,
+        // The map sits in a scrolling page: the wheel scrolls the page, Ctrl/⌘ + wheel or two fingers zoom the map.
+        cooperativeGestures: true,
       });
     } catch (err) {
       setFallback(`the interactive map could not start (${err.message}).`);
       return undefined;
     }
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-left");
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
     const tip = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
     let ready = false;
     map.on("error", (event) => {
@@ -264,6 +290,20 @@ export default function RiskMap({ features, marks, selectedId, onSelect }) {
           "circle-stroke-width": 2.5,
         },
       }, labels);
+      map.addSource("floods", { type: "geojson", data: floodPoints(floodsRef.current) });
+      // A solid ring where the model had the cell at or above threshold, a thinner one where it missed.
+      map.addLayer({
+        id: "floods",
+        type: "circle",
+        source: "floods",
+        paint: {
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 0, 4, 3, 9, 6, 22],
+          "circle-color": "rgba(0,0,0,0)",
+          "circle-stroke-color": FLOOD_RING,
+          "circle-stroke-width": ["case", ["get", "caught"], 2.4, 1.2],
+          "circle-stroke-opacity": ["case", ["get", "caught"], 1, 0.75],
+        },
+      });
       map.addSource("reports", { type: "geojson", data: points(marks) });
       map.addLayer({
         id: "reports",
@@ -278,6 +318,7 @@ export default function RiskMap({ features, marks, selectedId, onSelect }) {
       });
       applyView(map, viewRef.current);
       show(map, "reports", reportsRef.current);
+      show(map, "floods", showFloodsRef.current);
       updatePicked(map, featuresRef.current, selectedRef.current);
       for (const layer of ["cells", "reports"]) {
         map.on("click", layer, (event) => {
@@ -293,7 +334,9 @@ export default function RiskMap({ features, marks, selectedId, onSelect }) {
       }
       map.on("mousemove", "cells", (event) => {
         const props = event.features?.[0]?.properties;
-        if (props) tip.setLngLat(event.lngLat).setText(`${props.place_name || props.cell_id} · ${Number(props.probability).toFixed(2)}`).addTo(map);
+        if (!props) return;
+        const flood = (floodsRef.current || []).some((f) => f.cell_id === props.cell_id) ? " · DFO flood recorded" : "";
+        tip.setLngLat(event.lngLat).setText(`${props.place_name || props.cell_id} · ${yearRef.current ?? ""} score ${Number(props.probability).toFixed(2)}${flood}`).addTo(map);
       });
       map.on("mouseleave", "cells", () => tip.remove());
     });
@@ -330,6 +373,19 @@ export default function RiskMap({ features, marks, selectedId, onSelect }) {
 
   useEffect(() => {
     const map = mapRef.current;
+    if (!map) return;
+    const apply = () => map.getSource("floods")?.setData(floodPoints(floods));
+    if (map.getSource("floods")) apply();
+    else map.once("load", apply);
+  }, [floods]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map) show(map, "floods", showFloods);
+  }, [showFloods]);
+
+  useEffect(() => {
+    const map = mapRef.current;
     if (!map || !map.getLayer("picked")) return;
     map.setFilter("picked", ["==", ["get", "cell_id"], selectedId || ""]);
     updatePicked(map, featuresRef.current, selectedId);
@@ -345,7 +401,7 @@ export default function RiskMap({ features, marks, selectedId, onSelect }) {
     if (map) show(map, "reports", showReports);
   }, [showReports]);
 
-  if (fallback) return <FlatMap features={features} marks={marks} selectedId={selectedId} onSelect={onSelect} reason={fallback} />;
+  if (fallback) return <FlatMap features={features} marks={marks} floods={floods} selectedId={selectedId} onSelect={onSelect} reason={fallback} />;
   return (
     <>
       <div ref={holder} className="map" />
@@ -363,6 +419,10 @@ export default function RiskMap({ features, marks, selectedId, onSelect }) {
         <button type="button" className="reportswitch" aria-pressed={showReports} onClick={() => setShowReports((on) => !on)}
           title="Cells with open blocked-drain reports. A bigger dot means more open reports.">
           <i /> Drain reports
+        </button>
+        <button type="button" className="reportswitch floodswitch" aria-pressed={showFloods} onClick={() => setShowFloods((on) => !on)}
+          title="Cells with a DFO large flood recorded in the year on show. Solid ring: the model had the cell at or above its threshold. Thin ring: it missed.">
+          <i /> Recorded floods
         </button>
       </div>
     </>

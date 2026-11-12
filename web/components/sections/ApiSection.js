@@ -6,7 +6,7 @@ import { API, api, errorDetail } from "../../lib/api";
 const METHODS = ["get", "post", "put", "patch", "delete"];
 
 // Not /api: Caddy sends /api/* to the FastAPI service in production.
-export default function EndpointsPage() {
+export default function ApiSection() {
   const [schema, setSchema] = useState(null);
   const [origin, setOrigin] = useState(API);
   const [error, setError] = useState("");
@@ -33,7 +33,7 @@ export default function EndpointsPage() {
   const count = groups.reduce((n, group) => n + group.operations.length, 0);
 
   return (
-    <main className="sheet wide">
+    <div className="sheet wide">
       <p className="kicker">Everything on the desk runs through these endpoints</p>
       <h1>API</h1>
       <p className="reading">
@@ -79,6 +79,6 @@ curl "${origin}/api/v1/response/plan?limit=5"`}</pre>
           </div>
         </section>
       ))}
-    </main>
+    </div>
   );
 }

@@ -74,7 +74,7 @@ Postman: import `api/postman/DrainSense.postman_collection.json` and `api/postma
 npx newman run api/postman/DrainSense.postman_collection.json -e api/postman/DrainSense.local.postman_environment.json
 ```
 
-Dashboard: the desk's **Impact** page (`web/app/impact/page.js`, http://localhost:3000/impact) runs entirely on the API above:
+Dashboard: the **Impact** section of the one-page desk (`web/components/sections/ImpactSection.js`, http://localhost:3000/#impact) runs entirely on the API above:
 
 | Section | Endpoint |
 |---|---|
@@ -121,17 +121,19 @@ npm ci
 NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 ```
 
-Open http://localhost:3000. Every page reads the API:
+Open http://localhost:3000. The desk is one page; the masthead links jump between its sections, and every section reads the API. The old routes (`/map`, `/operations`, `/response`, `/sectors`, `/impact`, `/model`, `/endpoints`) redirect to their section and keep their query, so `/map?cell=s45_w75` still opens that cell.
 
-| Page | What it shows |
+| Section | What it shows |
 |---|---|
-| `/` Overview | The problem each part answers, live figures from every part, the maintenance loop |
-| `/map` Risk map | Flood score per cell, SHAP reasons, flood record, open drain reports, the cell's ledger and sector flags |
-| `/operations` Ledger | Report, inspection, repair and incident forms; a report moves to inspection scheduled, then repaired; incidents before and after each repair |
-| `/response` Dispatch | The ranking, with each cell's points split into model, open reports and repeat incidents |
-| `/sectors` Sectors | The rule behind each sector flag, a flag matrix for the 30 highest-scoring cells, and each flag's inputs |
-| `/impact`, `/model` | The impact dashboard and the risk model card |
-| `/endpoints` API | Every endpoint, read live from `/openapi.json`, with links into Swagger UI |
+| `#overview` | The problem each part answers, live figures from every part, the maintenance loop |
+| `#map` Risk map | Flood score per cell for every label year 2014–2024 (`GET /api/v1/risk/timeline`). A year strip on the map plays the years in order; each column shows cells the model flagged and cells with a recorded DFO flood. Past years draw the recorded floods as rings (solid where the model flagged the cell, thin where it missed); 2024 is the outlook with no record yet. The dossier has the cell's score by year, whether that year was caught, missed or a false alarm, SHAP reasons for the outlook, open drain reports, ledger counts and sector flags |
+| `#dispatch` | The ranking, with each cell's points split into model, open reports and repeat incidents |
+| `#ledger` | Report, inspection, repair and incident forms; a report moves to inspection scheduled, then repaired; incidents before and after each repair. A save refreshes the map dots, dispatch plan and overview figures |
+| `#sectors` | The rule behind each sector flag, a flag matrix for the 30 highest-scoring cells, and each flag's inputs |
+| `#impact`, `#model` | The impact dashboard and the risk model card |
+| `#api` | Every endpoint, read live from `/openapi.json`, with links into Swagger UI |
+
+Years 2014–2018 are the years the map model was fitted on, so their scores are in-sample. 2019–2023 are the held-out test years. Both are scored with the committed coefficients in `metrics.json`; nothing is refitted in the API.
 
 The only key the desk can take is an optional CARTO basemaps key, `NEXT_PUBLIC_CARTO_KEY` (free from https://carto.com/basemaps/apikey). The map uses CARTO's vector Dark Matter style, which loads without one today; CARTO's raster tiles have needed a key since 2026-09-25. The API itself has no key or login.
 
