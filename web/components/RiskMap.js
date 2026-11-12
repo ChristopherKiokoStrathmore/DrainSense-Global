@@ -11,6 +11,21 @@ import "maplibre-gl/dist/maplibre-gl.css";
 const STYLE_URL = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
 const CARTO_KEY = process.env.NEXT_PUBLIC_CARTO_KEY || "";
 
+// The Overview page shows the last cell picked on the map. This is where it is saved (in this browser only).
+// Overview must use the same key and event name.
+const SELECTED_KEY = "drainsense:selected";
+const SELECTED_EVENT = "drainsense:selected-change";
+function remember(id) {
+  try {
+    if (window.localStorage.getItem(SELECTED_KEY) !== id) {
+      window.localStorage.setItem(SELECTED_KEY, id);
+    }
+  } catch {
+    // Storage can be blocked; the map still works without it.
+  }
+  window.dispatchEvent(new Event(SELECTED_EVENT));
+}
+
 function withCartoKey(url) {
   if (!CARTO_KEY || !url.includes("basemaps.cartocdn.com") || /[?&]key=/.test(url)) return { url };
   return { url: `${url}${url.includes("?") ? "&" : "?"}key=${encodeURIComponent(CARTO_KEY)}` };
@@ -56,6 +71,15 @@ const HEAT = {
 // Each cell becomes five points one degree apart in latitude. The map stretches latitude towards the poles,
 // so one point per cell leaves horizontal gaps there; the extra points close them.
 const LAT_STEPS = [-2, -1, 0, 1, 2];
+
+// The details card floats over the right side of the map. Fit the world into the space left of it,
+// so the whole map is visible; when the card is hidden, use the full width. Keep the widths in step with the CSS.
+const WORLD = [[-170, -58], [180, 78]];
+function mapPadding(panelOpen) {
+  const narrow = window.innerWidth <= 980; // the card sits below the map on narrow screens
+  const card = panelOpen && !narrow ? (window.innerWidth <= 1100 ? 340 : 400) + 32 : 12;
+  return { top: 12, bottom: 12, left: 12, right: card };
+}
 
 const collection = (features) => ({ type: "FeatureCollection", features: features || [] });
 
@@ -199,6 +223,9 @@ export default function RiskMap({ features, marks, floods, year, selectedId, onS
   const [showFloods, setShowFloods] = useState(true);
   const showFloodsRef = useRef(showFloods);
   showFloodsRef.current = showFloods;
+  const [panelOpen, setPanelOpen] = useState(true);
+  const panelRef = useRef(panelOpen);
+  panelRef.current = panelOpen;
 
   useEffect(() => {
     if (!webglAvailable()) {
@@ -212,8 +239,8 @@ export default function RiskMap({ features, marks, floods, year, selectedId, onS
         style: STYLE_URL,
         transformRequest: withCartoKey,
         // Fit the inhabited latitudes to whatever size the window is, instead of a fixed zoom.
-        bounds: [[-170, -58], [180, 78]],
-        fitBoundsOptions: { padding: 12 },
+        bounds: WORLD,
+        fitBoundsOptions: { padding: mapPadding(panelRef.current) },
         renderWorldCopies: false,
         attributionControl: true,
         // The map sits in a scrolling page: the wheel scrolls the page, Ctrl/⌘ + wheel or two fingers zoom the map.
@@ -323,7 +350,11 @@ export default function RiskMap({ features, marks, floods, year, selectedId, onS
       for (const layer of ["cells", "reports"]) {
         map.on("click", layer, (event) => {
           const id = event.features?.[0]?.properties?.cell_id;
-          if (id) onSelectRef.current(id);
+          if (id) {
+            remember(id);
+            onSelectRef.current(id);
+            setPanelOpen(true);
+          }
         });
         map.on("mouseenter", layer, () => {
           map.getCanvas().style.cursor = "pointer";
@@ -401,7 +432,51 @@ export default function RiskMap({ features, marks, floods, year, selectedId, onS
     if (map) show(map, "reports", showReports);
   }, [showReports]);
 
-  if (fallback) return <FlatMap features={features} marks={marks} floods={floods} selectedId={selectedId} onSelect={onSelect} reason={fallback} />;
+  // Show or hide the details card (the .desk element is the map page's wrapper) and refit the world to the space left.
+  const firstPanelRun = useRef(true);
+  useEffect(() => {
+    const desk = holder.current?.closest(".desk");
+    desk?.classList.toggle("panel-hidden", !panelOpen);
+    const map = mapRef.current;
+    if (map && !firstPanelRun.current) {
+      map.resize();
+      map.fitBounds(WORLD, { padding: mapPadding(panelOpen), duration: 400 });
+    }
+    firstPanelRun.current = false;
+    return () => desk?.classList.remove("panel-hidden");
+  }, [panelOpen]);
+
+  // Reopen on the cell last picked here, instead of the page's default (the top-ranked cell). A ?cell= link wins.
+  const restoredRef = useRef(false);
+  const skipPersistRef = useRef(null);
+  useEffect(() => {
+    if (restoredRef.current || !features?.length) return;
+    restoredRef.current = true;
+    if (new URLSearchParams(window.location.search).get("cell")) return;
+    let saved = null;
+    try {
+      saved = window.localStorage.getItem(SELECTED_KEY);
+    } catch {
+      return;
+    }
+    if (saved && saved !== selectedRef.current && features.some((f) => f.properties.cell_id === saved)) {
+      skipPersistRef.current = saved; // don't overwrite it with the page's default cell
+      onSelectRef.current(saved);
+    }
+  }, [features]);
+
+  // Save any selection, wherever it came from (map click, hotlist, ?cell= link), so Overview can follow it.
+  useEffect(() => {
+    if (!selectedId || !restoredRef.current) return;
+    if (skipPersistRef.current) {
+      if (selectedId !== skipPersistRef.current) return; // still the default render
+      skipPersistRef.current = null;
+    }
+    remember(selectedId);
+  }, [selectedId]);
+
+  if (fallback) return <FlatMap features={features} marks={marks} floods={floods} selectedId={selectedId}
+    onSelect={(id) => { remember(id); onSelect(id); }} reason={fallback} />;
   return (
     <>
       <div ref={holder} className="map" />
@@ -423,6 +498,10 @@ export default function RiskMap({ features, marks, floods, year, selectedId, onS
         <button type="button" className="reportswitch floodswitch" aria-pressed={showFloods} onClick={() => setShowFloods((on) => !on)}
           title="Cells with a DFO large flood recorded in the year on show. Solid ring: the model had the cell at or above its threshold. Thin ring: it missed.">
           <i /> Recorded floods
+        </button>
+        <button type="button" className="reportswitch panel-toggle" aria-pressed={panelOpen} onClick={() => setPanelOpen((on) => !on)}
+          title="Show or hide the details card so the whole map is visible.">
+          {panelOpen ? "Hide details" : "Show details"}
         </button>
       </div>
     </>

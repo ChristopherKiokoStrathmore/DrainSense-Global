@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { api, errorDetail } from "../../lib/api";
 import { useDesk } from "../desk";
 
@@ -28,6 +28,34 @@ const CLEARED = {
 const OPEN = new Set(["open", "inspection_scheduled"]);
 const INCIDENT_KINDS = ["standing water", "overflow", "repeat blockage", "road overflow"];
 
+// The cell picked on the map (written by RiskMap). Same key and event name as RiskMap.jsx and the Overview page.
+const SELECTED_KEY = "drainsense:selected";
+const SELECTED_EVENT = "drainsense:selected-change";
+function subscribeSelected(callback) {
+  window.addEventListener("storage", callback); // another tab
+  window.addEventListener(SELECTED_EVENT, callback); // this tab
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(SELECTED_EVENT, callback);
+  };
+}
+function readSelected() {
+  try {
+    return window.localStorage.getItem(SELECTED_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+function writeSelected(id) {
+  try {
+    if (id) window.localStorage.setItem(SELECTED_KEY, id);
+    else window.localStorage.removeItem(SELECTED_KEY);
+  } catch {
+    // Storage can be blocked; the event below still updates this page.
+  }
+  window.dispatchEvent(new Event(SELECTED_EVENT));
+}
+
 const today = () => new Date().toLocaleDateString("en-CA");
 
 function blankDrafts() {
@@ -49,6 +77,8 @@ export default function LedgerSection() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const { bump, formRequest } = useDesk();
+  // null on the server and until the browser has read it, so the first render matches.
+  const selectedId = useSyncExternalStore(subscribeSelected, readSelected, () => null);
 
   async function load() {
     const [reportBody, inspectionBody, repairBody, incidentBody, effectBody] = await Promise.all([
@@ -77,7 +107,11 @@ export default function LedgerSection() {
       .then((grid) => {
         const list = grid.features.map((f) => f.properties).sort((a, b) => a.rank - b.rank);
         setCells(list);
-        const start = list.some((c) => c.cell_id === wanted) ? wanted : list[0]?.cell_id || "";
+        const linked = list.some((c) => c.cell_id === wanted);
+        // A ?cell= link becomes the picked cell for the whole desk. Otherwise the form starts on the top-ranked
+        // cell, and the picked cell (if any) replaces it in the effect below.
+        if (linked) writeSelected(wanted);
+        const start = linked ? wanted : list[0]?.cell_id || "";
         setDrafts((cur) => Object.fromEntries(
           Object.entries(cur).map(([key, draft]) => [key, { ...draft, cell_id: draft.cell_id || start }]),
         ));
@@ -101,6 +135,21 @@ export default function LedgerSection() {
 
   // Ledger rows carry only the cell id; the grid has each cell's reverse-geocoded place name.
   const placeOf = useMemo(() => Object.fromEntries(cells.map((c) => [c.cell_id, c.place_name])), [cells]);
+
+  // The cell picked on the map. Until the grid has loaded, trust the saved id so the page does not flash unfiltered.
+  const picked = selectedId ? cells.find((c) => c.cell_id === selectedId) : null;
+  const scopeId = cells.length ? picked?.cell_id ?? null : selectedId;
+
+  // Forms start on the picked cell, and follow it when it changes. A form linked to a report or inspection keeps that record's cell.
+  useEffect(() => {
+    if (!picked) return;
+    setDrafts((cur) => Object.fromEntries(
+      Object.entries(cur).map(([key, draft]) => [
+        key,
+        draft.report_id || draft.inspection_id ? draft : { ...draft, cell_id: picked.cell_id },
+      ]),
+    ));
+  }, [picked?.cell_id]);
 
   const draft = drafts[kind];
   const set = (patch) => setDrafts((cur) => ({ ...cur, [kind]: { ...cur[kind], ...patch } }));
@@ -152,8 +201,19 @@ export default function LedgerSection() {
     }
   }
 
-  const openReports = log.reports.filter((r) => OPEN.has(r.status));
-  const scheduled = log.inspections.filter((i) => i.status === "scheduled");
+  // Everything shown below is narrowed to the picked cell when there is one.
+  const inScope = (row) => !scopeId || row.cell_id === scopeId;
+  const shown = {
+    reports: log.reports.filter(inScope),
+    inspections: log.inspections.filter(inScope),
+    repairs: log.repairs.filter(inScope),
+    incidents: log.incidents.filter(inScope),
+  };
+  const shownEffect = effect.filter(inScope);
+  const emptyText = scopeId ? "None logged in this cell." : "None logged.";
+
+  const openReports = shown.reports.filter((r) => OPEN.has(r.status));
+  const scheduled = shown.inspections.filter((i) => i.status === "scheduled");
   const linked = Boolean(draft.report_id || draft.inspection_id);
 
   const cellSelect = (
@@ -180,11 +240,27 @@ export default function LedgerSection() {
         Anything you save here is stored as a community row.
       </p>
 
+      {picked && (
+        <p className="scope">
+          <b>{picked.place_name || picked.cell_id}</b>
+          <span>picked on the map</span>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              writeSelected(null);
+            }}
+          >
+            Show all
+          </a>
+        </p>
+      )}
+
       <div className="metrics">
         <div className="metric"><span>Open reports</span><b>{openReports.length}</b></div>
         <div className="metric"><span>Inspections scheduled</span><b>{scheduled.length}</b></div>
-        <div className="metric"><span>Repairs logged</span><b>{log.repairs.length}</b></div>
-        <div className="metric"><span>Incidents logged</span><b>{log.incidents.length}</b></div>
+        <div className="metric"><span>Repairs logged</span><b>{shown.repairs.length}</b></div>
+        <div className="metric"><span>Incidents logged</span><b>{shown.incidents.length}</b></div>
       </div>
 
       <section id="record">
@@ -309,7 +385,8 @@ export default function LedgerSection() {
       <h2>Reports</h2>
       <Ledger
         placeOf={placeOf}
-        rows={log.reports}
+        empty={emptyText}
+        rows={shown.reports}
         columns={["id", "cell_id", "severity", "status", "reporter", "note", "origin"]}
         action={(r) => r.status === "open" && (
           <button type="button" className="link" onClick={() => startFrom("inspection", { report_id: String(r.id), cell_id: r.cell_id })}>
@@ -320,7 +397,8 @@ export default function LedgerSection() {
       <h2>Inspections</h2>
       <Ledger
         placeOf={placeOf}
-        rows={log.inspections}
+        empty={emptyText}
+        rows={shown.inspections}
         columns={["id", "report_id", "cell_id", "crew", "scheduled_for", "status", "origin"]}
         action={(i) => i.status === "scheduled" && (
           <button type="button" className="link"
@@ -330,9 +408,9 @@ export default function LedgerSection() {
         )}
       />
       <h2>Repairs</h2>
-      <Ledger placeOf={placeOf} rows={log.repairs} columns={["id", "inspection_id", "report_id", "cell_id", "action", "completed_on", "origin"]} />
+      <Ledger placeOf={placeOf} empty={emptyText} rows={shown.repairs} columns={["id", "inspection_id", "report_id", "cell_id", "action", "completed_on", "origin"]} />
       <h2>Incidents</h2>
-      <Ledger placeOf={placeOf} rows={log.incidents} columns={["id", "cell_id", "kind", "occurred_on", "note", "origin"]} />
+      <Ledger placeOf={placeOf} empty={emptyText} rows={shown.incidents} columns={["id", "cell_id", "kind", "occurred_on", "note", "origin"]} />
 
       <h2>Did the repair work?</h2>
       <p className="reading">
@@ -347,7 +425,10 @@ export default function LedgerSection() {
           </tr>
         </thead>
         <tbody>
-          {effect.map((row) => (
+          {shownEffect.length === 0 && (
+            <tr><td colSpan={6}>{scopeId ? "No repairs logged in this cell." : "No repairs logged."}</td></tr>
+          )}
+          {shownEffect.map((row) => (
             <tr key={row.repair_id}>
               <td title={row.cell_id}>{placeOf[row.cell_id] || row.cell_id}</td>
               <td>{row.completed_on}</td>
@@ -363,8 +444,8 @@ export default function LedgerSection() {
   );
 }
 
-function Ledger({ rows, columns, action, placeOf }) {
-  if (!rows.length) return <p>None logged.</p>;
+function Ledger({ rows, columns, action, placeOf, empty = "None logged." }) {
+  if (!rows.length) return <p>{empty}</p>;
   return (
     <div className="scroll">
       <table>

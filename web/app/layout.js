@@ -1,16 +1,7 @@
-import { Bricolage_Grotesque, Instrument_Sans } from "next/font/google";
+import "@fontsource-variable/bricolage-grotesque";
+import "@fontsource-variable/instrument-sans";
 import Nav from "../components/Nav";
 import "./globals.css";
-
-const display = Bricolage_Grotesque({
-  subsets: ["latin"],
-  variable: "--font-display",
-});
-
-const sans = Instrument_Sans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
 
 export const metadata = {
   title: "DrainSense",
@@ -20,7 +11,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${display.variable} ${sans.variable}`}>
+    <html lang="en">
       <body>
         <header className="mast">
           <a className="mark" href="/#overview">
