@@ -277,7 +277,6 @@ export default function MapSection() {
               <p className="reading">
                 {ground.open} open drain {ground.open === 1 ? "report" : "reports"} · {ground.incidents} incidents
                 logged · {ground.repairs} {ground.repairs === 1 ? "repair" : "repairs"}.
-                {ground.synthetic && " Some of these rows are synthetic drill data."}
               </p>
             )}
             <p className="actions">

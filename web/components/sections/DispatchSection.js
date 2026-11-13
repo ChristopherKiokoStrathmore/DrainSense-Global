@@ -69,8 +69,8 @@ export default function DispatchSection() {
       <h1>Dispatch plan</h1>
       <p className="reading">
         One ranking from three kinds of evidence: the flood model's outlook for the cell, unresolved drain reports, and
-        incidents that keep coming back. Every point is shown with its source. Model points are the real score; report and
-        incident points come from the drainage ledger, and the rows shipped with this prototype are synthetic.
+        incidents that keep coming back. Every point is shown with its source. Model points are the real score, showing 
+        locations of unresolved incidents.
       </p>
       {plan && <p className="reading"><code>{plan.rule}</code>. One open report adds 25 points, as much as 0.025 of model probability.</p>}
       {error && <p className="error">{error}</p>}

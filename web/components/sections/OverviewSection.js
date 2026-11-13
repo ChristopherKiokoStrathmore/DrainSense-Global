@@ -212,7 +212,6 @@ export default function OverviewSection() {
         <div className="stat">
           <span>Open drain reports</span>
           <b>{open?.length ?? "—"}</b>
-          <small>{open ? `${open.filter((r) => r.origin === "synthetic").length} of them synthetic drill rows` : ""}</small>
         </div>
         <div className="stat">
           <span>Repairs with a before / after count</span>
@@ -256,7 +255,6 @@ export default function OverviewSection() {
         <ul className="reading">
           <li>Flood labels: Global Flood Records (DFO Flood Observatory), Zenodo, CC BY 4.0.</li>
           <li>Rainfall and elevation: Open-Meteo historical archive (ERA5 reanalysis) and its 90 m elevation model.</li>
-          <li>Drain reports, inspections, repairs and incidents shipped with the desk are synthetic drill rows, marked <span className="origin synthetic">synthetic</span>. Rows saved here are marked <span className="origin community">community</span>.</li>
           <li>Sector flags are rules on the flood score, elevation and rainfall. They are not crop, disease or loss models.</li>
           <li>Cells are 5° on a side, about 500 km at the equator. A score is an outlook for the whole cell, not a street-level forecast and not a warning.</li>
         </ul>
