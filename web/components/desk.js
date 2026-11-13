@@ -13,9 +13,9 @@ export const SECTIONS = [
   ["dispatch", "Dispatch"],
   ["ledger", "Ledger"],
   ["sectors", "Sectors"],
-  ["impact", "Impact"],
-  ["model", "Model card"],
-  ["api", "API"],
+  // ["impact", "Impact"],
+  // ["model", "Model card"],
+  // ["api", "API"],
 ];
 
 export function scrollToSection(id) {
