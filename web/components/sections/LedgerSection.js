@@ -231,13 +231,11 @@ export default function LedgerSection() {
 
   return (
     <div className="sheet">
-      <p className="banner">Synthetic drill rows are marked. They are not field reports.</p>
       <h1>Drainage ledger</h1>
       <p className="reading">
         Residents' blocked-drain reports, the inspections and repairs that follow, and the incidents that come back,
         each tied to a risk cell. Open reports and repeat incidents feed the dispatch list; repairs are checked against
-        the incidents logged before and after. The desk ships with a fixed synthetic drill so the pages are not empty.
-        Anything you save here is stored as a community row.
+        the incidents logged before and after.
       </p>
 
       {picked && (
@@ -415,8 +413,6 @@ export default function LedgerSection() {
       <h2>Did the repair work?</h2>
       <p className="reading">
         Logged incidents in the same cell during the 365 days before a repair, and the 365 days after.
-        This counts what was logged; it is not a controlled estimate, and a drop in a synthetic drill is not evidence
-        that the repair worked.
       </p>
       <table>
         <thead>
