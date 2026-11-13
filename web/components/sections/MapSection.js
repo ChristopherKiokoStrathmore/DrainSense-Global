@@ -12,6 +12,18 @@ const RiskMap = dynamic(() => import("../RiskMap"), { ssr: false });
 // Report statuses the dispatch plan counts as unresolved.
 const OPEN = new Set(["open", "inspection_scheduled"]);
 
+// Same key and event name as RiskMap.jsx and the other pages.
+const SELECTED_KEY = "drainsense:selected";
+const SELECTED_EVENT = "drainsense:selected-change";
+function publishSelected(id) {
+  try {
+    window.localStorage.setItem(SELECTED_KEY, id);
+  } catch {
+    // Storage can be blocked; the event below still updates this tab.
+  }
+  window.dispatchEvent(new Event(SELECTED_EVENT));
+}
+
 const SECTORS = [
   ["agri_suppliers", "Agriculture"],
   ["health", "Public health"],
@@ -51,6 +63,13 @@ export default function MapSection() {
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState("");
   const { revision, mapCell, openForm } = useDesk();
+
+  // A deliberate pick: shown here and shared with the Overview, Dispatch, Sectors and Ledger pages.
+  // The default top-hotspot selection on load does not go through here, so no page looks scoped before a pick.
+  const select = useCallback((id) => {
+    setSelectedId(id);
+    publishSelected(id);
+  }, []);
 
   useEffect(() => {
     let cancel = false;
@@ -96,8 +115,8 @@ export default function MapSection() {
 
   // "Show on the map" from another section.
   useEffect(() => {
-    if (mapCell) setSelectedId(mapCell.id);
-  }, [mapCell]);
+    if (mapCell) select(mapCell.id);
+  }, [mapCell, select]);
 
   useEffect(() => {
     if (!selectedId) return undefined;
@@ -192,7 +211,7 @@ export default function MapSection() {
 
   return (
     <div className="desk">
-      <RiskMap features={yearFeatures} marks={marks} floods={floods} year={shownYear} selectedId={selectedId} onSelect={setSelectedId} />
+      <RiskMap features={yearFeatures} marks={marks} floods={floods} year={shownYear} selectedId={selectedId} onSelect={select} />
       {timeline && <Timeline timeline={timeline} year={year} onYear={pickYear} />}
       <aside className="dossier">
         <p className="kicker">{shownYear ?? 2024} {PHASE_KICKER[phase]} · from {(shownYear ?? 2024) - 1} rainfall</p>
@@ -281,7 +300,7 @@ export default function MapSection() {
         <ol className="hotlist">
           {ranked.slice(0, 8).map((spot, i) => (
             <li key={spot.cell_id}>
-              <button type="button" aria-current={spot.cell_id === selectedId ? "true" : undefined} onClick={() => setSelectedId(spot.cell_id)}>
+              <button type="button" aria-current={spot.cell_id === selectedId ? "true" : undefined} onClick={() => select(spot.cell_id)}>
                 <strong>{String(i + 1).padStart(2, "0")}</strong>
                 <span title={spot.cell_id}>
                   {spot.place_name}

@@ -655,3 +655,19 @@ html { scroll-behavior: smooth; }
 @media (max-width: 980px) {
   .panel-toggle { display: none; } /* on narrow screens the card sits below the map */
 }
+
+.band {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.band.red   { background: #fde2e0; color: #9b1c14; }
+.band.amber { background: #fff0cc; color: #7a4b00; }
+.band.green { background: #dcf3e4; color: #14633a; }
+
+.stat.red   { border-top: 4px solid #d93025; }
+.stat.amber { border-top: 4px solid #f0a400; }
+.stat.green { border-top: 4px solid #1e9e5a; }

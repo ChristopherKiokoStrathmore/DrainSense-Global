@@ -20,9 +20,9 @@ export default function Desk() {
         <section id="dispatch" className="slot"><DispatchSection /></section>
         <section id="ledger" className="slot"><LedgerSection /></section>
         <section id="sectors" className="slot"><SectorsSection /></section>
-        <section id="impact" className="slot"><ImpactSection /></section>
-        <section id="model" className="slot"><ModelSection /></section>
-        <section id="api" className="slot"><ApiSection /></section>
+        {/*<section id="impact" className="slot"><ImpactSection /></section>*/}
+        {/*<section id="model" className="slot"><ModelSection /></section>*/}
+        {/*<section id="api" className="slot"><ApiSection /></section>*/}
       </main>
     </DeskProvider>
   );

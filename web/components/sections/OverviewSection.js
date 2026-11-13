@@ -1,12 +1,58 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { API, api } from "../../lib/api";
 import { useDesk } from "../desk";
 
 // Report statuses the dispatch plan counts as unresolved.
 const OPEN = new Set(["open", "inspection_scheduled"]);
-const fmt = (value, places = 2) => (value == null ? "—" : Number(value).toFixed(places));
+
+
+// Whiteboard bands: Urgent (red), Moderate risk (amber), OK for now (green).
+// Amber starts at the model's own threshold; red starts at RED_AT.
+const RED_AT = 0.3;
+const BANDS = {
+  red: { key: "red", label: "Urgent" },
+  amber: { key: "amber", label: "Moderate risk" },
+  green: { key: "green", label: "OK for now" },
+};
+function band(score, threshold) {
+  if (score == null || threshold == null) return null;
+  if (score >= RED_AT) return BANDS.red;
+  if (score >= threshold) return BANDS.amber;
+  return BANDS.green;
+}
+
+function BandPill({ value }) {
+  if (!value) return null;
+  return <span className={`band ${value.key}`}>{value.label}</span>;
+}
+// The cell picked on the map. Same key and event name as RiskMap.jsx and the other pages.
+const SELECTED_KEY = "drainsense:selected";
+const SELECTED_EVENT = "drainsense:selected-change";
+function subscribeSelected(callback) {
+  window.addEventListener("storage", callback); // another tab
+  window.addEventListener(SELECTED_EVENT, callback); // this tab
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(SELECTED_EVENT, callback);
+  };
+}
+function readSelected() {
+  try {
+    return window.localStorage.getItem(SELECTED_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+function clearSelected() {
+  try {
+    window.localStorage.removeItem(SELECTED_KEY);
+  } catch {
+    // Storage can be blocked; the event below still resets this page.
+  }
+  window.dispatchEvent(new Event(SELECTED_EVENT));
+}
 
 // Each gap in today's practice, and the part of the desk that answers it.
 const ANSWERS = [
@@ -28,24 +74,6 @@ const ANSWERS = [
     href: "#ledger",
     answer: "Report, inspection, repair and incident in one log per cell, with incidents counted the year before and after each repair.",
   },
-  {
-    problem: "Risk scores are black boxes: no reason, no measured accuracy, no line between real and filler data.",
-    part: "Model card",
-    href: "#model",
-    answer: "Why each cell scores as it does (SHAP), how the model does on later years against dummy baselines, and every synthetic row marked.",
-  },
-  {
-    problem: "Farm suppliers, health teams, insurers and logistics planners each rebuild the same flood picture.",
-    part: "Sector flags",
-    href: "#sectors",
-    answer: "Fixed, published rules turn the flood score into attention flags for agriculture, public health, and insurance and logistics.",
-  },
-  {
-    problem: "The size of a recorded flood, and what drove it, is hard to compare across events.",
-    part: "Impact model",
-    href: "#impact",
-    answer: "A CatBoost estimate of the DFO flood impact index for one event or 500, shown next to the exact formula.",
-  },
 ];
 
 const LOOP = [
@@ -58,9 +86,12 @@ const LOOP = [
 ];
 
 export default function OverviewSection() {
-  const [facts, setFacts] = useState({});
+  // Raw API data. Scoping to the picked cell happens at render time, so a new pick shows at once.
+  const [data, setData] = useState({});
   const [down, setDown] = useState(false);
   const { revision } = useDesk();
+  // null on the server and until the browser has read it, so the first render matches.
+  const selectedId = useSyncExternalStore(subscribeSelected, readSelected, () => null);
 
   // Each figure loads on its own, so one failing call leaves a dash rather than a blank page.
   useEffect(() => {
@@ -68,31 +99,43 @@ export default function OverviewSection() {
       api("/api/v1/risk/grid"),
       api("/api/v1/reports"),
       api("/api/v1/interventions/effectiveness"),
-      api("/api/v1/response/plan?limit=1"),
+      api("/api/v1/response/plan?limit=40"), // the whole ranking, so a picked cell is found
       api("/api/v1/metrics"),
-      api("/api/v1/impact/model"),
-    ]).then(([grid, reports, effect, plan, metrics, impact]) => {
+    ]).then(([grid, reports, effect, plan, metrics]) => {
       const value = (result) => (result.status === "fulfilled" ? result.value : null);
-      const cells = value(grid)?.features.map((f) => f.properties);
-      const open = value(reports)?.reports.filter((r) => OPEN.has(r.status));
-      setFacts({
-        cells: cells?.length,
-        above: cells?.filter((c) => c.above_threshold).length,
-        open: open?.length,
-        openSynthetic: open?.filter((r) => r.origin === "synthetic").length,
+      setData({
+        cells: value(grid)?.features.map((f) => f.properties),
+        open: value(reports)?.reports.filter((r) => OPEN.has(r.status)),
         repairs: value(effect)?.repairs,
-        top: value(plan)?.plan[0],
+        plan: value(plan)?.plan,
         metrics: value(metrics),
-        impact: value(impact),
       });
       // fetch() rejects with a TypeError only when the API could not be reached at all.
-      setDown([grid, reports, effect, plan, metrics, impact].every((r) => r.status === "rejected" && r.reason instanceof TypeError));
+      setDown([grid, reports, effect, plan, metrics].every((r) => r.status === "rejected" && r.reason instanceof TypeError));
     });
   }, [revision]);
 
-  const { metrics, impact, top, repairs } = facts;
-  const measured = repairs?.at(-1);
+  const { cells, metrics } = data;
+  const picked = selectedId ? cells?.find((c) => c.cell_id === selectedId) : null;
+  const scoped = Boolean(selectedId);
+  const inScope = (row) => !picked || row.cell_id === picked.cell_id;
 
+  const open = data.open?.filter(inScope);
+  const repairs = data.repairs?.filter(inScope);
+  const measured = repairs?.at(-1);
+  const top = picked ? data.plan?.find((p) => p.cell_id === picked.cell_id) : data.plan?.[0];
+  const threshold = metrics ? ` ${metrics.model.threshold}` : "";
+
+  const cut = metrics?.model.threshold;
+  const pickedBand = picked ? band(picked.probability, cut) : null;
+  const topBand = top ? band(top.probability, cut) : null;
+  const counts = cells && cut != null
+    ? cells.reduce((n, c) => {
+        const b = band(c.probability, cut);
+        if (b) n[b.key] += 1;
+        return n;
+      }, { red: 0, amber: 0, green: 0 })
+    : null;
   return (
     <div className="sheet wide overview">
       <section className="hero">
@@ -115,21 +158,61 @@ export default function OverviewSection() {
         </p>
       )}
 
+      {scoped && cells && (
+        <p className="scope">
+          <b>{picked ? picked.place_name : selectedId}</b>
+          <span>
+            {picked
+              ? `picked on the map · rank ${picked.rank} of ${cells.length} · flood score ${picked.probability.toFixed(2)}`
+              : "picked on the map · not in the scored cells"}
+          </span>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              clearSelected();
+            }}
+          >
+            Show all
+          </a>
+        </p>
+      )}
+
       <section className="stats" aria-label="Desk at a glance">
-        <div className="stat">
-          <span>Land cells scored for 2024</span>
-          <b>{facts.cells ?? "—"}</b>
-          <small>{facts.above != null ? `${facts.above} at or above the model threshold${metrics ? ` ${metrics.model.threshold}` : ""}` : ""}</small>
+        <div className={`stat ${pickedBand ? pickedBand.key : ""}`}>
+          <span>{picked ? "Selected cell flood score" : "Land cells scored for 2024"}</span>
+          <b>{picked ? picked.probability.toFixed(2) : cells?.length ?? "—"}</b>
+          {picked ? (
+            <small>
+              <BandPill value={pickedBand} /> {picked.above_threshold ? "at or above" : "below"} the model threshold{threshold}
+            </small>
+          ) : (
+            <small>
+              {counts ? (
+                <>
+                  <span className="band red">{counts.red} urgent</span>{" "}
+                  <span className="band amber">{counts.amber} moderate</span>{" "}
+                  <span className="band green">{counts.green} ok</span>
+                </>
+              ) : ""}
+            </small>
+          )}
         </div>
-        <div className="stat">
-          <span>First on the dispatch plan</span>
-          <b>{top ? top.place_name : "—"}</b>
-          <small>{top ? `priority ${top.priority.toFixed(1)} · flood score ${top.probability.toFixed(2)}` : ""}</small>
+        <div className={`stat ${topBand ? topBand.key : ""}`}>
+          <span>{picked ? "This cell on the dispatch plan" : "First on the dispatch plan"}</span>
+          <b>{top ? top.place_name : picked ? picked.place_name : "—"}</b>
+          <small>
+            {top ? (
+              <>
+                <BandPill value={topBand} /> rank {top.rank} · priority {top.priority.toFixed(1)} · flood score {top.probability.toFixed(2)}
+              </>
+            ) : picked ? "not in the top 40 of the dispatch plan" : ""}
+          </small>
         </div>
         <div className="stat">
           <span>Open drain reports</span>
-          <b>{facts.open ?? "—"}</b>
-          <small>{facts.open != null ? `${facts.openSynthetic} of them synthetic drill rows` : ""}</small>
+          <b>{open?.length ?? "—"}</b>
+          <small>{open ? `${open.filter((r) => r.origin === "synthetic").length} of them synthetic drill rows` : ""}</small>
         </div>
         <div className="stat">
           <span>Repairs with a before / after count</span>
@@ -139,16 +222,6 @@ export default function OverviewSection() {
               ? `latest: ${measured.incidents_365d_before} incidents the year before, ${measured.incidents_365d_after} after (${measured.origin})`
               : ""}
           </small>
-        </div>
-        <div className="stat">
-          <span>Risk model ROC-AUC, later years</span>
-          <b>{metrics ? fmt(metrics.temporal_test.roc_auc, 3) : "—"}</b>
-          <small>{metrics ? `test years ${metrics.split.test_label_years[0]}–${metrics.split.test_label_years.at(-1)} · dummy ${fmt(metrics.dummy_prior.roc_auc, 3)}` : ""}</small>
-        </div>
-        <div className="stat">
-          <span>Impact model test RMSE</span>
-          <b>{impact ? fmt(impact.variants.brief.temporal_test.rmse, 3) : "—"}</b>
-          <small>{impact ? `${impact.split.n_test} held-out events · exact formula ${fmt(impact.baselines_temporal_test.dfo_formula.rmse, 3)}` : ""}</small>
         </div>
       </section>
 
@@ -162,11 +235,6 @@ export default function OverviewSection() {
               <span className="answer-text">{row.answer}</span>
             </a>
           ))}
-          <a href="#api" className="answer answer-wide">
-            <span className="answer-problem">Each tool keeps its numbers to itself.</span>
-            <b>API</b>
-            <span className="answer-text">Every page reads the same documented endpoints, with Swagger, a published schema and a Postman collection.</span>
-          </a>
         </div>
       </section>
 
