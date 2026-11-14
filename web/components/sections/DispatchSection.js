@@ -65,14 +65,12 @@ export default function DispatchSection() {
 
   return (
     <div className="sheet">
-      <p className="kicker">Where to send a crew first</p>
-      <h1>Dispatch plan</h1>
-      <p className="reading">
-        One ranking from three kinds of evidence: the flood model's outlook for the cell, unresolved drain reports, and
-        incidents that keep coming back. Every point is shown with its source. Model points are the real score, showing 
-        locations of unresolved incidents.
+      <h1>Prioritised response list</h1>
+      <p className="mute">
+        Where to send a crew first: one ranking from the flood model's outlook for the cell, unresolved drain reports,
+        and incidents that keep coming back. Every point is shown with its source.
       </p>
-      {plan && <p className="reading"><code>{plan.rule}</code>. One open report adds 25 points, as much as 0.025 of model probability.</p>}
+      {plan && <p className="mute"><code>{plan.rule}</code>. One open report adds 25 points, as much as 0.025 of model probability.</p>}
       {error && <p className="error">{error}</p>}
 
       {scoped && plan && (
@@ -109,36 +107,34 @@ export default function DispatchSection() {
 
       <ol className="plan">
         {items.map((item) => (
-          <li key={item.cell_id}>
+          <li key={item.cell_id} className="card">
             <div className="plan-head">
               <span className="rank">{String(item.rank).padStart(2, "0")}</span>
               <strong title={`Cell ${item.cell_id}`}>{item.place_name}</strong>
-              <span className="reading">
+              <span className="mute">
                 p {item.probability.toFixed(3)} · {item.components.open_reports.count} open{" "}
                 {item.components.open_reports.count === 1 ? "report" : "reports"} ·{" "}
                 {item.components.recurring_incidents.count} repeat incidents counted
               </span>
             </div>
             <PriorityBar item={item} max={max} />
-            <table className="parts">
-              <tbody>
-                {PARTS.map(([key, label, color]) => {
-                  const part = item.components[key];
-                  return (
-                    <tr key={key}>
-                      <td><i className="key" style={{ background: color }} />{label}</td>
-                      <td className="num">{part.points}</td>
-                      <td><span className={`origin ${part.origin}`}>{part.origin}</span></td>
-                      <td>{part.note}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            <p className="actions">
-              <button type="button" className="link" onClick={() => openForm("inspection", item.cell_id)}>Schedule an inspection</button>
-              <button type="button" className="link" onClick={() => showOnMap(item.cell_id)}>Show on the map</button>
-            </p>
+            <ul className="parts">
+              {PARTS.map(([key, label, color]) => {
+                const part = item.components[key];
+                return (
+                  <li key={key}>
+                    <span><i className="key" style={{ background: color }} />{label}</span>
+                    <span className="num">{part.points} pts</span>
+                    <span className={`origin ${part.origin}`}>{part.origin}</span>
+                    {part.note && <small>{part.note}</small>}
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="btn-row">
+              <button type="button" className="act ghost small" onClick={() => showOnMap(item.cell_id)}>Show on map</button>
+              <button type="button" className="act small" onClick={() => openForm("inspection", item.cell_id)}>Schedule inspection</button>
+            </div>
           </li>
         ))}
       </ol>

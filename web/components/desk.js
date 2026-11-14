@@ -1,46 +1,103 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
-// The one-page desk: what one section asks of another. The map's selected cell, a ledger form opened from the map
-// or the dispatch list, and a revision number that goes up after every ledger save so the map dots, the dispatch
-// plan and the overview figures reload.
+// The desk is one screen: the map fills it, a side panel holds the working tabs, and the longer reference pages
+// (overview, impact model, model card, API) open as sheets over the map. This context is what one part asks of
+// another: which tab and sheet are open, the map's selected cell, a ledger form opened from elsewhere, and a
+// revision number that goes up after every ledger save so the map dots, the dispatch plan and the tracker reload.
 const DeskContext = createContext(null);
 
-export const SECTIONS = [
-  ["overview", "Overview"],
-  ["map", "Map"],
+// Tabs in the side panel, in order.
+export const TABS = [
+  ["map", "Risk map"],
+  ["forecast", "Forecast"],
+  ["report", "Report"],
   ["dispatch", "Dispatch"],
-  ["ledger", "Ledger"],
   ["sectors", "Sectors"],
-  // ["impact", "Impact"],
+  ["tracker", "Tracker"],
+];
+
+// Sheets that open over the map.
+export const SHEETS = [
+  ["overview", "About"],
+  // Hidden from the frontend for now. Uncomment here and in Overlays.js (and next.config.js) to bring them back.
+  // ["impact", "Impact model"],
   // ["model", "Model card"],
   // ["api", "API"],
 ];
 
-export function scrollToSection(id) {
-  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
+// Links from the old one-page desk (/#ledger, /#record) still land somewhere sensible.
+const ALIASES = { ledger: "tracker", record: "report" };
+
+const isTab = (id) => TABS.some(([key]) => key === id);
+const isSheet = (id) => SHEETS.some(([key]) => key === id);
 
 export function DeskProvider({ children }) {
   const [revision, setRevision] = useState(0);
+  const [tab, setTabState] = useState("map");
+  const tabRef = useRef(tab);
+  tabRef.current = tab;
+  const [sheet, setSheet] = useState(null);
   // { id, at }: `at` makes a second request for the same cell still count as a new one.
   const [mapCell, setMapCell] = useState(null);
   const [formRequest, setFormRequest] = useState(null);
 
+  // Every place the desk can show is a hash, so a link to a tab or a sheet can be shared.
+  const go = useCallback((raw) => {
+    const id = ALIASES[raw] || raw;
+    if (isTab(id)) {
+      setTabState(id);
+      setSheet(null);
+    } else if (isSheet(id)) {
+      setSheet(id);
+    } else {
+      return false;
+    }
+    if (window.location.hash !== `#${id}`) window.history.replaceState(null, "", `${window.location.search}#${id}`);
+    return true;
+  }, []);
+
+  const closeSheet = useCallback(() => {
+    setSheet(null);
+    window.history.replaceState(null, "", `${window.location.search}#${tabRef.current}`);
+  }, []);
+
+  useEffect(() => {
+    const fromHash = () => {
+      const id = window.location.hash.slice(1);
+      if (id) go(id);
+      else if (new URLSearchParams(window.location.search).get("form")) go("report");
+    };
+    fromHash();
+    // Plain <a href="#dispatch"> links anywhere on the desk switch tabs instead of jumping.
+    const onClick = (event) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey) return;
+      const link = event.target.closest?.('a[href^="#"]');
+      if (link && go(link.getAttribute("href").slice(1))) event.preventDefault();
+    };
+    window.addEventListener("hashchange", fromHash);
+    document.addEventListener("click", onClick);
+    return () => {
+      window.removeEventListener("hashchange", fromHash);
+      document.removeEventListener("click", onClick);
+    };
+  }, [go]);
+
   const bump = useCallback(() => setRevision((n) => n + 1), []);
   const showOnMap = useCallback((id) => {
     setMapCell({ id, at: Date.now() });
-    scrollToSection("map");
-  }, []);
-  const openForm = useCallback((kind, cellId) => {
-    setFormRequest({ kind, cellId, at: Date.now() });
-    scrollToSection("record");
-  }, []);
+    go("map");
+  }, [go]);
+  // patch: extra fields for the form, such as the report an inspection is linked to.
+  const openForm = useCallback((kind, cellId, patch = null) => {
+    setFormRequest({ kind, cellId, patch, at: Date.now() });
+    go("report");
+  }, [go]);
 
   const value = useMemo(
-    () => ({ revision, bump, mapCell, showOnMap, formRequest, openForm }),
-    [revision, bump, mapCell, showOnMap, formRequest, openForm],
+    () => ({ revision, bump, tab, sheet, go, closeSheet, mapCell, showOnMap, formRequest, openForm }),
+    [revision, bump, tab, sheet, go, closeSheet, mapCell, showOnMap, formRequest, openForm],
   );
   return <DeskContext.Provider value={value}>{children}</DeskContext.Provider>;
 }

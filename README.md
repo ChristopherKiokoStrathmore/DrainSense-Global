@@ -74,7 +74,7 @@ Postman: import `api/postman/DrainSense.postman_collection.json` and `api/postma
 npx newman run api/postman/DrainSense.postman_collection.json -e api/postman/DrainSense.local.postman_environment.json
 ```
 
-Dashboard: the **Impact** section of the one-page desk (`web/components/sections/ImpactSection.js`, http://localhost:3000/#impact) runs entirely on the API above:
+Dashboard: the **Impact model** sheet of the desk (`web/components/sections/ImpactSection.js`, http://localhost:3000/#impact) runs entirely on the API above:
 
 | Section | Endpoint |
 |---|---|
@@ -121,17 +121,24 @@ npm ci
 NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 ```
 
-Open http://localhost:3000. The desk is one page; the masthead links jump between its sections, and every section reads the API. The old routes (`/map`, `/operations`, `/response`, `/sectors`, `/impact`, `/model`, `/endpoints`) redirect to their section and keep their query, so `/map?cell=s45_w75` still opens that cell.
+Open http://localhost:3000. The desk is one screen, laid out like the prototype in `index.html`: the map fills the window, a side panel on the left holds the working tabs, a header pill on the right opens the reference sheets over the map, and a short intro card explains the desk on the first visit of a session. Every tab and sheet has a hash (`/#dispatch`, `/#impact`), and every part reads the API. The old routes (`/map`, `/operations`, `/response`, `/sectors`, `/impact`, `/model`, `/endpoints`) redirect to their tab or sheet and keep their query, so `/map?cell=s45_w75` still opens that cell.
 
-| Section | What it shows |
+| Side panel tab | What it shows |
 |---|---|
-| `#overview` | The problem each part answers, live figures from every part, the maintenance loop |
-| `#map` Risk map | Flood score per cell for every label year 2014–2024 (`GET /api/v1/risk/timeline`). A year strip on the map plays the years in order; each column shows cells the model flagged and cells with a recorded DFO flood. Past years draw the recorded floods as rings (solid where the model flagged the cell, thin where it missed); 2024 is the outlook with no record yet. The dossier has the cell's score by year, whether that year was caught, missed or a false alarm, SHAP reasons for the outlook, open drain reports, ledger counts and sector flags |
-| `#dispatch` | The ranking, with each cell's points split into model, open reports and repeat incidents |
-| `#ledger` | Report, inspection, repair and incident forms; a report moves to inspection scheduled, then repaired; incidents before and after each repair. A save refreshes the map dots, dispatch plan and overview figures |
-| `#sectors` | The rule behind each sector flag, a flag matrix for the 30 highest-scoring cells, and each flag's inputs |
+| `#map` Risk map | Headline figures, then the year strip: flood score per cell for every label year 2014–2024 (`GET /api/v1/risk/timeline`), played in order; each column shows cells the model flagged and cells with a recorded DFO flood. The map layer (heatmap or cells) and the report and flood overlays. Past years draw the recorded floods as rings (solid where the model flagged the cell, thin where it missed); 2024 is the outlook with no record yet. The selected cell: its score by year, whether that year was caught, missed or a false alarm, SHAP reasons for the outlook, open drain reports, ledger counts and sector flags. The hottest cells for the year |
+| `#forecast` Forecast | A date filter from today to at most 14 days ahead (the picker and the API both refuse later dates). Regions likely to be affected by flooding in that window, on watch, or quiet, from `GET /api/v1/risk/forecast?until=YYYY-MM-DD`; the map shows the levels while the tab is open. The selected region's daily forecast rain against its wettest week of the feature year |
+| `#report` Report | Report, inspection, repair and incident forms. A save refreshes the map dots, the dispatch plan and the tracker |
+| `#dispatch` Dispatch | The ranking, with each cell's points split into model, open reports and repeat incidents; schedule an inspection or fly the map to the cell |
+| `#sectors` Sectors | The rule behind each sector flag, a flag matrix for the 30 highest-scoring cells, and each flag's inputs |
+| `#tracker` Tracker | Every report (with its progress: reported, inspection, repaired), inspection, repair and incident, and the incidents before and after each repair |
+
+| Sheet (header pill) | What it shows |
+|---|---|
+| `#overview` About | The problem each part answers, live figures from every part, the maintenance loop |
 | `#impact`, `#model` | The impact dashboard and the risk model card |
 | `#api` | Every endpoint, read live from `/openapi.json`, with links into Swagger UI |
+
+The two-week forecast is a published rule, not a trained model: it combines each cell's risk-model score with Open-Meteo's daily precipitation forecast at the cell centre (`api/app/forecast.py`, cached for three hours). A cell is *likely* when its score is at or above the threshold and the wettest 7 forecast days are at least as wet as its wettest 7 days in the feature year, or it has 20 mm or more on two or more days. It has not been checked against floods that followed a forecast.
 
 Years 2014–2018 are the years the map model was fitted on, so their scores are in-sample. 2019–2023 are the held-out test years. Both are scored with the committed coefficients in `metrics.json`; nothing is refitted in the API.
 

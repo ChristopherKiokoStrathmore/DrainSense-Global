@@ -161,3 +161,50 @@ def test_timeline_scores_every_year_with_the_map_model(client):
         row = summary[year]
         assert row["hits"] + row["missed"] == row["recorded_flood_cells"]
     assert summary[2024]["phase"] == "outlook" and summary[2024]["recorded_flood_cells"] is None
+
+
+def _fake_forecast(monkeypatch, rain_for):
+    """Replace the Open-Meteo call: rain_for(cell) gives 16 daily totals from today."""
+    from datetime import timedelta
+
+    from api.app import forecast
+
+    def fetch(cells):
+        start = forecast.today()
+        dates = [(start + timedelta(days=i)).isoformat() for i in range(16)]
+        return {c["cell_id"]: {"dates": dates, "rain": rain_for(c)} for c in cells}
+
+    monkeypatch.setattr(forecast, "_fetch_rows", fetch)
+    monkeypatch.setitem(forecast._cache, "rows", None)
+
+
+def test_forecast_window_is_capped_at_two_weeks(client, monkeypatch):
+    from datetime import timedelta
+
+    from api.app import forecast
+
+    _fake_forecast(monkeypatch, lambda c: [0.0] * 16)
+    today = forecast.today()
+    ok = client.get(f"/api/v1/risk/forecast?until={(today + timedelta(days=14)).isoformat()}")
+    assert ok.status_code == 200
+    assert ok.json()["days"] == 15
+    assert client.get(f"/api/v1/risk/forecast?until={(today + timedelta(days=15)).isoformat()}").status_code == 422
+    assert client.get(f"/api/v1/risk/forecast?until={(today - timedelta(days=1)).isoformat()}").status_code == 422
+    default = client.get("/api/v1/risk/forecast").json()
+    assert default["until"] == default["latest_until"] == (today + timedelta(days=14)).isoformat()
+
+
+def test_forecast_levels_follow_the_rule(client, monkeypatch):
+    _fake_forecast(monkeypatch, lambda c: [60.0 if c["cell_id"] == "s45_w75" else 0.0] * 16)
+    body = client.get("/api/v1/risk/forecast").json()
+    by_id = {c["cell_id"]: c for c in body["cells"]}
+    wet = by_id["s45_w75"]  # top-ranked cell, far above the threshold, with 60 mm every day
+    assert wet["level"] == "likely"
+    assert wet["heavy_days"] == 15
+    assert body["cells"][0]["level"] == "likely"
+    dry = [c for c in body["cells"] if c["cell_id"] != "s45_w75"]
+    assert all(c["level"] == "quiet" for c in dry)
+    assert body["counts"] == {"likely": 1, "watch": 0, "quiet": len(dry)}
+    # Only days inside the window count.
+    short = client.get(f"/api/v1/risk/forecast?until={body['issued']}").json()
+    assert {c["cell_id"]: c for c in short["cells"]}["s45_w75"]["window_total_mm"] == 60.0

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { api, errorDetail } from "../../lib/api";
 import { useDesk } from "../desk";
+import { useRiskMap } from "./MapSection";
 
 const FORMS = [
   ["report", "Report a blocked drain"],
@@ -28,7 +29,12 @@ const CLEARED = {
 const OPEN = new Set(["open", "inspection_scheduled"]);
 const INCIDENT_KINDS = ["standing water", "overflow", "repeat blockage", "road overflow"];
 
-// The cell picked on the map (written by RiskMap). Same key and event name as RiskMap.jsx and the Overview page.
+// Report statuses in order, for the progress steps on each report card.
+const REPORT_STEPS = [["open", "Reported"], ["inspection_scheduled", "Inspection"], ["repaired", "Repaired"]];
+// Each list in the tracker shows this many cards before "Show all".
+const FIRST = 6;
+
+// The cell picked on the map (written by RiskMap). Same key and event name as RiskMap.jsx and the other tabs.
 const SELECTED_KEY = "drainsense:selected";
 const SELECTED_EVENT = "drainsense:selected-change";
 function subscribeSelected(callback) {
@@ -67,16 +73,20 @@ function blankDrafts() {
   };
 }
 
-export default function LedgerSection() {
+// The drainage ledger, in two tabs: part "form" is the Report tab (record a report, inspection, repair or
+// incident), part "tracker" is the Tracker tab (everything logged, and whether repairs cut the incidents).
+export default function LedgerSection({ part = "form" }) {
   const [log, setLog] = useState({ reports: [], inspections: [], repairs: [], incidents: [] });
   const [effect, setEffect] = useState([]);
-  const [cells, setCells] = useState([]);
   const [kind, setKind] = useState("report");
   const [drafts, setDrafts] = useState(blankDrafts);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const { bump, formRequest } = useDesk();
+  const { bump, revision, formRequest, openForm } = useDesk();
+  const { features } = useRiskMap();
+  // Ledger rows carry only the cell id; the grid has each cell's reverse-geocoded place name.
+  const cells = useMemo(() => features.map((f) => f.properties).sort((a, b) => a.rank - b.rank), [features]);
   // null on the server and until the browser has read it, so the first render matches.
   const selectedId = useSyncExternalStore(subscribeSelected, readSelected, () => null);
 
@@ -97,43 +107,41 @@ export default function LedgerSection() {
     setEffect(effectBody.repairs);
   }
 
+  // Old links still open a form: /operations?form=inspection redirects to the Report tab. (?cell= is read by the map.)
   useEffect(() => {
-    // Old links still open a form on a cell: /operations?cell=s45_w75&form=inspection redirects here.
     const query = new URLSearchParams(window.location.search);
     if (FORMS.some(([key]) => key === query.get("form"))) setKind(query.get("form"));
-    const wanted = query.get("cell");
-    load().catch((err) => setError(errorDetail(err)));
-    api("/api/v1/risk/grid")
-      .then((grid) => {
-        const list = grid.features.map((f) => f.properties).sort((a, b) => a.rank - b.rank);
-        setCells(list);
-        const linked = list.some((c) => c.cell_id === wanted);
-        // A ?cell= link becomes the picked cell for the whole desk. Otherwise the form starts on the top-ranked
-        // cell, and the picked cell (if any) replaces it in the effect below.
-        if (linked) writeSelected(wanted);
-        const start = linked ? wanted : list[0]?.cell_id || "";
-        setDrafts((cur) => Object.fromEntries(
-          Object.entries(cur).map(([key, draft]) => [key, { ...draft, cell_id: draft.cell_id || start }]),
-        ));
-      })
-      .catch((err) => setError(errorDetail(err)));
   }, []);
 
-  // The map and the dispatch list open a form on a cell. The scroll is done by the desk.
+  // Both tabs reload after any save, so the tracker shows what the Report tab just recorded.
   useEffect(() => {
-    if (!formRequest) return;
+    load().catch((err) => setError(errorDetail(err)));
+  }, [revision]);
+
+  // Until a cell is picked on the map, the forms start on the top-ranked cell.
+  useEffect(() => {
+    const start = cells[0]?.cell_id;
+    if (!start) return;
+    setDrafts((cur) => Object.fromEntries(
+      Object.entries(cur).map(([key, draft]) => [key, { ...draft, cell_id: draft.cell_id || start }]),
+    ));
+  }, [cells]);
+
+  // The map, the dispatch plan and the tracker open a form on a cell; the desk switches to this tab.
+  useEffect(() => {
+    if (!formRequest || part !== "form") return;
     setKind(formRequest.kind);
     setNotice("");
     setError("");
     setDrafts((cur) => {
       const draft = { ...cur[formRequest.kind], cell_id: formRequest.cellId };
-      // A linked report or inspection would lock the cell to another one, so the link is dropped.
+      // A linked report or inspection would lock the cell to another one, so the link is dropped unless the
+      // request names one (the tracker's "Schedule inspection" on a report).
       for (const link of ["report_id", "inspection_id"]) if (link in draft) draft[link] = "";
-      return { ...cur, [formRequest.kind]: draft };
+      return { ...cur, [formRequest.kind]: { ...draft, ...(formRequest.patch || {}) } };
     });
-  }, [formRequest]);
+  }, [formRequest, part]);
 
-  // Ledger rows carry only the cell id; the grid has each cell's reverse-geocoded place name.
   const placeOf = useMemo(() => Object.fromEntries(cells.map((c) => [c.cell_id, c.place_name])), [cells]);
 
   // The cell picked on the map. Until the grid has loaded, trust the saved id so the page does not flash unfiltered.
@@ -154,13 +162,9 @@ export default function LedgerSection() {
   const draft = drafts[kind];
   const set = (patch) => setDrafts((cur) => ({ ...cur, [kind]: { ...cur[kind], ...patch } }));
 
-  // Start a form from a ledger row: the next step for that report or inspection.
+  // Start a form from a tracker card: the next step for that report or inspection, on the Report tab.
   function startFrom(next, patch) {
-    setKind(next);
-    setNotice("");
-    setError("");
-    setDrafts((cur) => ({ ...cur, [next]: { ...cur[next], ...patch } }));
-    document.getElementById("record")?.scrollIntoView({ behavior: "smooth" });
+    openForm(next, patch.cell_id, patch);
   }
 
   function pickReport(id) {
@@ -192,8 +196,7 @@ export default function LedgerSection() {
         ...cur,
         [kind]: { ...cur[kind], ...Object.fromEntries(CLEARED[kind].map((field) => [field, ""])) },
       }));
-      await load();
-      bump();
+      bump(); // reloads this tab, the tracker, the map dots and the dispatch plan
     } catch (err) {
       setError(errorDetail(err));
     } finally {
@@ -229,37 +232,130 @@ export default function LedgerSection() {
     </label>
   );
 
+  const scopeChip = picked && (
+    <p className="scope">
+      <b>{picked.place_name || picked.cell_id}</b>
+      <span>picked on the map</span>
+      <a
+        href="#"
+        onClick={(e) => {
+          e.preventDefault();
+          writeSelected(null);
+        }}
+      >
+        Show all
+      </a>
+    </p>
+  );
+
+  if (part === "tracker") {
+    const place = (row) => <span title={row.cell_id}>{placeOf[row.cell_id] || row.cell_id}</span>;
+    return (
+      <div className="sheet">
+        <h1>Incident &amp; repair tracker</h1>
+        <p className="mute">
+          Every report, inspection, repair and incident, newest first. Open reports and repeat incidents feed the
+          dispatch plan; repairs are checked against the incidents logged before and after.
+        </p>
+        {scopeChip}
+        {error && <p className="error">{error}</p>}
+
+        <div className="kpis four">
+          <div className="kpi hot"><b>{openReports.length}</b><span>Open reports</span></div>
+          <div className="kpi"><b>{scheduled.length}</b><span>Inspections due</span></div>
+          <div className="kpi"><b>{shown.repairs.length}</b><span>Repairs</span></div>
+          <div className="kpi"><b>{shown.incidents.length}</b><span>Incidents</span></div>
+        </div>
+
+        <h2 className="sub">Reports</h2>
+        <Cards empty={emptyText} rows={shown.reports} render={(r) => {
+          const at = REPORT_STEPS.findIndex(([status]) => status === r.status);
+          return (
+            <>
+              <div className="row"><b>#{r.id} · {r.severity} drain</b><span className={`origin ${r.origin}`}>{r.origin}</span></div>
+              <div className="mute">{place(r)} · {r.reporter}</div>
+              {r.note && <div className="note">{r.note}</div>}
+              <div className="steps">
+                {REPORT_STEPS.map(([status, label], n) => <span key={status} className={n <= at ? "d" : ""}>{label}</span>)}
+              </div>
+              {r.status === "open" && (
+                <button type="button" className="act small" onClick={() => startFrom("inspection", { report_id: String(r.id), cell_id: r.cell_id })}>
+                  Schedule inspection →
+                </button>
+              )}
+            </>
+          );
+        }} />
+
+        <h2 className="sub">Inspections</h2>
+        <Cards empty={emptyText} rows={shown.inspections} render={(i) => (
+          <>
+            <div className="row"><b>#{i.id} · {i.crew}</b><span className={`origin ${i.origin}`}>{i.origin}</span></div>
+            <div className="mute">{place(i)} · {i.scheduled_for} · {i.status}{i.report_id != null && ` · report #${i.report_id}`}</div>
+            {i.status === "scheduled" && (
+              <button type="button" className="act small"
+                onClick={() => startFrom("repair", { inspection_id: String(i.id), report_id: i.report_id == null ? "" : String(i.report_id), cell_id: i.cell_id })}>
+                Log repair →
+              </button>
+            )}
+          </>
+        )} />
+
+        <h2 className="sub">Repairs</h2>
+        <Cards empty={emptyText} rows={shown.repairs} render={(r) => (
+          <>
+            <div className="row"><b>#{r.id} · {r.completed_on}</b><span className={`origin ${r.origin}`}>{r.origin}</span></div>
+            <div className="mute">{place(r)}{r.inspection_id != null && ` · inspection #${r.inspection_id}`}{r.report_id != null && ` · report #${r.report_id}`}</div>
+            <div className="note">{r.action}</div>
+          </>
+        )} />
+
+        <h2 className="sub">Incidents</h2>
+        <Cards empty={emptyText} rows={shown.incidents} render={(r) => (
+          <>
+            <div className="row"><b>#{r.id} · {r.kind}</b><span className={`origin ${r.origin}`}>{r.origin}</span></div>
+            <div className="mute">{place(r)} · {r.occurred_on}</div>
+            {r.note && <div className="note">{r.note}</div>}
+          </>
+        )} />
+
+        <h2 className="sub">Did the repair work?</h2>
+        <p className="mute">
+          Logged incidents in the same cell during the 365 days before a repair, and the 365 days after.
+        </p>
+        <table className="compact">
+          <thead>
+            <tr><th>Place</th><th className="num">Before</th><th className="num">After</th><th className="num">Δ</th></tr>
+          </thead>
+          <tbody>
+            {shownEffect.length === 0 && (
+              <tr><td colSpan={4}>{scopeId ? "No repairs logged in this cell." : "No repairs logged."}</td></tr>
+            )}
+            {shownEffect.map((row) => (
+              <tr key={row.repair_id}>
+                <td title={row.reading}>
+                  {placeOf[row.cell_id] || row.cell_id}
+                  <div className="mute">{row.completed_on} · <span className={`origin ${row.origin}`}>{row.origin}</span></div>
+                </td>
+                <td className="num">{row.incidents_365d_before}</td>
+                <td className="num">{row.incidents_365d_after}</td>
+                <td className="num">{row.delta}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
   return (
     <div className="sheet">
-      <h1>Drainage ledger</h1>
-      <p className="reading">
-        Residents' blocked-drain reports, the inspections and repairs that follow, and the incidents that come back,
-        each tied to a risk cell. Open reports and repeat incidents feed the dispatch list; repairs are checked against
-        the incidents logged before and after.
+      <h1>Community drainage report</h1>
+      <p className="mute">
+        Report a blocked drain, or record the inspection, repair or incident that follows. Each entry is tied to a risk
+        cell; pick one on the map or below.
       </p>
-
-      {picked && (
-        <p className="scope">
-          <b>{picked.place_name || picked.cell_id}</b>
-          <span>picked on the map</span>
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              writeSelected(null);
-            }}
-          >
-            Show all
-          </a>
-        </p>
-      )}
-
-      <div className="metrics">
-        <div className="metric"><span>Open reports</span><b>{openReports.length}</b></div>
-        <div className="metric"><span>Inspections scheduled</span><b>{scheduled.length}</b></div>
-        <div className="metric"><span>Repairs logged</span><b>{shown.repairs.length}</b></div>
-        <div className="metric"><span>Incidents logged</span><b>{shown.incidents.length}</b></div>
-      </div>
+      {scopeChip}
 
       <section id="record">
         <div className="toggles" role="group" aria-label="Record type">
@@ -379,95 +475,25 @@ export default function LedgerSection() {
         {notice && <p className="notice">{notice}</p>}
         {error && <p className="error">{error}</p>}
       </section>
-
-      <h2>Reports</h2>
-      <Ledger
-        placeOf={placeOf}
-        empty={emptyText}
-        rows={shown.reports}
-        columns={["id", "cell_id", "severity", "status", "reporter", "note", "origin"]}
-        action={(r) => r.status === "open" && (
-          <button type="button" className="link" onClick={() => startFrom("inspection", { report_id: String(r.id), cell_id: r.cell_id })}>
-            Schedule inspection
-          </button>
-        )}
-      />
-      <h2>Inspections</h2>
-      <Ledger
-        placeOf={placeOf}
-        empty={emptyText}
-        rows={shown.inspections}
-        columns={["id", "report_id", "cell_id", "crew", "scheduled_for", "status", "origin"]}
-        action={(i) => i.status === "scheduled" && (
-          <button type="button" className="link"
-            onClick={() => startFrom("repair", { inspection_id: String(i.id), report_id: i.report_id == null ? "" : String(i.report_id), cell_id: i.cell_id })}>
-            Log repair
-          </button>
-        )}
-      />
-      <h2>Repairs</h2>
-      <Ledger placeOf={placeOf} empty={emptyText} rows={shown.repairs} columns={["id", "inspection_id", "report_id", "cell_id", "action", "completed_on", "origin"]} />
-      <h2>Incidents</h2>
-      <Ledger placeOf={placeOf} empty={emptyText} rows={shown.incidents} columns={["id", "cell_id", "kind", "occurred_on", "note", "origin"]} />
-
-      <h2>Did the repair work?</h2>
-      <p className="reading">
-        Logged incidents in the same cell during the 365 days before a repair, and the 365 days after.
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Cell</th><th>Completed</th><th>Before</th><th>After</th><th>Delta</th><th>Origin</th>
-          </tr>
-        </thead>
-        <tbody>
-          {shownEffect.length === 0 && (
-            <tr><td colSpan={6}>{scopeId ? "No repairs logged in this cell." : "No repairs logged."}</td></tr>
-          )}
-          {shownEffect.map((row) => (
-            <tr key={row.repair_id}>
-              <td title={row.cell_id}>{placeOf[row.cell_id] || row.cell_id}</td>
-              <td>{row.completed_on}</td>
-              <td>{row.incidents_365d_before}</td>
-              <td>{row.incidents_365d_after}</td>
-              <td>{row.delta}</td>
-              <td><span className={`origin ${row.origin}`}>{row.origin}</span><div>{row.reading}</div></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <p className="mute">Saved entries appear in the <a href="#tracker">Tracker</a> and feed the <a href="#dispatch">Dispatch plan</a>.</p>
     </div>
   );
 }
 
-function Ledger({ rows, columns, action, placeOf, empty = "None logged." }) {
-  if (!rows.length) return <p>{empty}</p>;
+// A tracker list as cards, newest first, with the rest behind "Show all".
+function Cards({ rows, render, empty }) {
+  const [all, setAll] = useState(false);
+  if (!rows.length) return <p className="mute">{empty}</p>;
+  const newest = [...rows].sort((a, b) => b.id - a.id);
+  const shown = all ? newest : newest.slice(0, FIRST);
   return (
-    <div className="scroll">
-      <table>
-        <thead>
-          <tr>
-            {columns.map((column) => <th key={column}>{column === "cell_id" ? "place" : column.replaceAll("_", " ")}</th>)}
-            {action && <th>Next step</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.id}>
-              {columns.map((column) => (
-                <td key={column}>
-                  {column === "origin"
-                    ? <span className={`origin ${row.origin}`}>{row.origin}</span>
-                    : column === "status" ? row.status.replaceAll("_", " ")
-                    : column === "cell_id" ? <span title={row.cell_id}>{placeOf[row.cell_id] || row.cell_id}</span>
-                    : row[column] ?? "—"}
-                </td>
-              ))}
-              {action && <td>{action(row)}</td>}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      {shown.map((row) => <div className="card job" key={row.id}>{render(row)}</div>)}
+      {rows.length > FIRST && (
+        <button type="button" className="act ghost small" onClick={() => setAll((on) => !on)}>
+          {all ? "Show fewer" : `Show all ${rows.length}`}
+        </button>
+      )}
+    </>
   );
 }

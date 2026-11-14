@@ -72,13 +72,13 @@ const HEAT = {
 // so one point per cell leaves horizontal gaps there; the extra points close them.
 const LAT_STEPS = [-2, -1, 0, 1, 2];
 
-// The details card floats over the right side of the map. Fit the world into the space left of it,
-// so the whole map is visible; when the card is hidden, use the full width. Keep the widths in step with the CSS.
+// The side panel floats over the left of the map (over the bottom half on narrow screens), and the header pill
+// over the top. Fit the world into the space left over. Keep the sizes in step with .side and .pillbar in the CSS.
 const WORLD = [[-170, -58], [180, 78]];
-function mapPadding(panelOpen) {
-  const narrow = window.innerWidth <= 980; // the card sits below the map on narrow screens
-  const card = panelOpen && !narrow ? (window.innerWidth <= 1100 ? 340 : 400) + 32 : 12;
-  return { top: 12, bottom: 12, left: 12, right: card };
+const NARROW = 800;
+function mapPadding() {
+  if (window.innerWidth <= NARROW) return { top: 64, left: 8, right: 8, bottom: Math.round(window.innerHeight * 0.5) + 16 };
+  return { top: 72, left: 440, right: 16, bottom: 48 };
 }
 
 const collection = (features) => ({ type: "FeatureCollection", features: features || [] });
@@ -194,12 +194,13 @@ function FlatMap({ features, marks, floods, selectedId, onSelect, reason }) {
           </circle>
         ))}
       </svg>
-      <p className="flatmap-note">Flat view: {reason} The cells and the dossier work as usual.</p>
+      <p className="flatmap-note">Flat view: {reason} The cells and the side panel work as usual.</p>
     </div>
   );
 }
 
-export default function RiskMap({ features, marks, floods, year, selectedId, onSelect }) {
+// view: "heat" or "cells". focus: { id, at } flies the map to that cell; `at` makes a repeat request count.
+export default function RiskMap({ features, marks, floods, year, selectedId, onSelect, view = "heat", showReports = true, showFloods = true, focus = null }) {
   const holder = useRef(null);
   const mapRef = useRef(null);
   const onSelectRef = useRef(onSelect);
@@ -208,10 +209,8 @@ export default function RiskMap({ features, marks, floods, year, selectedId, onS
   const selectedRef = useRef(selectedId);
   selectedRef.current = selectedId;
   const [fallback, setFallback] = useState("");
-  const [view, setView] = useState("heat");
   const viewRef = useRef(view);
   viewRef.current = view;
-  const [showReports, setShowReports] = useState(true);
   const reportsRef = useRef(showReports);
   reportsRef.current = showReports;
   const featuresRef = useRef(features);
@@ -220,12 +219,8 @@ export default function RiskMap({ features, marks, floods, year, selectedId, onS
   floodsRef.current = floods;
   const yearRef = useRef(year);
   yearRef.current = year;
-  const [showFloods, setShowFloods] = useState(true);
   const showFloodsRef = useRef(showFloods);
   showFloodsRef.current = showFloods;
-  const [panelOpen, setPanelOpen] = useState(true);
-  const panelRef = useRef(panelOpen);
-  panelRef.current = panelOpen;
 
   useEffect(() => {
     if (!webglAvailable()) {
@@ -240,17 +235,17 @@ export default function RiskMap({ features, marks, floods, year, selectedId, onS
         transformRequest: withCartoKey,
         // Fit the inhabited latitudes to whatever size the window is, instead of a fixed zoom.
         bounds: WORLD,
-        fitBoundsOptions: { padding: mapPadding(panelRef.current) },
-        renderWorldCopies: false,
+        fitBoundsOptions: { padding: mapPadding() },
+        // With one world copy MapLibre stretches the world to the full window width, under the panel. With copies
+        // on, the fit beside the panel holds; the repeat sits hidden behind the panel.
+        renderWorldCopies: true,
         attributionControl: true,
-        // The map sits in a scrolling page: the wheel scrolls the page, Ctrl/⌘ + wheel or two fingers zoom the map.
-        cooperativeGestures: true,
       });
     } catch (err) {
       setFallback(`the interactive map could not start (${err.message}).`);
       return undefined;
     }
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
     const tip = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
     let ready = false;
     map.on("error", (event) => {
@@ -261,6 +256,8 @@ export default function RiskMap({ features, marks, floods, year, selectedId, onS
     });
     map.on("load", () => {
       ready = true;
+      // Fit again now the canvas has its final size, so the world sits in the space beside the panel.
+      map.fitBounds(WORLD, { padding: mapPadding(), duration: 0 });
       // Everything goes under the style's place labels, so country and city names stay readable.
       const labels = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
       map.addSource("risk", { type: "geojson", data: collection(features) });
@@ -353,7 +350,6 @@ export default function RiskMap({ features, marks, floods, year, selectedId, onS
           if (id) {
             remember(id);
             onSelectRef.current(id);
-            setPanelOpen(true);
           }
         });
         map.on("mouseenter", layer, () => {
@@ -367,7 +363,9 @@ export default function RiskMap({ features, marks, floods, year, selectedId, onS
         const props = event.features?.[0]?.properties;
         if (!props) return;
         const flood = (floodsRef.current || []).some((f) => f.cell_id === props.cell_id) ? " · DFO flood recorded" : "";
-        tip.setLngLat(event.lngLat).setText(`${props.place_name || props.cell_id} · ${yearRef.current ?? ""} score ${Number(props.probability).toFixed(2)}${flood}`).addTo(map);
+        // A layer that is not the year's score (the two-week forecast) brings its own hover text.
+        const text = props.tip || `${props.place_name || props.cell_id} · ${yearRef.current ?? ""} score ${Number(props.probability).toFixed(2)}${flood}`;
+        tip.setLngLat(event.lngLat).setText(text).addTo(map);
       });
       map.on("mouseleave", "cells", () => tip.remove());
     });
@@ -432,23 +430,22 @@ export default function RiskMap({ features, marks, floods, year, selectedId, onS
     if (map) show(map, "reports", showReports);
   }, [showReports]);
 
-  // Show or hide the details card (the .desk element is the map page's wrapper) and refit the world to the space left.
-  const firstPanelRun = useRef(true);
+  // "Show on the map" from another tab: centre the cell in the space beside the panel.
   useEffect(() => {
-    const desk = holder.current?.closest(".desk");
-    desk?.classList.toggle("panel-hidden", !panelOpen);
     const map = mapRef.current;
-    if (map && !firstPanelRun.current) {
-      map.resize();
-      map.fitBounds(WORLD, { padding: mapPadding(panelOpen), duration: 400 });
-    }
-    firstPanelRun.current = false;
-    return () => desk?.classList.remove("panel-hidden");
-  }, [panelOpen]);
+    if (!map || !focus) return;
+    const feature = (featuresRef.current || []).find((f) => f.properties.cell_id === focus.id);
+    if (!feature) return;
+    const fly = () => map.easeTo({ center: cellCentre(feature), zoom: Math.max(map.getZoom(), 3), padding: mapPadding(), duration: 700 });
+    // The risk source exists once the style has loaded; map.loaded() is also false while tiles stream in.
+    if (map.getSource("risk")) fly();
+    else map.once("load", fly);
+  }, [focus]);
 
   // Reopen on the cell last picked here, instead of the page's default (the top-ranked cell). A ?cell= link wins.
+  // Picks are shared with the other tabs by the onSelect handler; the default selection is not, so no tab looks
+  // scoped to a cell nobody picked.
   const restoredRef = useRef(false);
-  const skipPersistRef = useRef(null);
   useEffect(() => {
     if (restoredRef.current || !features?.length) return;
     restoredRef.current = true;
@@ -460,50 +457,11 @@ export default function RiskMap({ features, marks, floods, year, selectedId, onS
       return;
     }
     if (saved && saved !== selectedRef.current && features.some((f) => f.properties.cell_id === saved)) {
-      skipPersistRef.current = saved; // don't overwrite it with the page's default cell
       onSelectRef.current(saved);
     }
   }, [features]);
 
-  // Save any selection, wherever it came from (map click, hotlist, ?cell= link), so Overview can follow it.
-  useEffect(() => {
-    if (!selectedId || !restoredRef.current) return;
-    if (skipPersistRef.current) {
-      if (selectedId !== skipPersistRef.current) return; // still the default render
-      skipPersistRef.current = null;
-    }
-    remember(selectedId);
-  }, [selectedId]);
-
   if (fallback) return <FlatMap features={features} marks={marks} floods={floods} selectedId={selectedId}
     onSelect={(id) => { remember(id); onSelect(id); }} reason={fallback} />;
-  return (
-    <>
-      <div ref={holder} className="map" />
-      <div className="mapbar">
-        <div className="viewswitch" role="group" aria-label="Map view">
-          <button type="button" aria-pressed={view === "heat"} onClick={() => setView("heat")}
-            title="Smooths neighbouring cells into one surface. Colours show relative concentration, not exact probability.">
-            Heatmap
-          </button>
-          <button type="button" aria-pressed={view === "cells"} onClick={() => setView("cells")}
-            title="One square per 5° cell, coloured by its exact probability">
-            Cells
-          </button>
-        </div>
-        <button type="button" className="reportswitch" aria-pressed={showReports} onClick={() => setShowReports((on) => !on)}
-          title="Cells with open blocked-drain reports. A bigger dot means more open reports.">
-          <i /> Drain reports
-        </button>
-        <button type="button" className="reportswitch floodswitch" aria-pressed={showFloods} onClick={() => setShowFloods((on) => !on)}
-          title="Cells with a DFO large flood recorded in the year on show. Solid ring: the model had the cell at or above its threshold. Thin ring: it missed.">
-          <i /> Recorded floods
-        </button>
-        <button type="button" className="reportswitch panel-toggle" aria-pressed={panelOpen} onClick={() => setPanelOpen((on) => !on)}
-          title="Show or hide the details card so the whole map is visible.">
-          {panelOpen ? "Hide details" : "Show details"}
-        </button>
-      </div>
-    </>
-  );
+  return <div ref={holder} className="map" />;
 }

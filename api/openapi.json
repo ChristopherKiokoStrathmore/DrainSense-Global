@@ -380,6 +380,57 @@
         }
       }
     },
+    "/api/v1/risk/forecast": {
+      "get": {
+        "tags": [
+          "risk map"
+        ],
+        "summary": "Risk Forecast",
+        "description": "Regions likely to be affected by flooding between today and `until`, at most two weeks ahead.\n\nCombines each cell's risk-model score with Open-Meteo's daily rainfall forecast at the cell centre, by the\npublished rule in `rule`. Levels: `likely`, `watch`, `quiet`; cells come most at risk first. A date before\ntoday or more than 14 days ahead is refused with 422.",
+        "operationId": "risk_forecast_api_v1_risk_forecast_get",
+        "parameters": [
+          {
+            "name": "until",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Last day of the window, YYYY-MM-DD: today (UTC) to 14 days ahead. Default: 14 days ahead.",
+              "title": "Until"
+            },
+            "description": "Last day of the window, YYYY-MM-DD: today (UTC) to 14 days ahead. Default: 14 days ahead."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/risk/hotspots": {
       "get": {
         "tags": [
@@ -1760,6 +1811,13 @@
           "type": {
             "type": "string",
             "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
           }
         },
         "type": "object",

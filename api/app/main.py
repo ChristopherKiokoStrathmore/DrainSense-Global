@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+from datetime import date, timedelta
 from contextlib import asynccontextmanager
 from typing import Annotated, Literal
 
@@ -10,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel, Field
 
-from api.app import db, impact, scoring
+from api.app import db, forecast, impact, scoring
 
 SEVERITIES = {"blocked", "slow", "overflow"}
 
@@ -108,6 +109,11 @@ async def impact_out_of_step(request: Request, exc: impact.ModelOutOfStep):
     return JSONResponse(status_code=503, content={"detail": str(exc)})
 
 
+@app.exception_handler(forecast.ForecastUnavailable)
+async def forecast_unavailable(request: Request, exc: forecast.ForecastUnavailable):
+    return JSONResponse(status_code=503, content={"detail": str(exc)})
+
+
 @app.get("/", include_in_schema=False)
 def root():
     return RedirectResponse("/docs")
@@ -194,6 +200,27 @@ def risk_timeline():
     hits, misses, false alarms and ROC-AUC.
     """
     return scoring.timeline()
+
+
+@app.get("/api/v1/risk/forecast", tags=["risk map"])
+def risk_forecast(
+    until: Annotated[date | None, Query(description="Last day of the window, YYYY-MM-DD: today (UTC) to 14 days ahead. Default: 14 days ahead.")] = None,
+):
+    """Regions likely to be affected by flooding between today and `until`, at most two weeks ahead.
+
+    Combines each cell's risk-model score with Open-Meteo's daily rainfall forecast at the cell centre, by the
+    published rule in `rule`. Levels: `likely`, `watch`, `quiet`; cells come most at risk first. A date before
+    today or more than 14 days ahead is refused with 422.
+    """
+    first = forecast.today()
+    last = first + timedelta(days=forecast.MAX_DAYS)
+    until = until or last
+    if until < first or until > last:
+        raise HTTPException(
+            status_code=422,
+            detail=f"until must be between {first.isoformat()} and {last.isoformat()}: forecasts go at most {forecast.MAX_DAYS} days ahead.",
+        )
+    return forecast.watch(until)
 
 
 @app.get("/api/v1/risk/hotspots", tags=["risk map"])
